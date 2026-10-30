@@ -72,9 +72,11 @@ function remove(media: ListingMedia): void {
             <div>
                 <h2 class="text-lg font-semibold">Fotos y videos</h2>
                 <p class="text-sm text-muted-foreground">
-                    Máximo {{ limits.max_images }} imágenes y
-                    {{ limits.max_videos }} videos. La primera imagen será la
-                    portada.
+                    Máximo {{ limits.max_images }} imágenes
+                    <span v-if="limits.max_videos > 0">
+                        y {{ limits.max_videos }} videos
+                    </span>
+                    según tu plan. La primera imagen será la portada.
                 </p>
             </div>
         </div>
@@ -91,7 +93,9 @@ function remove(media: ListingMedia): void {
                     class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                     <option value="image">Imagen</option>
-                    <option value="video">Video</option>
+                    <option v-if="limits.max_videos > 0" value="video">
+                        Video
+                    </option>
                 </select>
             </div>
 

@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Laravel\Cashier\Subscription;
 use Modules\Bookings\Enums\DepositMethod;
 use Modules\Bookings\Enums\DepositStatus;
 use Modules\Bookings\Models\BookingDeposit;
@@ -83,6 +84,7 @@ class CustomerDepositTest extends TestCase
     public function test_owner_can_update_customer_notes_but_not_another_account_customer(): void
     {
         [$owner, $team] = $this->ownerListing();
+        $this->subscribePro($team);
         $customer = Customer::factory()->create(['team_id' => $team->id]);
 
         $this->actingAs($owner)->patch(route('bookings.customers.update', [
@@ -129,6 +131,22 @@ class CustomerDepositTest extends TestCase
         ])->assertNotFound();
 
         $this->assertSame(DepositStatus::Pending, $foreignDeposit->fresh()->status);
+    }
+
+    private function subscribePro(Team $team): void
+    {
+        config(['billing.plans.pro.stripe_price_id' => 'price_pro_test']);
+
+        Subscription::query()->create([
+            'team_id' => $team->id,
+            'type' => 'default',
+            'stripe_id' => 'sub_'.fake()->unique()->bothify('??####'),
+            'stripe_status' => 'active',
+            'stripe_price' => 'price_pro_test',
+            'quantity' => 1,
+            'trial_ends_at' => null,
+            'ends_at' => null,
+        ]);
     }
 
     /**

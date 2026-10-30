@@ -25,9 +25,11 @@ const props = defineProps<{
         search?: string | null;
     };
     statuses: StatusOption[];
+    canUseCustomers: boolean;
     urls: {
         index: string;
         customers: string;
+        billing: string;
     };
 }>();
 
@@ -88,9 +90,9 @@ function statusVariant(
                 </p>
             </div>
             <Button variant="outline" as-child>
-                <Link :href="urls.customers">
+                <Link :href="canUseCustomers ? urls.customers : urls.billing">
                     <Users />
-                    Clientes
+                    {{ canUseCustomers ? 'Clientes' : 'Clientes · Pro' }}
                 </Link>
             </Button>
         </div>

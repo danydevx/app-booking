@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Laravel\Cashier\Subscription;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Listings\Models\Listing;
@@ -43,6 +44,7 @@ class BookingsPageTest extends TestCase
     public function test_owner_can_render_customers_and_availability_pages(): void
     {
         [$owner, $team, $listing] = $this->ownerListing();
+        $this->subscribePro($team);
         $customer = Customer::factory()->create(['team_id' => $team->id]);
 
         $this->actingAs($owner)
@@ -71,6 +73,22 @@ class BookingsPageTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Bookings/Availability/Edit')
                 ->where('listing.id', $listing->id));
+    }
+
+    private function subscribePro(Team $team): void
+    {
+        config(['billing.plans.pro.stripe_price_id' => 'price_pro_test']);
+
+        Subscription::query()->create([
+            'team_id' => $team->id,
+            'type' => 'default',
+            'stripe_id' => 'sub_'.fake()->unique()->bothify('??####'),
+            'stripe_status' => 'active',
+            'stripe_price' => 'price_pro_test',
+            'quantity' => 1,
+            'trial_ends_at' => null,
+            'ends_at' => null,
+        ]);
     }
 
     /**

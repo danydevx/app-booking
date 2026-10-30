@@ -2,6 +2,7 @@
 
 use App\Providers\AppServiceProvider;
 use App\Providers\FortifyServiceProvider;
+use Modules\Billing\BillingServiceProvider;
 use Modules\Bookings\BookingsServiceProvider;
 use Modules\Listings\ListingsServiceProvider;
 use Modules\Platform\PlatformServiceProvider;
@@ -12,4 +13,5 @@ return [
     PlatformServiceProvider::class,
     ListingsServiceProvider::class,
     BookingsServiceProvider::class,
+    BillingServiceProvider::class,
 ];

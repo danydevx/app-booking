@@ -19,9 +19,15 @@ defineProps<{
     listings: Paginated<ListingOwnerCard>;
     limits: ListingLimits;
     canCreate: boolean;
+    plan: {
+        name: string;
+        slug: string;
+        listing_limit: number;
+    };
     urls: {
         index: string;
         create: string;
+        billing: string;
     };
 }>();
 
@@ -68,6 +74,23 @@ function statusVariant(
                     <Plus />
                     Nueva terraza
                 </Link>
+            </Button>
+        </div>
+
+        <div
+            v-if="!canCreate"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+            <div>
+                <p class="font-medium">Límite del plan {{ plan.name }}</p>
+                <p>
+                    La cuenta permite hasta {{ plan.listing_limit }}
+                    {{ plan.listing_limit === 1 ? 'terraza' : 'terrazas' }}. Tus
+                    terrazas actuales no se eliminan.
+                </p>
+            </div>
+            <Button variant="outline" as-child>
+                <Link :href="urls.billing">Ver planes</Link>
             </Button>
         </div>
 

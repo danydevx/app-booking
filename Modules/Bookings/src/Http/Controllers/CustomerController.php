@@ -3,11 +3,13 @@
 namespace Modules\Bookings\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Billing\Support\Entitlements;
 use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
@@ -18,11 +20,19 @@ class CustomerController extends Controller
 {
     use ResolvesCurrentTeam;
 
-    public function index(Request $request): Response
+    public function __construct(
+        private readonly Entitlements $entitlements,
+    ) {}
+
+    public function index(Request $request): Response|RedirectResponse
     {
         $team = $this->currentTeam($request);
 
         Gate::authorize('viewAny', [Customer::class, $team]);
+
+        if (! $this->entitlements->allows($team, 'customers')) {
+            return $this->upgradeRedirect($team);
+        }
 
         $search = $request->string('search')->toString();
 
@@ -58,12 +68,16 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function show(Request $request, string $currentTeam, Customer $customer): Response
+    public function show(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
     {
         $team = $this->currentTeam($request);
         $this->ensureOwned($customer, $team->id);
 
         Gate::authorize('view', $customer);
+
+        if (! $this->entitlements->allows($team, 'customers')) {
+            return $this->upgradeRedirect($team);
+        }
 
         $customer->load(['inquiries.listing', 'inquiries.deposits']);
         $customer->loadCount('inquiries');
@@ -95,6 +109,10 @@ class CustomerController extends Controller
 
         Gate::authorize('update', $customer);
 
+        if (! $this->entitlements->allows($team, 'customers')) {
+            return $this->upgradeRedirect($team);
+        }
+
         $customer->update($request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cliente actualizado.']);
@@ -105,5 +123,15 @@ class CustomerController extends Controller
     private function ensureOwned(Customer $customer, int $teamId): void
     {
         abort_unless($customer->team_id === $teamId, 404);
+    }
+
+    private function upgradeRedirect(Team $team): RedirectResponse
+    {
+        Inertia::flash('toast', [
+            'type' => 'error',
+            'message' => 'El CRM de clientes está disponible en el plan Pro.',
+        ]);
+
+        return to_route('billing.index', ['current_team' => $team->slug]);
     }
 }

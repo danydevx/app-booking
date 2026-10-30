@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Laravel\Cashier\Billable;
 
 /**
  * @property int $id
@@ -20,6 +21,10 @@ use Illuminate\Support\Carbon;
  * @property string $slug
  * @property string $timezone
  * @property bool $is_personal
+ * @property string|null $stripe_id
+ * @property string|null $pm_type
+ * @property string|null $pm_last_four
+ * @property Carbon|null $trial_ends_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
@@ -31,7 +36,7 @@ use Illuminate\Support\Carbon;
 class Team extends Model
 {
     /** @use HasFactory<TeamFactory> */
-    use GeneratesUniqueTeamSlugs, HasFactory, SoftDeletes;
+    use Billable, GeneratesUniqueTeamSlugs, HasFactory, SoftDeletes;
 
     /**
      * Bootstrap the model and its traits.
@@ -105,6 +110,7 @@ class Team extends Model
     {
         return [
             'is_personal' => 'boolean',
+            'trial_ends_at' => 'datetime',
         ];
     }
 

@@ -7,8 +7,10 @@ use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Billing\Support\Entitlements;
 use Modules\Listings\Actions\CreateListing;
 use Modules\Listings\Actions\DeleteListing;
 use Modules\Listings\Actions\PublishListing;
@@ -21,11 +23,18 @@ use Modules\Listings\Support\TerraceServiceCatalog;
 
 class ListingController extends Controller
 {
+    public function __construct(
+        private readonly Entitlements $entitlements,
+    ) {}
+
     public function index(Request $request): Response
     {
         $team = $this->team($request);
 
         Gate::authorize('viewAny', [Listing::class, $team]);
+
+        $listingCount = Listing::query()->where('team_id', $team->id)->count();
+        $plan = $this->entitlements->planFor($team);
 
         $listings = Listing::query()
             ->where('team_id', $team->id)
@@ -48,24 +57,42 @@ class ListingController extends Controller
                 'slug' => $team->slug,
             ],
             'listings' => $listings,
-            'limits' => $this->mediaLimits(),
-            'canCreate' => Gate::allows('create', [Listing::class, $team]),
+            'limits' => $this->mediaLimits($team),
+            'canCreate' => Gate::allows('create', [Listing::class, $team])
+                && $this->entitlements->canCreateListing($team, $listingCount),
+            'plan' => [
+                'name' => $plan->name,
+                'slug' => $plan->slug,
+                'listing_limit' => $plan->limit('listings'),
+            ],
             'urls' => [
                 'index' => route('listings.index', ['current_team' => $team->slug]),
                 'create' => route('listings.create', ['current_team' => $team->slug]),
+                'billing' => route('billing.index', ['current_team' => $team->slug]),
             ],
         ]);
     }
 
-    public function create(Request $request): Response
+    public function create(Request $request): Response|RedirectResponse
     {
         $team = $this->team($request);
 
         Gate::authorize('create', [Listing::class, $team]);
 
+        $listingCount = Listing::query()->where('team_id', $team->id)->count();
+
+        if (! $this->entitlements->canCreateListing($team, $listingCount)) {
+            Inertia::flash('toast', [
+                'type' => 'error',
+                'message' => 'Tu plan actual ya alcanzó el límite de terrazas.',
+            ]);
+
+            return to_route('billing.index', ['current_team' => $team->slug]);
+        }
+
         return Inertia::render('Listings/Create', [
             'services' => $this->services(),
-            'limits' => $this->mediaLimits(),
+            'limits' => $this->mediaLimits($team),
             'urls' => [
                 'index' => route('listings.index', ['current_team' => $team->slug]),
                 'store' => route('listings.store', ['current_team' => $team->slug]),
@@ -80,6 +107,14 @@ class ListingController extends Controller
         $team = $this->team($request);
 
         Gate::authorize('create', [Listing::class, $team]);
+
+        $listingCount = Listing::query()->where('team_id', $team->id)->count();
+
+        if (! $this->entitlements->canCreateListing($team, $listingCount)) {
+            throw ValidationException::withMessages([
+                'name' => 'Tu plan actual ya alcanzó el límite de terrazas. Actualiza el plan para crear otra.',
+            ]);
+        }
 
         $listing = $createListing->handle($team, $request->validated());
 
@@ -106,7 +141,7 @@ class ListingController extends Controller
         return Inertia::render('Listings/Edit', [
             'listing' => ListingPresenter::ownerForm($listing, $team->slug),
             'services' => $this->services(),
-            'limits' => $this->mediaLimits(),
+            'limits' => $this->mediaLimits($team),
             'canPublish' => Gate::allows('publish', $listing),
             'canDelete' => Gate::allows('delete', $listing),
             'urls' => $this->ownerUrls($team, $listing),
@@ -220,11 +255,17 @@ class ListingController extends Controller
     /**
      * @return array<string, int>
      */
-    private function mediaLimits(): array
+    private function mediaLimits(Team $team): array
     {
         return [
-            'max_images' => (int) config('listings.media.max_images', 20),
-            'max_videos' => (int) config('listings.media.max_videos', 3),
+            'max_images' => min(
+                (int) config('listings.media.max_images', 20),
+                $this->entitlements->limit($team, 'photos_per_listing'),
+            ),
+            'max_videos' => min(
+                (int) config('listings.media.max_videos', 3),
+                $this->entitlements->limit($team, 'videos_per_listing'),
+            ),
             'max_image_kb' => (int) config('listings.media.max_image_kb', 5120),
             'max_video_kb' => (int) config('listings.media.max_video_kb', 51200),
         ];

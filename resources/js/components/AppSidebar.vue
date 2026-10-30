@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     BookOpen,
     Building2,
+    CreditCard,
     FolderGit2,
     Inbox,
     LayoutGrid,
@@ -52,6 +53,14 @@ const mainNavItems = computed<NavItem[]>(() => {
             href: `/${page.props.currentTeam.slug}/bookings`,
             icon: Inbox,
         });
+
+        if (page.props.currentTeam.role === 'owner') {
+            items.push({
+                title: 'Facturación',
+                href: `/${page.props.currentTeam.slug}/billing`,
+                icon: CreditCard,
+            });
+        }
     }
 
     if (page.props.platform?.isSuperadmin) {

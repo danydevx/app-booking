@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia;
+use Laravel\Cashier\Subscription;
 use Modules\Listings\Enums\ListingStatus;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingMedia;
@@ -134,6 +135,7 @@ class ListingManagementTest extends TestCase
     public function test_duplicate_names_receive_deterministic_slugs(): void
     {
         [$owner, $team] = $this->ownerWithTeam();
+        $this->subscribePro($team);
 
         $this->actingAs($owner)->post(
             route('listings.store', ['current_team' => $team->slug]),
@@ -240,6 +242,22 @@ class ListingManagementTest extends TestCase
         $owner = User::factory()->create();
 
         return [$owner, $owner->currentTeam];
+    }
+
+    private function subscribePro(Team $team): void
+    {
+        config(['billing.plans.pro.stripe_price_id' => 'price_pro_test']);
+
+        Subscription::query()->create([
+            'team_id' => $team->id,
+            'type' => 'default',
+            'stripe_id' => 'sub_'.fake()->unique()->bothify('??####'),
+            'stripe_status' => 'active',
+            'stripe_price' => 'price_pro_test',
+            'quantity' => 1,
+            'trial_ends_at' => null,
+            'ends_at' => null,
+        ]);
     }
 
     private function memberOf(Team $team): User

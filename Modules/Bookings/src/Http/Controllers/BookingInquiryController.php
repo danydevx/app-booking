@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Billing\Support\Entitlements;
 use Modules\Bookings\Actions\AcceptBookingInquiry;
 use Modules\Bookings\Actions\AddBookingDeposit;
 use Modules\Bookings\Actions\CancelBookingInquiry;
@@ -29,6 +30,10 @@ use Modules\Listings\Models\Listing;
 class BookingInquiryController extends Controller
 {
     use ResolvesCurrentTeam;
+
+    public function __construct(
+        private readonly Entitlements $entitlements,
+    ) {}
 
     public function index(BookingInquiryIndexRequest $request): Response
     {
@@ -84,9 +89,11 @@ class BookingInquiryController extends Controller
             'listings' => $listings,
             'filters' => $filters,
             'statuses' => $this->inquiryStatuses(),
+            'canUseCustomers' => $this->entitlements->allows($team, 'customers'),
             'urls' => [
                 'index' => route('bookings.index', ['current_team' => $team->slug]),
                 'customers' => route('bookings.customers.index', ['current_team' => $team->slug]),
+                'billing' => route('billing.index', ['current_team' => $team->slug]),
             ],
         ]);
     }
