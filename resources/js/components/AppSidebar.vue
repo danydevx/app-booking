@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid, Shield } from '@lucide/vue';
+import {
+    BookOpen,
+    Building2,
+    FolderGit2,
+    LayoutGrid,
+    Shield,
+} from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -33,6 +39,14 @@ const mainNavItems = computed<NavItem[]>(() => {
             icon: LayoutGrid,
         },
     ];
+
+    if (page.props.currentTeam) {
+        items.push({
+            title: 'Terrazas',
+            href: `/${page.props.currentTeam.slug}/listings`,
+            icon: Building2,
+        });
+    }
 
     if (page.props.platform?.isSuperadmin) {
         items.push({

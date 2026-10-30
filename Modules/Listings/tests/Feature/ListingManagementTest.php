@@ -1,0 +1,279 @@
+<?php
+
+namespace Modules\Listings\Tests\Feature;
+
+use App\Enums\TeamRole;
+use App\Models\Team;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Testing\AssertableInertia;
+use Modules\Listings\Enums\ListingStatus;
+use Modules\Listings\Models\Listing;
+use Modules\Listings\Models\ListingMedia;
+use Tests\TestCase;
+
+class ListingManagementTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_owner_can_create_a_listing_as_a_draft(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $response = $this->actingAs($owner)->post(
+            route('listings.store', ['current_team' => $team->slug]),
+            $this->payload(['name' => 'Terraza Centro']),
+        );
+
+        $listing = Listing::query()->firstOrFail();
+
+        $response->assertRedirect(route('listings.edit', [
+            'current_team' => $team->slug,
+            'listing' => $listing->slug,
+        ]));
+
+        $this->assertSame($team->id, $listing->team_id);
+        $this->assertSame('terraza-centro', $listing->slug);
+        $this->assertSame(ListingStatus::Draft, $listing->status);
+        $this->assertSame('America/Mexico_City', $listing->timezone);
+        $this->assertNull($listing->published_at);
+    }
+
+    public function test_owner_can_update_own_listing(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->create([
+            'name' => 'Terraza Norte',
+        ]);
+        $originalSlug = $listing->slug;
+
+        $this->actingAs($owner)
+            ->patch(route('listings.update', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), $this->payload([
+                'name' => 'Terraza Norte Actualizada',
+                'city' => 'Monterrey',
+                'capacity' => 80,
+            ]))
+            ->assertRedirect();
+
+        $listing->refresh();
+
+        $this->assertSame('Terraza Norte Actualizada', $listing->name);
+        $this->assertSame('Monterrey', $listing->city);
+        $this->assertSame(80, $listing->capacity);
+        $this->assertSame($originalSlug, $listing->slug);
+    }
+
+    public function test_user_cannot_edit_a_listing_from_another_team_even_by_guessing_the_slug(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $otherTeam = Team::factory()->create();
+        $foreignListing = Listing::factory()->forTeam($otherTeam)->create();
+
+        $this->actingAs($owner)
+            ->get(route('listings.edit', [
+                'current_team' => $team->slug,
+                'listing' => $foreignListing->slug,
+            ]))
+            ->assertNotFound();
+    }
+
+    public function test_owner_can_publish_a_complete_listing(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->create([
+            'address' => 'Av. Principal 123',
+            'latitude' => 19.4326,
+            'longitude' => -99.1332,
+            'contact_email' => 'hola@terraza.test',
+        ]);
+
+        ListingMedia::factory()->for($listing)->create([
+            'type' => 'image',
+        ]);
+
+        $this->actingAs($owner)
+            ->patch(route('listings.publish', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertRedirect();
+
+        $listing->refresh();
+
+        $this->assertSame(ListingStatus::Published, $listing->status);
+        $this->assertNotNull($listing->published_at);
+    }
+
+    public function test_publish_requires_an_image_address_coordinates_and_contact(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->create([
+            'address' => null,
+            'latitude' => null,
+            'longitude' => null,
+            'contact_email' => null,
+            'contact_phone' => null,
+            'whatsapp_phone' => null,
+        ]);
+
+        $this->actingAs($owner)
+            ->patch(route('listings.publish', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertSessionHasErrors('listing');
+
+        $this->assertSame(ListingStatus::Draft, $listing->fresh()->status);
+    }
+
+    public function test_duplicate_names_receive_deterministic_slugs(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)->post(
+            route('listings.store', ['current_team' => $team->slug]),
+            $this->payload(['name' => 'Terraza Centro']),
+        );
+
+        $this->actingAs($owner)->post(
+            route('listings.store', ['current_team' => $team->slug]),
+            $this->payload(['name' => 'Terraza Centro']),
+        );
+
+        $this->assertDatabaseHas('listings', ['slug' => 'terraza-centro']);
+        $this->assertDatabaseHas('listings', ['slug' => 'terraza-centro-2']);
+    }
+
+    public function test_member_can_create_but_cannot_publish(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $member = $this->memberOf($team);
+
+        $this->actingAs($member)->post(
+            route('listings.store', ['current_team' => $team->slug]),
+            $this->payload(['name' => 'Terraza Equipo']),
+        )->assertRedirect();
+
+        $listing = Listing::query()->where('name', 'Terraza Equipo')->firstOrFail();
+
+        $this->actingAs($member)
+            ->patch(route('listings.publish', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertForbidden();
+    }
+
+    public function test_owner_listing_index_only_lists_current_team_listings(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $ownListing = Listing::factory()->forTeam($team)->create();
+        $otherTeam = Team::factory()->create();
+        Listing::factory()->forTeam($otherTeam)->create();
+
+        $this->actingAs($owner)
+            ->get(route('listings.index', ['current_team' => $team->slug]))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Listings/Index')
+                ->has('listings.data', 1)
+                ->where('listings.data.0.id', $ownListing->id));
+    }
+
+    public function test_owner_listing_index_eager_loads_cover_images_and_counts(): void
+    {
+        Model::preventLazyLoading();
+
+        [$owner, $team] = $this->ownerWithTeam();
+
+        Listing::factory()
+            ->forTeam($team)
+            ->count(5)
+            ->create()
+            ->each(fn (Listing $listing) => ListingMedia::factory()
+                ->for($listing)
+                ->create());
+
+        $this->actingAs($owner)
+            ->get(route('listings.index', ['current_team' => $team->slug]))
+            ->assertOk();
+
+        Model::preventLazyLoading(false);
+    }
+
+    public function test_deleting_a_listing_removes_its_media_files(): void
+    {
+        Storage::fake('public');
+
+        [$owner, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->create();
+        $path = "listings/{$listing->id}/photo.jpg";
+        Storage::disk('public')->put($path, 'image-content');
+
+        $media = ListingMedia::factory()->for($listing)->create([
+            'disk' => 'public',
+            'path' => $path,
+        ]);
+
+        $this->actingAs($owner)
+            ->delete(route('listings.destroy', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertRedirect(route('listings.index', ['current_team' => $team->slug]));
+
+        $this->assertDatabaseMissing('listings', ['id' => $listing->id]);
+        $this->assertDatabaseMissing('listing_media', ['id' => $media->id]);
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    /**
+     * @return array{0: User, 1: Team}
+     */
+    private function ownerWithTeam(): array
+    {
+        $owner = User::factory()->create();
+
+        return [$owner, $owner->currentTeam];
+    }
+
+    private function memberOf(Team $team): User
+    {
+        $member = User::factory()->create();
+        $team->members()->attach($member, ['role' => TeamRole::Member->value]);
+        $member->switchTeam($team);
+
+        return $member;
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     * @return array<string, mixed>
+     */
+    private function payload(array $overrides = []): array
+    {
+        return array_merge([
+            'name' => 'Terraza de Prueba',
+            'description' => 'Una terraza para eventos.',
+            'address' => 'Av. Reforma 123',
+            'city' => 'Ciudad de México',
+            'state' => 'CDMX',
+            'country' => 'México',
+            'postal_code' => '06000',
+            'latitude' => 19.4326,
+            'longitude' => -99.1332,
+            'capacity' => 60,
+            'services' => ['wifi', 'bathroom'],
+            'rules' => 'No fumar.',
+            'contact_name' => 'Ana',
+            'contact_email' => 'ana@example.test',
+            'contact_phone' => '5555555555',
+            'whatsapp_phone' => '5215555555555',
+        ], $overrides);
+    }
+}

@@ -23,6 +23,7 @@ class TeamFactory extends Factory
         return [
             'name' => $name,
             'slug' => Str::slug($name),
+            'timezone' => 'America/Mexico_City',
             'is_personal' => false,
         ];
     }

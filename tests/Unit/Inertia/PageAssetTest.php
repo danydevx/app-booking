@@ -26,6 +26,14 @@ class PageAssetTest extends TestCase
         $this->assertFileExists(base_path($path));
     }
 
+    public function test_listings_module_pages_are_resolved_from_the_module_folder(): void
+    {
+        $path = PageAsset::path('Listings/Index');
+
+        $this->assertSame('Modules/Listings/resources/js/pages/Index.vue', $path);
+        $this->assertFileExists(base_path($path));
+    }
+
     public function test_missing_module_pages_fall_back_to_the_core_path(): void
     {
         $this->assertSame(

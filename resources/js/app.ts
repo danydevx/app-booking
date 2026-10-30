@@ -51,6 +51,8 @@ void createInertiaApp({
             case name.startsWith('settings/'):
             case name.startsWith('teams/'):
                 return [AppLayout, SettingsLayout];
+            case name.startsWith('Listings/Public/'):
+                return null;
             default:
                 return AppLayout;
         }

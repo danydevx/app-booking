@@ -35,11 +35,13 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
+            "Modules\\Listings\\": "Modules/Listings/src/",
             "Modules\\Platform\\": "Modules/Platform/src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
+            "Modules\\Listings\\Tests\\": "Modules/Listings/tests/",
             "Modules\\Platform\\Tests\\": "Modules/Platform/tests/",
             "Tests\\": "tests/"
         }
