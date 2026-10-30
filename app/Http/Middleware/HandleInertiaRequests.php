@@ -2,9 +2,9 @@
 
 namespace App\Http\Middleware;
 
-use App\Support\Platform\PlatformAccess;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Modules\Platform\Support\PlatformAccess;
 
 class HandleInertiaRequests extends Middleware
 {

@@ -14,6 +14,21 @@ These rules apply to every phase.
 - Use Wayfinder-generated routes if the Vue starter kit provides them. Do not
   hand-write duplicate route helpers.
 
+## Module structure
+
+- Business code lives under `Modules/{Name}/`, not in a shared `app/Domain/`
+  bucket. Follow `docs/development/MODULES.md`.
+- Each module owns `src/`, `routes/`, `database/migrations/`, `resources/js/`,
+  `resources/views/` and `tests/` when those pieces are needed.
+- Register module providers explicitly in `bootstrap/providers.php`. Do not add a
+  runtime loader, ZIP installer or plugin marketplace.
+- Module Inertia page names are `{Module}/{Page}` and resolve to
+  `Modules/{Module}/resources/js/pages/{Page}.vue`.
+- Module route files must apply the `web` middleware explicitly.
+- Add module PSR-4 entries to `composer.json` and module tests to `phpunit.xml`.
+- Shared UI and helpers stay in the Starter Kit `resources/js` / `app` locations;
+  modules must not duplicate shadcn-vue components.
+
 ## Backend
 
 - Controllers validate through FormRequests and delegate to actions/services.

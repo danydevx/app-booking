@@ -69,9 +69,15 @@ Both commands must show no application dependency or import.
   registry, or a second module registry.
 - Use the Starter Kit's Teams feature as the account/business boundary. A Team is
   the **Cuenta** in product language. Do not create a second `accounts` table.
-- Keep domain code grouped by bounded context under `app/Domain/`:
-  `Accounts`, `Listings`, `Availability`, `Bookings`, `Billing`, `Platform`,
-  `Communications`.
+- Organize business capabilities as explicit modules under `Modules/{Name}/`, not
+  as scattered files under `app/`. Each module owns its backend, routes,
+  migrations, Vue pages/components, Blade views and tests. The canonical layout is
+  in `docs/development/MODULES.md` and
+  `references/module-structure.md`.
+- Do not build a runtime module loader or plugin marketplace. Register each module
+  provider explicitly in `bootstrap/providers.php`.
+- Keep shared Starter Kit code in `app/` and `resources/js/`; module code must not
+  duplicate shared UI components.
 - Keep HTTP controllers thin. Put business operations in actions/services and
   authorization in policies.
 - Every tenant-owned query must be scoped to the current team/account. Never
@@ -90,18 +96,18 @@ Both commands must show no application dependency or import.
 Execute one phase at a time, in order. Read `phases/NN-*.md` before touching the
 project. Do not start a later phase until the current phase's exit criteria pass.
 
-| Phase | File | Main outcome |
-|---|---|---|
-| 0 | `phases/00-product-decisions.md` | Lock MVP decisions and recommended defaults |
-| 1 | `phases/01-bootstrap.md` | Laravel 13 + Vue starter kit, no Bootstrap/jQuery, Git, local app |
-| 2 | `phases/02-accounts-permissions.md` | Teams as Accounts, Spatie roles, platform superadmin |
-| 3 | `phases/03-listings-media-map.md` | Listings, media, public catalog, map and radius search |
-| 4 | `phases/04-availability-bookings.md` | Availability, inquiries, customers, deposits, email/WhatsApp |
-| 5 | `phases/05-stripe-plans.md` | Stripe subscriptions, plans, entitlements, webhooks |
-| 6 | `phases/06-platform-admin.md` | Superadmin operations, moderation, suspensions and audit |
-| 7 | `phases/07-branding-communications.md` | Account branding, branded email, notifications |
-| 8 | `phases/08-production-launch.md` | Staging, CI/CD, backups, security, launch checklist |
-| 9 | `phases/09-post-mvp.md` | AI posts, WhatsApp API, advanced CRM, second vertical |
+| Phase | File                                   | Main outcome                                                      |
+| ----- | -------------------------------------- | ----------------------------------------------------------------- |
+| 0     | `phases/00-product-decisions.md`       | Lock MVP decisions and recommended defaults                       |
+| 1     | `phases/01-bootstrap.md`               | Laravel 13 + Vue starter kit, no Bootstrap/jQuery, Git, local app |
+| 2     | `phases/02-accounts-permissions.md`    | Teams as Accounts, Spatie roles, platform superadmin              |
+| 3     | `phases/03-listings-media-map.md`      | Listings, media, public catalog, map and radius search            |
+| 4     | `phases/04-availability-bookings.md`   | Availability, inquiries, customers, deposits, email/WhatsApp      |
+| 5     | `phases/05-stripe-plans.md`            | Stripe subscriptions, plans, entitlements, webhooks               |
+| 6     | `phases/06-platform-admin.md`          | Superadmin operations, moderation, suspensions and audit          |
+| 7     | `phases/07-branding-communications.md` | Account branding, branded email, notifications                    |
+| 8     | `phases/08-production-launch.md`       | Staging, CI/CD, backups, security, launch checklist               |
+| 9     | `phases/09-post-mvp.md`                | AI posts, WhatsApp API, advanced CRM, second vertical             |
 
 ## Execution protocol
 

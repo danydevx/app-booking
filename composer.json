@@ -34,11 +34,13 @@
         "psr-4": {
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
-            "Database\\Seeders\\": "database/seeders/"
+            "Database\\Seeders\\": "database/seeders/",
+            "Modules\\Platform\\": "Modules/Platform/src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
+            "Modules\\Platform\\Tests\\": "Modules/Platform/tests/",
             "Tests\\": "tests/"
         }
     },

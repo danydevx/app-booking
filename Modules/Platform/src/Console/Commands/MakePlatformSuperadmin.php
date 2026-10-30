@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Console\Commands;
+namespace Modules\Platform\Console\Commands;
 
 use App\Models\User;
-use App\Support\Platform\PlatformAccess;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Modules\Platform\Support\PlatformAccess;
 
 class MakePlatformSuperadmin extends Command
 {

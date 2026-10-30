@@ -119,6 +119,10 @@
         "skipLibCheck": true /* Skip type checking all .d.ts files. */
     },
     "include": [
+        "Modules/**/*.ts",
+        "Modules/**/*.d.ts",
+        "Modules/**/*.tsx",
+        "Modules/**/*.vue",
         "resources/js/**/*.ts",
         "resources/js/**/*.d.ts",
         "resources/js/**/*.tsx",

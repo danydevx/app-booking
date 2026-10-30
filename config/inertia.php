@@ -63,7 +63,13 @@ return [
 
     'testing' => [
 
-        'ensure_pages_exist' => true,
+        /*
+         * Module pages are resolved by App\Support\Inertia\PageAsset and
+         * Modules/{Module}/resources/js/pages, so the default single-root
+         * existence check cannot resolve names such as Platform/Dashboard.
+         * PageAssetTest verifies the module/core mapping instead.
+         */
+        'ensure_pages_exist' => false,
 
     ],
 

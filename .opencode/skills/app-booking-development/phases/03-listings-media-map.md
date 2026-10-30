@@ -2,6 +2,22 @@
 
 **Status: NOT STARTED**
 
+## Module placement
+
+Implement the business capability as `Modules/Listings/`:
+
+- backend in `Modules/Listings/src/`;
+- owner and public routes in `Modules/Listings/routes/web.php`;
+- migrations in `Modules/Listings/database/migrations/`;
+- Inertia pages in `Modules/Listings/resources/js/pages/`, addressed as
+  `Listings/Index`, `Listings/Public/Index`, `Listings/Public/Show`;
+- module-only components in `Modules/Listings/resources/js/components/`;
+- Blade views, if needed, in `Modules/Listings/resources/views/`;
+- tests in `Modules/Listings/tests/Feature/`;
+- provider registered explicitly in `bootstrap/providers.php`.
+
+Follow `docs/development/MODULES.md`.
+
 ## Objective
 
 Let an owner create, edit, publish and unpublish a terrace listing, upload images
@@ -69,10 +85,10 @@ conversion requirement cannot be met with native storage.
 - Public listing detail with image gallery, services, rules, map location and
   availability summary (availability fully implemented in phase 4).
 - Public search page:
-  - Leaflet + OpenStreetMap, no Google Maps dependency;
-  - location/radius controls;
-  - server-side radius filtering;
-  - results list synchronized with the map.
+    - Leaflet + OpenStreetMap, no Google Maps dependency;
+    - location/radius controls;
+    - server-side radius filtering;
+    - results list synchronized with the map.
 
 ### Map and geocoding
 

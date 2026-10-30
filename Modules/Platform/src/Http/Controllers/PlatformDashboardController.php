@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Platform;
+namespace Modules\Platform\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Team;

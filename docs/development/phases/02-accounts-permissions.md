@@ -13,9 +13,9 @@ created.
 
 ## Packages
 
-| Package | Version | Purpose |
-|---|---|---|
-| `spatie/laravel-permission` | 8.3.2 | Platform roles and permissions |
+| Package                     | Version | Purpose                        |
+| --------------------------- | ------- | ------------------------------ |
+| `spatie/laravel-permission` | 8.3.2   | Platform roles and permissions |
 
 Published `config/permission.php` and
 `database/migrations/2026_10_30_223008_create_permission_tables.php`; migration
@@ -36,21 +36,44 @@ ran locally.
 
 Added:
 
-- `App\Support\Platform\PlatformPermission` with the platform permission catalog.
-- `App\Support\Platform\PlatformAccess` to create/sync the protected
+- `Modules\Platform\Support\PlatformPermission` with the platform permission
+  catalog.
+- `Modules\Platform\Support\PlatformAccess` to create/sync the protected
   `platform_superadmin` role.
-- `app:make-platform-superadmin {email} {--force}` command:
-  - requires an existing user;
-  - requires verified email;
-  - requires confirmation unless `--force`;
-  - is idempotent;
-  - logs the grant event.
-- `/platform` route behind `auth`, `verified` and `can:platform.access`.
-- Minimal platform dashboard with account/user counts.
+- `app:make-platform-superadmin {email} {--force}` command in
+  `Modules/Platform/src/Console/Commands`:
+    - requires an existing user;
+    - requires verified email;
+    - requires confirmation unless `--force`;
+    - is idempotent;
+    - logs the grant event.
+- `/platform` route behind `auth`, `verified` and `can:platform.access`, defined
+  in `Modules/Platform/routes/web.php`.
+- Minimal platform dashboard at
+  `Modules/Platform/resources/js/pages/Dashboard.vue`.
 - `platform.isSuperadmin` shared Inertia prop and a conditional "Plataforma" nav
   item.
 
 The public registration flow does not assign the platform role.
+
+## Module placement
+
+After the phase was functionally complete, the Platform capability was moved into
+the project's module convention so subsequent business capabilities do not scatter
+controllers, routes, Vue pages and tests across the Starter Kit folders:
+
+```text
+Modules/Platform/
+├── src/Console/Commands/
+├── src/Http/Controllers/
+├── src/Support/
+├── routes/web.php
+├── resources/js/pages/
+└── tests/Feature/
+```
+
+The module provider is registered explicitly in `bootstrap/providers.php`. See
+`docs/development/MODULES.md`.
 
 ## Trait collision
 
@@ -66,14 +89,16 @@ This preserves the account boundary and keeps Spatie permissions available.
 
 ## Tests
 
-| Command | Result |
-|---|---|
-| `php artisan test` | PASS — 100 tests / 367 assertions |
-| New focused tests | PASS — 9 tests / 39 assertions |
-| `npm run build` | PASS — 3,616 modules transformed |
-| `vendor/bin/pint --test` | PASS |
-| `php artisan route:list --path=platform` | One protected route |
-| Bootstrap/jQuery scan | No matches |
+| Command                                  | Result                            |
+| ---------------------------------------- | --------------------------------- |
+| `php artisan test`                       | PASS — 103 tests / 372 assertions |
+| New focused tests                        | PASS — 9 tests / 39 assertions    |
+| `npm run build`                          | PASS — 3,616 modules transformed  |
+| `vendor/bin/pint --test`                 | PASS                              |
+| `composer types:check`                   | PASS — 0 PHPStan errors           |
+| `npm run types:check`                    | PASS                              |
+| `php artisan route:list --path=platform` | One protected route               |
+| Bootstrap/jQuery scan                    | No matches                        |
 
 Coverage includes:
 

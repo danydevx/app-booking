@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Support\Platform;
+namespace Modules\Platform\Support;
 
 final class PlatformPermission
 {

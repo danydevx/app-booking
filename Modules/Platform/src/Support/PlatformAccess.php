@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Support\Platform;
+namespace Modules\Platform\Support;
 
 use App\Models\User;
+use Spatie\Permission\Contracts\Permission as PermissionContract;
+use Spatie\Permission\Contracts\Role as RoleContract;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -14,12 +16,12 @@ final class PlatformAccess
     /**
      * Ensure the platform role and its permissions exist.
      */
-    public static function ensure(): Role
+    public static function ensure(): RoleContract
     {
         $role = Role::findOrCreate(self::ROLE, 'web');
 
         $permissions = collect(PlatformPermission::all())
-            ->map(fn (string $name): Permission => Permission::findOrCreate($name, 'web'))
+            ->map(fn (string $name): PermissionContract => Permission::findOrCreate($name, 'web'))
             ->all();
 
         $role->syncPermissions($permissions);

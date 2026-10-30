@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests\Feature\Platform;
+namespace Modules\Platform\Tests\Feature;
 
 use App\Models\Team;
 use App\Models\User;
-use App\Support\Platform\PlatformAccess;
-use App\Support\Platform\PlatformPermission;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Modules\Platform\Support\PlatformAccess;
+use Modules\Platform\Support\PlatformPermission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
