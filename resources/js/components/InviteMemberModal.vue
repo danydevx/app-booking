@@ -59,9 +59,9 @@ function handleOpenChange(value: boolean) {
                 @success="emit('update:open', false)"
             >
                 <DialogHeader>
-                    <DialogTitle>Invite a team member</DialogTitle>
+                    <DialogTitle>Invitar a un miembro de la cuenta</DialogTitle>
                     <DialogDescription>
-                        Send an invitation to join this team.
+                        Envía una invitación para unirse a esta cuenta.
                     </DialogDescription>
                 </DialogHeader>
 

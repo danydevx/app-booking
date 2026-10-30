@@ -91,6 +91,14 @@ class TeamPolicy
     }
 
     /**
+     * Determine whether the user can manage the account's billing.
+     */
+    public function manageBilling(User $user, Team $team): bool
+    {
+        return $user->ownsTeam($team);
+    }
+
+    /**
      * Determine whether the user can delete the model.
      */
     public function delete(User $user, Team $team): bool

@@ -6,7 +6,7 @@ Last updated: 2026-10-30
 |---|---|---|---|
 | 0 — Product decisions | PASS | `docs/decisions/0001-mvp.md`, phase report | docs commit |
 | 1 — Bootstrap | PASS | Laravel 13.39.0; 91 tests/328 assertions; build 3,614 modules; Pint PASS | docs commit |
-| 2 — Accounts and permissions | NOT STARTED | — | — |
+| 2 — Accounts and permissions | PASS | Spatie 8.3.2; `/platform` protected; 100 tests/367 assertions; build 3,616 modules | docs commit |
 | 3 — Listings, media and map | NOT STARTED | — | — |
 | 4 — Availability and bookings | NOT STARTED | — | — |
 | 5 — Stripe and plans | NOT STARTED | — | — |

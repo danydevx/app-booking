@@ -44,10 +44,10 @@ const removeMember = () => {
     <Dialog :open="props.open" @update:open="emit('update:open', $event)">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Remove team member</DialogTitle>
+                <DialogTitle>Quitar miembro de la cuenta</DialogTitle>
                 <DialogDescription>
-                    Are you sure you want to remove
-                    <strong>{{ props.member?.name }}</strong> from this team?
+                    ¿Seguro que quieres quitar a
+                    <strong>{{ props.member?.name }}</strong> de esta cuenta?
                 </DialogDescription>
             </DialogHeader>
 

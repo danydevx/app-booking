@@ -55,10 +55,10 @@ const handleOpenChange = (nextOpen: boolean) => {
                 @success="handleOpenChange(false)"
             >
                 <DialogHeader>
-                    <DialogTitle>Are you sure?</DialogTitle>
+                    <DialogTitle>¿Estás seguro?</DialogTitle>
                     <DialogDescription>
-                        This action cannot be undone. This will permanently
-                        delete the team
+                        Esta acción no se puede deshacer. Se eliminará
+                        permanentemente la cuenta
                         <strong>"{{ props.team.name }}"</strong>.
                     </DialogDescription>
                 </DialogHeader>
@@ -66,15 +66,16 @@ const handleOpenChange = (nextOpen: boolean) => {
                 <div class="space-y-4 py-4">
                     <div class="grid gap-2">
                         <Label for="confirmation-name">
-                            Type
-                            <strong>"{{ props.team.name }}"</strong> to confirm
+                            Escribe
+                            <strong>"{{ props.team.name }}"</strong> para
+                            confirmar
                         </Label>
                         <Input
                             id="confirmation-name"
                             name="name"
                             data-test="delete-team-name"
                             v-model="confirmationName"
-                            placeholder="Enter team name"
+                            placeholder="Escribe el nombre de la cuenta"
                             autocomplete="off"
                         />
                         <InputError :message="errors.name" />
@@ -92,7 +93,7 @@ const handleOpenChange = (nextOpen: boolean) => {
                         type="submit"
                         :disabled="!canDeleteTeam || processing"
                     >
-                        Delete team
+                        Eliminar cuenta
                     </Button>
                 </DialogFooter>
             </Form>

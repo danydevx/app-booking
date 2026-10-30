@@ -23,6 +23,9 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             currentTeam: Team | null;
             teams: Team[];
+            platform: {
+                isSuperadmin: boolean;
+            };
             [key: string]: unknown;
         };
     }

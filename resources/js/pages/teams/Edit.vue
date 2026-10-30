@@ -50,7 +50,7 @@ defineOptions({
     layout: (props: { team: Team }) => ({
         breadcrumbs: [
             {
-                title: 'Teams',
+                title: 'Cuentas',
                 href: index(),
             },
             {
@@ -104,8 +104,8 @@ const confirmCancelInvitation = (invitation: TeamInvitation) => {
         <div v-if="permissions.canUpdateTeam" class="space-y-6">
             <Heading
                 variant="small"
-                title="Team settings"
-                description="Update your team name and settings"
+                title="Configuración de la cuenta"
+                description="Actualiza el nombre y la configuración de tu cuenta"
             />
 
             <Form
@@ -114,7 +114,7 @@ const confirmCancelInvitation = (invitation: TeamInvitation) => {
                 v-slot="{ errors, processing }"
             >
                 <div class="grid gap-2">
-                    <Label for="name">Team name</Label>
+                    <Label for="name">Nombre de la cuenta</Label>
                     <Input
                         id="name"
                         name="name"
@@ -146,10 +146,10 @@ const confirmCancelInvitation = (invitation: TeamInvitation) => {
             <div class="flex items-center justify-between">
                 <Heading
                     variant="small"
-                    title="Team members"
+                    title="Miembros de la cuenta"
                     :description="
                         permissions.canCreateInvitation
-                            ? 'Manage who belongs to this team'
+                            ? 'Administra quién pertenece a esta cuenta'
                             : ''
                     "
                 />
@@ -313,8 +313,8 @@ const confirmCancelInvitation = (invitation: TeamInvitation) => {
         >
             <Heading
                 variant="small"
-                title="Delete team"
-                description="Permanently delete your team"
+                title="Eliminar cuenta"
+                description="Elimina permanentemente tu cuenta"
             />
             <div
                 class="space-y-4 rounded-lg border border-red-100 bg-red-50 p-4 dark:border-red-200/10 dark:bg-red-700/10"
@@ -331,7 +331,7 @@ const confirmCancelInvitation = (invitation: TeamInvitation) => {
                     data-test="delete-team-button"
                     variant="destructive"
                     @click="deleteDialogOpen = true"
-                    >Delete team</Button
+                    >Eliminar cuenta</Button
                 >
             </div>
         </div>

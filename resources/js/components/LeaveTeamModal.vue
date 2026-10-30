@@ -43,9 +43,9 @@ const leaveTeam = () => {
     <Dialog :open="props.open" @update:open="emit('update:open', $event)">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Leave team</DialogTitle>
+                <DialogTitle>Salir de la cuenta</DialogTitle>
                 <DialogDescription>
-                    Are you sure you want to leave
+                    ¿Seguro que quieres salir de la cuenta
                     <strong>{{ props.team?.name }}</strong
                     >?
                 </DialogDescription>
@@ -62,7 +62,7 @@ const leaveTeam = () => {
                     :disabled="processing"
                     @click="leaveTeam"
                 >
-                    Leave team
+                    Salir de la cuenta
                 </Button>
             </DialogFooter>
         </DialogContent>
