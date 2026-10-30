@@ -4,6 +4,7 @@ import {
     BookOpen,
     Building2,
     FolderGit2,
+    Inbox,
     LayoutGrid,
     Shield,
 } from '@lucide/vue';
@@ -45,6 +46,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Terrazas',
             href: `/${page.props.currentTeam.slug}/listings`,
             icon: Building2,
+        });
+        items.push({
+            title: 'Solicitudes',
+            href: `/${page.props.currentTeam.slug}/bookings`,
+            icon: Inbox,
         });
     }
 

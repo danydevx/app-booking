@@ -34,6 +34,17 @@ class PageAssetTest extends TestCase
         $this->assertFileExists(base_path($path));
     }
 
+    public function test_bookings_module_pages_are_resolved_from_the_module_folder(): void
+    {
+        $path = PageAsset::path('Bookings/Public/Availability');
+
+        $this->assertSame(
+            'Modules/Bookings/resources/js/pages/Public/Availability.vue',
+            $path,
+        );
+        $this->assertFileExists(base_path($path));
+    }
+
     public function test_missing_module_pages_fall_back_to_the_core_path(): void
     {
         $this->assertSame(

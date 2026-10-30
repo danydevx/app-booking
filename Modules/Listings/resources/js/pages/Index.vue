@@ -2,6 +2,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { Plus } from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
+import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Button } from '@/components/ui/button';
 import type {
     ListingLimits,
@@ -9,7 +10,6 @@ import type {
     ListingStatus,
     Paginated,
 } from '../types';
-import PaginationLinks from '../components/PaginationLinks.vue';
 
 defineProps<{
     team: {

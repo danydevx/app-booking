@@ -1,0 +1,290 @@
+<?php
+
+namespace Modules\Bookings\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
+use Modules\Bookings\Actions\AcceptBookingInquiry;
+use Modules\Bookings\Actions\AddBookingDeposit;
+use Modules\Bookings\Actions\CancelBookingInquiry;
+use Modules\Bookings\Actions\DeclineBookingInquiry;
+use Modules\Bookings\Actions\MarkInquiryContacted;
+use Modules\Bookings\Actions\UpdateBookingDeposit;
+use Modules\Bookings\Enums\DepositMethod;
+use Modules\Bookings\Enums\DepositStatus;
+use Modules\Bookings\Enums\InquiryStatus;
+use Modules\Bookings\Http\Requests\BookingInquiryIndexRequest;
+use Modules\Bookings\Http\Requests\StoreBookingDepositRequest;
+use Modules\Bookings\Http\Requests\UpdateBookingDepositRequest;
+use Modules\Bookings\Models\BookingDeposit;
+use Modules\Bookings\Models\BookingInquiry;
+use Modules\Bookings\Support\BookingPresenter;
+use Modules\Bookings\Support\ResolvesCurrentTeam;
+use Modules\Listings\Models\Listing;
+
+class BookingInquiryController extends Controller
+{
+    use ResolvesCurrentTeam;
+
+    public function index(BookingInquiryIndexRequest $request): Response
+    {
+        $team = $this->currentTeam($request);
+
+        Gate::authorize('viewAny', [BookingInquiry::class, $team]);
+
+        $filters = $request->validated();
+
+        $inquiries = BookingInquiry::query()
+            ->where('team_id', $team->id)
+            ->with(['listing', 'customer'])
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($filters['listing'] ?? null, fn ($query, string $listing) => $query
+                ->whereHas('listing', fn ($listingQuery) => $listingQuery->where('slug', $listing)))
+            ->when($filters['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($searchQuery) use ($search): void {
+                    $searchQuery->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
+            })
+            ->latest()
+            ->paginate((int) config('bookings.per_page', 15))
+            ->withQueryString();
+
+        $inquiries->through(
+            fn (BookingInquiry $inquiry): array => BookingPresenter::inquiryCard($inquiry, $team->slug),
+        );
+
+        $listings = Listing::query()
+            ->where('team_id', $team->id)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (Listing $listing): array => [
+                'id' => $listing->id,
+                'name' => $listing->name,
+                'slug' => $listing->slug,
+                'availability_url' => route('bookings.availability.edit', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+            ])
+            ->values()
+            ->all();
+
+        return Inertia::render('Bookings/Index', [
+            'team' => [
+                'name' => $team->name,
+                'slug' => $team->slug,
+            ],
+            'inquiries' => $inquiries,
+            'listings' => $listings,
+            'filters' => $filters,
+            'statuses' => $this->inquiryStatuses(),
+            'urls' => [
+                'index' => route('bookings.index', ['current_team' => $team->slug]),
+                'customers' => route('bookings.customers.index', ['current_team' => $team->slug]),
+            ],
+        ]);
+    }
+
+    public function show(Request $request, string $currentTeam, BookingInquiry $inquiry): Response
+    {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        Gate::authorize('view', $inquiry);
+
+        $inquiry->load(['listing', 'customer', 'deposits']);
+
+        return Inertia::render('Bookings/Show', [
+            'inquiry' => BookingPresenter::inquiryDetail($inquiry, $team->slug),
+            'statuses' => $this->inquiryStatuses(),
+            'depositStatuses' => $this->depositStatuses(),
+            'depositMethods' => $this->depositMethods(),
+            'canManage' => Gate::allows('accept', $inquiry),
+            'canManageDeposits' => Gate::allows('manageDeposits', $inquiry),
+            'urls' => [
+                'index' => route('bookings.index', ['current_team' => $team->slug]),
+                'contacted' => route('bookings.inquiries.contacted', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+                'accept' => route('bookings.inquiries.accept', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+                'decline' => route('bookings.inquiries.decline', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+                'cancel' => route('bookings.inquiries.cancel', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+                'deposits_store' => route('bookings.deposits.store', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+            ],
+        ]);
+    }
+
+    public function contacted(
+        Request $request,
+        string $currentTeam,
+        BookingInquiry $inquiry,
+        MarkInquiryContacted $markContacted,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        Gate::authorize('update', $inquiry);
+
+        $markContacted->handle($inquiry);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud marcada como contactada.']);
+
+        return back();
+    }
+
+    public function accept(
+        Request $request,
+        string $currentTeam,
+        BookingInquiry $inquiry,
+        AcceptBookingInquiry $acceptInquiry,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        Gate::authorize('accept', $inquiry);
+
+        $acceptInquiry->handle($inquiry, $request->user());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud aceptada y fechas reservadas.']);
+
+        return back();
+    }
+
+    public function decline(
+        Request $request,
+        string $currentTeam,
+        BookingInquiry $inquiry,
+        DeclineBookingInquiry $declineInquiry,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        Gate::authorize('decline', $inquiry);
+
+        $declineInquiry->handle($inquiry);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud rechazada.']);
+
+        return back();
+    }
+
+    public function cancel(
+        Request $request,
+        string $currentTeam,
+        BookingInquiry $inquiry,
+        CancelBookingInquiry $cancelInquiry,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        Gate::authorize('cancel', $inquiry);
+
+        $cancelInquiry->handle($inquiry);
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud cancelada y fechas liberadas.']);
+
+        return back();
+    }
+
+    public function storeDeposit(
+        StoreBookingDepositRequest $request,
+        string $currentTeam,
+        BookingInquiry $inquiry,
+        AddBookingDeposit $addDeposit,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        Gate::authorize('manageDeposits', $inquiry);
+
+        $addDeposit->handle($inquiry, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Anticipo registrado.']);
+
+        return back();
+    }
+
+    public function updateDeposit(
+        UpdateBookingDepositRequest $request,
+        string $currentTeam,
+        BookingInquiry $inquiry,
+        BookingDeposit $deposit,
+        UpdateBookingDeposit $updateDeposit,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        abort_unless($deposit->booking_inquiry_id === $inquiry->id, 404);
+
+        Gate::authorize('manageDeposits', $inquiry);
+
+        $updateDeposit->handle($deposit, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Anticipo actualizado.']);
+
+        return back();
+    }
+
+    private function ensureOwned(BookingInquiry $inquiry, int $teamId): void
+    {
+        abort_unless($inquiry->team_id === $teamId, 404);
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function inquiryStatuses(): array
+    {
+        return collect(InquiryStatus::cases())
+            ->map(fn (InquiryStatus $status): array => [
+                'value' => $status->value,
+                'label' => $status->label(),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function depositStatuses(): array
+    {
+        return collect(DepositStatus::cases())
+            ->map(fn (DepositStatus $status): array => [
+                'value' => $status->value,
+                'label' => $status->label(),
+            ])
+            ->all();
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    private function depositMethods(): array
+    {
+        return collect(DepositMethod::cases())
+            ->map(fn (DepositMethod $method): array => [
+                'value' => $method->value,
+                'label' => $method->label(),
+            ])
+            ->all();
+    }
+}

@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import PaginationLinks from '@/components/PaginationLinks.vue';
+import PublicShell from '@/components/PublicShell.vue';
 import ListingMap from '../../components/ListingMap.vue';
-import PaginationLinks from '../../components/PaginationLinks.vue';
-import PublicShell from '../../components/PublicShell.vue';
 import type {
     ListingPublicCard,
     Paginated,

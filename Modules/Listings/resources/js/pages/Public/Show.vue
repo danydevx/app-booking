@@ -3,8 +3,8 @@ import { Head, Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import PublicShell from '@/components/PublicShell.vue';
 import ListingMap from '../../components/ListingMap.vue';
-import PublicShell from '../../components/PublicShell.vue';
 import type { ListingMedia, ListingPublicDetail } from '../../types';
 
 const props = defineProps<{
@@ -185,6 +185,13 @@ const mapListing = computed(() => ({
                         </div>
 
                         <div class="flex flex-col gap-2">
+                            <Button as-child class="w-full">
+                                <Link
+                                    :href="`/terrazas/${listing.slug}/disponibilidad`"
+                                >
+                                    Consultar disponibilidad
+                                </Link>
+                            </Button>
                             <Button
                                 v-if="listing.whatsapp_url"
                                 as-child
