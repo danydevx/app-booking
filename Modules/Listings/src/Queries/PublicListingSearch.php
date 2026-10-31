@@ -23,7 +23,7 @@ final class PublicListingSearch
             : (float) config('listings.search.default_radius_km', 25);
 
         $query = Listing::query()
-            ->published()
+            ->publiclyVisible()
             ->with('coverImage');
 
         if (! empty($filters['city'])) {

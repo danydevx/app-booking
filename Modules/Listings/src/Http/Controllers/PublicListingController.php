@@ -33,7 +33,7 @@ class PublicListingController extends Controller
 
     public function show(Listing $listing): Response
     {
-        abort_unless($listing->isPublished(), 404);
+        abort_unless($listing->isPubliclyVisible(), 404);
 
         $listing->load('media');
 
@@ -41,6 +41,7 @@ class PublicListingController extends Controller
             'listing' => ListingPresenter::publicDetail($listing),
             'urls' => [
                 'index' => route('public.listings.index'),
+                'report' => route('public.reports.create', ['listing' => $listing->slug]),
             ],
         ]);
     }

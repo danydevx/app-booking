@@ -50,6 +50,15 @@ class MakePlatformSuperadmin extends Command
 
         $user->assignRole(PlatformAccess::ensure());
 
+        activity('moderation')
+            ->performedOn($user)
+            ->withProperties([
+                'email' => $user->email,
+                'action' => 'grant',
+                'actor' => 'console',
+            ])
+            ->log('platform.superadmin.granted');
+
         Log::notice('Platform superadmin access granted.', [
             'event' => 'platform.superadmin.granted',
             'user_id' => $user->id,

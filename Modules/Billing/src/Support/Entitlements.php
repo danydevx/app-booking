@@ -89,6 +89,13 @@ final class Entitlements
 
     private function subscription(Team $team): ?Subscription
     {
+        if ($team->relationLoaded('subscriptions')) {
+            /** @var Subscription|null $subscription */
+            $subscription = $team->subscriptions->firstWhere('type', 'default');
+
+            return $subscription;
+        }
+
         /** @var Subscription|null $subscription */
         $subscription = $team->subscriptions()
             ->where('type', 'default')

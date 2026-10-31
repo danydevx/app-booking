@@ -10,16 +10,15 @@ Last updated: 2026-10-31
 | 3 — Listings, media and map     | PASS        | `Modules/Listings`; Leaflet 1.9.4; radius search; 124 tests/491 assertions; build 3,638 modules                  | phase-3 commit |
 | 4 — Availability and bookings   | PASS        | `Modules/Bookings`; inquiries, customers, deposits, notifications; 146 tests/648 assertions; build 3,656 modules | phase-4 commit |
 | 5 — Stripe and plans            | PASS        | `Modules/Billing`; Cashier 16.9; test-mode checkout/portal/webhooks verified; 167 tests/764 assertions; build 3,658 modules | phase-5 commit |
-| 6 — Platform admin              | NOT STARTED | —                                                                                                                | —              |
+| 6 — Platform admin              | PASS        | `Modules/Platform`; activitylog 4.12; moderation, reports, audit; 181 tests/959 assertions; build 3,678 modules | phase-6 commit |
 | 7 — Branding and communications | NOT STARTED | —                                                                                                                | —              |
 | 8 — Production launch           | NOT STARTED | —                                                                                                                | —              |
 | 9 — Post-MVP                    | NOT STARTED | —                                                                                                                | —              |
 
 ## Current blockers
 
-- None. Phase 5 Stripe test-mode checkout session, Customer Portal session,
-  subscription webhooks and invoice sync were verified against the local Stripe
-  test account. Live charges remain disabled.
+- None. Phase 6 completes platform moderation. Phase 5 Stripe test-mode flows
+  remain verified locally; live charges remain disabled.
 
 ## Environment facts
 
@@ -34,3 +33,4 @@ Last updated: 2026-10-31
   Vue pages/components, Blade views and tests; see `docs/development/MODULES.md`
 - Current business modules: `Modules/Platform`, `Modules/Listings`,
   `Modules/Bookings`, `Modules/Billing`
+- Moderation audit: `spatie/laravel-activitylog` 4.12 with `moderation` log

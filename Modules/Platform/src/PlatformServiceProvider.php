@@ -2,8 +2,12 @@
 
 namespace Modules\Platform;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Modules\Platform\Console\Commands\MakePlatformSuperadmin;
+use Modules\Platform\Console\Commands\RevokePlatformSuperadmin;
 
 final class PlatformServiceProvider extends ServiceProvider
 {
@@ -21,9 +25,13 @@ final class PlatformServiceProvider extends ServiceProvider
 
         $this->loadRoutesFrom($modulePath.'/routes/web.php');
 
+        RateLimiter::for('listing-reports', fn (Request $request) => Limit::perMinute(5)
+            ->by($request->ip()));
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 MakePlatformSuperadmin::class,
+                RevokePlatformSuperadmin::class,
             ]);
         }
     }

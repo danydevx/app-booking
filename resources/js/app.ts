@@ -3,6 +3,7 @@ import type { DefineComponent } from 'vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
+import PlatformLayout from '@/layouts/PlatformLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 
@@ -54,6 +55,10 @@ void createInertiaApp({
             case name.startsWith('Listings/Public/'):
             case name.startsWith('Bookings/Public/'):
                 return null;
+            case name.startsWith('Platform/Public/'):
+                return null;
+            case name.startsWith('Platform/'):
+                return PlatformLayout;
             default:
                 return AppLayout;
         }

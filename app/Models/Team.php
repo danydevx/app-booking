@@ -25,12 +25,15 @@ use Laravel\Cashier\Billable;
  * @property string|null $pm_type
  * @property string|null $pm_last_four
  * @property Carbon|null $trial_ends_at
+ * @property Carbon|null $suspended_at
+ * @property string|null $suspension_reason
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property Carbon|null $deleted_at
  * @property-read Collection<int, TeamInvitation> $invitations
  * @property-read Collection<int, Membership> $memberships
  * @property-read Collection<int, User> $members
+ * @property-read int $members_count
  */
 #[Fillable(['name', 'slug', 'is_personal', 'timezone'])]
 class Team extends Model
@@ -61,7 +64,7 @@ class Team extends Model
     /**
      * Get the team owner.
      */
-    public function owner(): ?Model
+    public function owner(): ?User
     {
         return $this->members()
             ->wherePivot('role', TeamRole::Owner->value)
@@ -102,6 +105,22 @@ class Team extends Model
     }
 
     /**
+     * Determine if the account has been suspended by platform moderation.
+     */
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
+    }
+
+    /**
+     * Determine if the account can be shown in public areas.
+     */
+    public function isPubliclyVisible(): bool
+    {
+        return ! $this->isSuspended() && $this->deleted_at === null;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -111,6 +130,7 @@ class Team extends Model
         return [
             'is_personal' => 'boolean',
             'trial_ends_at' => 'datetime',
+            'suspended_at' => 'datetime',
         ];
     }
 

@@ -21,7 +21,7 @@ class PublicAvailabilityController extends Controller
         Listing $listing,
         AvailabilityService $availability,
     ): Response {
-        abort_unless($listing->isPublished(), 404);
+        abort_unless($listing->isPubliclyVisible(), 404);
 
         $listing->load('media');
 
@@ -47,7 +47,7 @@ class PublicAvailabilityController extends Controller
         Listing $listing,
         CreateBookingInquiry $createInquiry,
     ): RedirectResponse {
-        abort_unless($listing->isPublished(), 404);
+        abort_unless($listing->isPubliclyVisible(), 404);
 
         $createInquiry->handle($listing, $request->validated(), $request->ip());
 

@@ -16,6 +16,10 @@ final class PlatformPermission
 
     public const SUBSCRIPTIONS_VIEW = 'platform.subscriptions.view';
 
+    public const REPORTS_VIEW = 'platform.reports.view';
+
+    public const REPORTS_MANAGE = 'platform.reports.manage';
+
     /**
      * @return array<int, string>
      */
@@ -28,6 +32,8 @@ final class PlatformPermission
             self::LISTINGS_VIEW,
             self::LISTINGS_MODERATE,
             self::SUBSCRIPTIONS_VIEW,
+            self::REPORTS_VIEW,
+            self::REPORTS_MANAGE,
         ];
     }
 }

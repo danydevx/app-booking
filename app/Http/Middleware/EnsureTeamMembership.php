@@ -22,6 +22,12 @@ class EnsureTeamMembership
 
         abort_if(! $user || ! $team || ! $user->belongsToTeam($team), 403);
 
+        abort_if(
+            $team->isSuspended(),
+            403,
+            'Esta cuenta está suspendida por la plataforma. Contacta al equipo de soporte.',
+        );
+
         $this->ensureTeamMemberHasRequiredRole($user, $team, $minimumRole);
 
         if ($request->route('current_team') && ! $user->isCurrentTeam($team)) {

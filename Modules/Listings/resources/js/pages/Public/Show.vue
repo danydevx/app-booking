@@ -11,6 +11,7 @@ const props = defineProps<{
     listing: ListingPublicDetail;
     urls: {
         index: string;
+        report: string;
     };
 }>();
 
@@ -236,6 +237,13 @@ const mapListing = computed(() => ({
                     </div>
                 </aside>
             </div>
+
+            <p class="text-center text-xs text-muted-foreground">
+                ¿Este anuncio parece fraudulento o incorrecto?
+                <Link :href="urls.report" class="underline">
+                    Reportar terraza
+                </Link>
+            </p>
         </div>
     </PublicShell>
 </template>

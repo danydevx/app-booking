@@ -31,12 +31,14 @@ class ListingPolicy
 
     public function publish(User $user, Listing $listing): bool
     {
-        return $this->canManageListing($user, $listing);
+        return ! $listing->isSuspendedByPlatform()
+            && $this->canManageListing($user, $listing);
     }
 
     public function delete(User $user, Listing $listing): bool
     {
-        return $this->canManageListing($user, $listing);
+        return ! $listing->isSuspendedByPlatform()
+            && $this->canManageListing($user, $listing);
     }
 
     private function belongsToListingTeam(User $user, Listing $listing): bool

@@ -42,6 +42,9 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property string $timezone
  * @property ListingStatus $status
  * @property Carbon|null $published_at
+ * @property Carbon|null $suspended_at
+ * @property ListingStatus|null $suspended_from_status
+ * @property string|null $suspension_reason
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, ListingMedia> $media
@@ -130,6 +133,39 @@ class Listing extends Model
         return $this->status === ListingStatus::Published && $this->published_at !== null;
     }
 
+    /**
+     * Determine if the listing has been suspended by platform moderation.
+     */
+    public function isSuspendedByPlatform(): bool
+    {
+        return $this->status === ListingStatus::Suspended && $this->suspended_at !== null;
+    }
+
+    /**
+     * Determine if the listing can be exposed in public pages and search.
+     */
+    public function isPubliclyVisible(): bool
+    {
+        return $this->isPublished()
+            && $this->suspended_at === null
+            && ($this->team?->isPubliclyVisible() ?? false);
+    }
+
+    /**
+     * Restrict the query to listings that are publicly visible.
+     *
+     * @param  Builder<Listing>  $query
+     * @return Builder<Listing>
+     */
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->published()
+            ->whereNull('suspended_at')
+            ->whereHas('team', fn ($team) => $team
+                ->whereNull('suspended_at')
+                ->whereNull('deleted_at'));
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';
@@ -174,6 +210,8 @@ class Listing extends Model
             'details' => 'array',
             'status' => ListingStatus::class,
             'published_at' => 'datetime',
+            'suspended_at' => 'datetime',
+            'suspended_from_status' => ListingStatus::class,
         ];
     }
 
