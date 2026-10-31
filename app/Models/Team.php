@@ -13,12 +13,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Cashier\Billable;
 
 /**
  * @property int $id
  * @property string $name
  * @property string $slug
+ * @property string|null $logo_path
+ * @property string|null $contact_email
+ * @property string|null $contact_phone
+ * @property string|null $whatsapp_phone
  * @property string $timezone
  * @property bool $is_personal
  * @property string|null $stripe_id
@@ -110,6 +115,18 @@ class Team extends Model
     public function isSuspended(): bool
     {
         return $this->suspended_at !== null;
+    }
+
+    /**
+     * Get the public URL for the account logo, if configured.
+     */
+    public function logoUrl(): ?string
+    {
+        if (blank($this->logo_path)) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->logo_path);
     }
 
     /**

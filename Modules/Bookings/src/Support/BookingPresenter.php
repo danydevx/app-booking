@@ -2,6 +2,7 @@
 
 namespace Modules\Bookings\Support;
 
+use App\Support\WhatsApp;
 use Modules\Bookings\Models\BookingDeposit;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
@@ -119,16 +120,6 @@ final class BookingPresenter
 
     public static function whatsappUrl(?string $phone, string $message): ?string
     {
-        if (blank($phone)) {
-            return null;
-        }
-
-        $digits = preg_replace('/\D+/', '', $phone);
-
-        if (! $digits) {
-            return null;
-        }
-
-        return "https://wa.me/{$digits}?text=".urlencode($message);
+        return WhatsApp::url($phone, $message);
     }
 }

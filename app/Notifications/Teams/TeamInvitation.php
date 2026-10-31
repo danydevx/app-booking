@@ -3,6 +3,7 @@
 namespace App\Notifications\Teams;
 
 use App\Models\TeamInvitation as TeamInvitationModel;
+use App\Support\Branding;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -39,6 +40,7 @@ class TeamInvitation extends Notification implements ShouldQueue
         $inviter = $this->invitation->inviter;
 
         return (new MailMessage)
+            ->from(Branding::fromAddress(), Branding::appName())
             ->subject(__("You've been invited to join :teamName", ['teamName' => $team->name]))
             ->line(__(':inviterName has invited you to join the :teamName team.', [
                 'inviterName' => $inviter->name,

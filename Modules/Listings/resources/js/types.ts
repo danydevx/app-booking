@@ -104,6 +104,13 @@ export type ListingPublicDetail = {
     contact_email: string | null;
     contact_phone: string | null;
     whatsapp_url: string | null;
+    account: {
+        name: string | null;
+        logo_url: string | null;
+        contact_email: string | null;
+        contact_phone: string | null;
+        whatsapp_url: string | null;
+    };
     timezone: string;
     url: string;
     media: ListingMedia[];

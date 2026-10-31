@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
+use App\Http\Controllers\Teams\TeamBrandingController;
 use App\Http\Controllers\Teams\TeamController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Controllers\Teams\TeamMemberController;
@@ -35,6 +36,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(EnsureTeamMembership::class)->group(function () {
         Route::get('settings/teams/{team}', [TeamController::class, 'edit'])->name('teams.edit');
         Route::patch('settings/teams/{team}', [TeamController::class, 'update'])->name('teams.update');
+        Route::get('settings/teams/{team}/branding', [TeamBrandingController::class, 'edit'])->name('teams.branding.edit');
+        Route::patch('settings/teams/{team}/branding', [TeamBrandingController::class, 'update'])->name('teams.branding.update');
         Route::delete('settings/teams/{team}', [TeamController::class, 'destroy'])->name('teams.destroy');
         Route::post('settings/teams/{team}/switch', [TeamController::class, 'switch'])->name('teams.switch');
         Route::delete('settings/teams/{team}/leave', [TeamController::class, 'leave'])->name('teams.leave');

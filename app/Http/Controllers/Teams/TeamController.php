@@ -82,6 +82,7 @@ class TeamController extends Controller
                 ]),
             'permissions' => $user->toTeamPermissions($team),
             'availableRoles' => TeamRole::assignable(),
+            'brandingUrl' => route('teams.branding.edit', ['team' => $team->slug]),
         ]);
     }
 

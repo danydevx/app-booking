@@ -49,7 +49,7 @@ class InquirySubmissionTest extends TestCase
         $this->assertSame('visitante@example.test', $customer->email);
 
         Notification::assertSentOnDemand(InquiryReceivedVisitorNotification::class);
-        Notification::assertSentOnDemand(NewInquiryOwnerNotification::class);
+        Notification::assertSentTo($owner, NewInquiryOwnerNotification::class);
         $this->assertNotNull($owner->fresh());
     }
 

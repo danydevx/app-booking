@@ -28,6 +28,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
  * @property int|null $current_team_id
+ * @property array<string, bool>|null $notification_preferences
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Team|null $currentTeam
@@ -36,7 +37,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Collection<int, Team> $teams
  * @property-read Membership $pivot
  */
-#[Fillable(['name', 'email', 'password', 'current_team_id'])]
+#[Fillable(['name', 'email', 'password', 'current_team_id', 'notification_preferences'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
@@ -57,6 +58,15 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
+            'notification_preferences' => 'array',
         ];
+    }
+
+    /**
+     * Determine if the user wants owner emails for new inquiries.
+     */
+    public function wantsInquiryEmails(): bool
+    {
+        return (bool) ($this->notification_preferences['inquiry_emails'] ?? true);
     }
 }

@@ -165,6 +165,7 @@ class PlatformModerationTest extends TestCase
             ->assertForbidden();
 
         Notification::assertSentTo($owner, AccountSuspended::class);
+        Notification::assertNotSentTo($superadmin, AccountSuspended::class);
 
         $activity = Activity::query()
             ->where('description', 'account.suspended')

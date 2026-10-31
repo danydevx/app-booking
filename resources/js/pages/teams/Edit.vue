@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Form, Head, router } from '@inertiajs/vue3';
+import { Form, Head, Link, router } from '@inertiajs/vue3';
 import { ChevronDown, Mail, UserPlus, X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import CancelInvitationModal from '@/components/CancelInvitationModal.vue';
@@ -42,6 +42,7 @@ type Props = {
     invitations: TeamInvitation[];
     permissions: TeamPermissions;
     availableRoles: RoleOption[];
+    brandingUrl: string;
 };
 
 const props = defineProps<Props>();
@@ -107,6 +108,10 @@ const confirmCancelInvitation = (invitation: TeamInvitation) => {
                 title="Configuración de la cuenta"
                 description="Actualiza el nombre y la configuración de tu cuenta"
             />
+
+            <Button variant="outline" as-child>
+                <Link :href="brandingUrl">Marca, logo y contacto</Link>
+            </Button>
 
             <Form
                 v-bind="update.form(team.slug)"

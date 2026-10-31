@@ -59,11 +59,9 @@ final class CreateBookingInquiry
             ->notify(new InquiryReceivedVisitorNotification($inquiry));
 
         $owner = $inquiry->listing->team?->owner();
-        $ownerEmail = $owner instanceof User ? $owner->email : null;
 
-        if ($ownerEmail) {
-            Notification::route('mail', $ownerEmail)
-                ->notify(new NewInquiryOwnerNotification($inquiry));
+        if ($owner instanceof User && $owner->wantsInquiryEmails()) {
+            $owner->notify(new NewInquiryOwnerNotification($inquiry));
         }
 
         return $inquiry;

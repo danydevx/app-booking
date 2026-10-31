@@ -17,6 +17,10 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->profileRules($this->user()->id);
+        return [
+            ...$this->profileRules($this->user()->id),
+            'notification_preferences' => ['nullable', 'array'],
+            'notification_preferences.inquiry_emails' => ['sometimes', 'boolean'],
+        ];
     }
 }

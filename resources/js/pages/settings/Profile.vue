@@ -93,6 +93,35 @@ const user = computed(() => page.props.auth.user);
                 </div>
             </div>
 
+            <div class="grid gap-2">
+                <Label>Notificaciones</Label>
+                <label class="flex items-start gap-2 text-sm">
+                    <input
+                        type="hidden"
+                        name="notification_preferences[inquiry_emails]"
+                        value="0"
+                    />
+                    <input
+                        type="checkbox"
+                        name="notification_preferences[inquiry_emails]"
+                        value="1"
+                        class="mt-0.5 size-4 rounded border-input"
+                        :checked="
+                            user.notification_preferences?.inquiry_emails !==
+                            false
+                        "
+                    />
+                    <span>
+                        Recibir un correo cuando llegue una nueva solicitud de
+                        reserva.
+                    </span>
+                </label>
+                <InputError
+                    class="mt-2"
+                    :message="errors['notification_preferences.inquiry_emails']"
+                />
+            </div>
+
             <div class="flex items-center gap-4">
                 <Button :disabled="processing" data-test="update-profile-button"
                     >Save</Button

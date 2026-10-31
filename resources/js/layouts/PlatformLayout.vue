@@ -5,6 +5,7 @@ import {
     CreditCard,
     Flag,
     LayoutDashboard,
+    Palette,
     Shield,
     Users,
 } from '@lucide/vue';
@@ -31,6 +32,7 @@ const navigation = [
         icon: CreditCard,
     },
     { title: 'Reportes', href: '/platform/reports', icon: Flag },
+    { title: 'Marca', href: '/platform/branding', icon: Palette },
 ];
 
 function isActive(href: string): boolean {

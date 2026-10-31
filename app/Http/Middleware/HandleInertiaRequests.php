@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Branding;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Modules\Platform\Support\PlatformAccess;
@@ -49,6 +50,12 @@ class HandleInertiaRequests extends Middleware
             'teams' => fn () => $user?->toUserTeams(includeCurrent: true) ?? [],
             'platform' => [
                 'isSuperadmin' => fn (): bool => $user ? PlatformAccess::isSuperadmin($user) : false,
+            ],
+            'branding' => fn (): array => [
+                'app_name' => Branding::appName(),
+                'logo_url' => Branding::logoUrl(),
+                'support_email' => Branding::supportEmail(),
+                'legal' => Branding::legalLinks(),
             ],
         ];
     }

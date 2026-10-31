@@ -3,6 +3,7 @@
 namespace Modules\Platform\Notifications;
 
 use App\Models\Team;
+use App\Support\Branding;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,6 +29,7 @@ class AccountSuspended extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
+            ->from(Branding::fromAddress(), Branding::appName())
             ->subject('Tu cuenta fue suspendida temporalmente')
             ->greeting("Hola, {$this->team->name}")
             ->line('La cuenta fue suspendida por el equipo de plataforma.')

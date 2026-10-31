@@ -20,6 +20,8 @@ final class PlatformPermission
 
     public const REPORTS_MANAGE = 'platform.reports.manage';
 
+    public const BRANDING_MANAGE = 'platform.branding.manage';
+
     /**
      * @return array<int, string>
      */
@@ -34,6 +36,7 @@ final class PlatformPermission
             self::SUBSCRIPTIONS_VIEW,
             self::REPORTS_VIEW,
             self::REPORTS_MANAGE,
+            self::BRANDING_MANAGE,
         ];
     }
 }

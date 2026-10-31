@@ -33,6 +33,16 @@ const mapListing = computed(() => ({
     longitude: props.listing.longitude,
     distance_km: null,
 }));
+
+const contactEmail = computed(
+    () => props.listing.contact_email ?? props.listing.account.contact_email,
+);
+const contactPhone = computed(
+    () => props.listing.contact_phone ?? props.listing.account.contact_phone,
+);
+const whatsappUrl = computed(
+    () => props.listing.whatsapp_url ?? props.listing.account.whatsapp_url,
+);
 </script>
 
 <template>
@@ -177,6 +187,29 @@ const mapListing = computed(() => ({
 
                 <aside class="space-y-4 lg:sticky lg:top-6 lg:h-fit">
                     <div class="space-y-4 rounded-xl border bg-card p-5">
+                        <div
+                            v-if="
+                                listing.account.logo_url ||
+                                listing.account.name
+                            "
+                            class="flex items-center gap-3 border-b pb-3"
+                        >
+                            <img
+                                v-if="listing.account.logo_url"
+                                :src="listing.account.logo_url"
+                                :alt="listing.account.name ?? listing.name"
+                                class="size-10 rounded-md border object-cover"
+                            />
+                            <div>
+                                <p class="text-xs uppercase text-muted-foreground">
+                                    Anfitrión
+                                </p>
+                                <p class="font-medium">
+                                    {{ listing.account.name }}
+                                </p>
+                            </div>
+                        </div>
+
                         <div>
                             <h2 class="font-semibold">Contacta al anfitrión</h2>
                             <p class="text-sm text-muted-foreground">
@@ -194,35 +227,35 @@ const mapListing = computed(() => ({
                                 </Link>
                             </Button>
                             <Button
-                                v-if="listing.whatsapp_url"
+                                v-if="whatsappUrl"
                                 as-child
                                 class="w-full"
                             >
                                 <a
-                                    :href="listing.whatsapp_url"
+                                    :href="whatsappUrl"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
-                                    WhatsApp
+                                    Abrir WhatsApp
                                 </a>
                             </Button>
                             <Button
-                                v-if="listing.contact_email"
+                                v-if="contactEmail"
                                 variant="outline"
                                 as-child
                                 class="w-full"
                             >
-                                <a :href="`mailto:${listing.contact_email}`">
+                                <a :href="`mailto:${contactEmail}`">
                                     Enviar correo
                                 </a>
                             </Button>
                             <Button
-                                v-if="listing.contact_phone"
+                                v-if="contactPhone"
                                 variant="outline"
                                 as-child
                                 class="w-full"
                             >
-                                <a :href="`tel:${listing.contact_phone}`">
+                                <a :href="`tel:${contactPhone}`">
                                     Llamar
                                 </a>
                             </Button>
@@ -233,6 +266,10 @@ const mapListing = computed(() => ({
                             class="text-xs text-muted-foreground"
                         >
                             Contacto: {{ listing.contact_name }}
+                        </p>
+                        <p class="text-xs text-muted-foreground">
+                            WhatsApp abre una conversación manual; la plataforma
+                            no envía el mensaje.
                         </p>
                     </div>
                 </aside>

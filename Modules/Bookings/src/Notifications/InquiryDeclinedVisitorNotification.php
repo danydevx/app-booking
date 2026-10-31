@@ -2,6 +2,7 @@
 
 namespace Modules\Bookings\Notifications;
 
+use App\Support\Branding;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -27,6 +28,7 @@ class InquiryDeclinedVisitorNotification extends Notification implements ShouldQ
         $inquiry = $this->inquiry;
 
         return (new MailMessage)
+            ->from(Branding::fromAddress(), Branding::appName())
             ->subject('Actualización de tu solicitud de reserva')
             ->greeting("Hola {$inquiry->name}")
             ->line("El anfitrión no pudo aceptar tu solicitud para {$inquiry->listing->name}.")

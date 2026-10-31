@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Platform\Http\Controllers\PlatformAccountController;
+use Modules\Platform\Http\Controllers\PlatformBrandingController;
 use Modules\Platform\Http\Controllers\PlatformDashboardController;
 use Modules\Platform\Http\Controllers\PlatformListingController;
 use Modules\Platform\Http\Controllers\PlatformReportController;
@@ -61,4 +62,11 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::patch('reports/{report}', [PlatformReportController::class, 'update'])
             ->middleware('can:'.PlatformPermission::REPORTS_MANAGE)
             ->name('reports.update');
+
+        Route::get('branding', [PlatformBrandingController::class, 'edit'])
+            ->middleware('can:'.PlatformPermission::BRANDING_MANAGE)
+            ->name('branding.edit');
+        Route::patch('branding', [PlatformBrandingController::class, 'update'])
+            ->middleware('can:'.PlatformPermission::BRANDING_MANAGE)
+            ->name('branding.update');
     });

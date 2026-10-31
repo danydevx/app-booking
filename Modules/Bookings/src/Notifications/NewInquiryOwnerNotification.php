@@ -2,6 +2,7 @@
 
 namespace Modules\Bookings\Notifications;
 
+use App\Support\Branding;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -27,6 +28,8 @@ class NewInquiryOwnerNotification extends Notification implements ShouldQueue
         $inquiry = $this->inquiry;
 
         return (new MailMessage)
+            ->from(Branding::fromAddress(), Branding::appName())
+            ->replyTo($inquiry->email, $inquiry->name)
             ->subject('Nueva solicitud de reserva')
             ->greeting('Nueva solicitud')
             ->line("{$inquiry->name} quiere rentar {$inquiry->listing->name}.")

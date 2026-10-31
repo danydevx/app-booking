@@ -11,14 +11,15 @@ Last updated: 2026-10-31
 | 4 — Availability and bookings   | PASS        | `Modules/Bookings`; inquiries, customers, deposits, notifications; 146 tests/648 assertions; build 3,656 modules | phase-4 commit |
 | 5 — Stripe and plans            | PASS        | `Modules/Billing`; Cashier 16.9; test-mode checkout/portal/webhooks verified; 167 tests/764 assertions; build 3,658 modules | phase-5 commit |
 | 6 — Platform admin              | PASS        | `Modules/Platform`; activitylog 4.12; moderation, reports, audit; 181 tests/959 assertions; build 3,678 modules | phase-6 commit |
-| 7 — Branding and communications | NOT STARTED | —                                                                                                                | —              |
+| 7 — Branding and communications | PASS        | `Modules/Platform` branding + account branding, queued mail, WhatsApp; 197 tests/1,041 assertions; build 3,683 modules | phase-7 commit |
 | 8 — Production launch           | NOT STARTED | —                                                                                                                | —              |
 | 9 — Post-MVP                    | NOT STARTED | —                                                                                                                | —              |
 
 ## Current blockers
 
-- None. Phase 6 completes platform moderation. Phase 5 Stripe test-mode flows
-  remain verified locally; live charges remain disabled.
+- None. Phase 7 completes account/platform branding and transactional email.
+  Phase 5 Stripe test-mode flows remain verified locally; live charges remain
+  disabled.
 
 ## Environment facts
 
@@ -34,3 +35,4 @@ Last updated: 2026-10-31
 - Current business modules: `Modules/Platform`, `Modules/Listings`,
   `Modules/Bookings`, `Modules/Billing`
 - Moderation audit: `spatie/laravel-activitylog` 4.12 with `moderation` log
+- Local mailer: `log`; Mailpit optional via `MAIL_HOST`/`MAIL_PORT`

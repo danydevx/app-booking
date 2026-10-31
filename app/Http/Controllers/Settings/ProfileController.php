@@ -30,7 +30,15 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $data = $request->validated();
+
+        if (array_key_exists('notification_preferences', $data)) {
+            $data['notification_preferences'] = [
+                'inquiry_emails' => (bool) ($data['notification_preferences']['inquiry_emails'] ?? false),
+            ];
+        }
+
+        $request->user()->fill($data);
 
         if ($request->user()->isDirty('email')) {
             $request->user()->email_verified_at = null;

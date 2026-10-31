@@ -2,6 +2,7 @@
 
 namespace Modules\Listings\Support;
 
+use App\Support\WhatsApp;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingMedia;
 
@@ -117,6 +118,16 @@ final class ListingPresenter
             'contact_email' => $listing->contact_email,
             'contact_phone' => $listing->contact_phone,
             'whatsapp_url' => self::whatsappUrl($listing->whatsapp_phone),
+            'account' => [
+                'name' => $listing->team?->name,
+                'logo_url' => $listing->team?->logoUrl(),
+                'contact_email' => $listing->team?->contact_email,
+                'contact_phone' => $listing->team?->contact_phone,
+                'whatsapp_url' => WhatsApp::url(
+                    $listing->team?->whatsapp_phone,
+                    "Hola, me interesa {$listing->name}.",
+                ),
+            ],
             'timezone' => $listing->timezone,
             'url' => self::publicUrl($listing),
             'media' => $listing->media
@@ -163,12 +174,6 @@ final class ListingPresenter
 
     public static function whatsappUrl(?string $phone): ?string
     {
-        if (blank($phone)) {
-            return null;
-        }
-
-        $digits = preg_replace('/\D+/', '', $phone);
-
-        return $digits ? "https://wa.me/{$digits}" : null;
+        return WhatsApp::url($phone);
     }
 }
