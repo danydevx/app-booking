@@ -29,6 +29,14 @@ type PlanPayload = {
     } | null;
 };
 
+type InvoicePayload = {
+    id: string;
+    date: string;
+    total: string;
+    status: string;
+    url: string | null;
+};
+
 const props = defineProps<{
     team: { name: string; slug: string };
     plan: PlanPayload & {
@@ -47,6 +55,7 @@ const props = defineProps<{
         limits: Record<string, string>;
         features: Record<string, string>;
     };
+    invoices: InvoicePayload[];
     checkoutResult: string;
     urls: {
         index: string;
@@ -74,6 +83,14 @@ const statusLabels: Record<string, string> = {
     past_due_grace: 'Pago pendiente · periodo de gracia',
     past_due_locked: 'Pago pendiente · plan Gratis aplicado',
     canceled: 'Suscripción cancelada',
+};
+
+const invoiceStatusLabels: Record<string, string> = {
+    paid: 'Pagada',
+    open: 'Pendiente de pago',
+    void: 'Anulada',
+    draft: 'Borrador',
+    uncollectible: 'No cobrable',
 };
 
 function statusVariant(
@@ -359,10 +376,50 @@ function openPortal(): void {
             </Card>
         </div>
 
+        <Card v-if="invoices.length">
+            <CardHeader>
+                <CardTitle>Facturas</CardTitle>
+                <CardDescription>
+                    Últimos movimientos de Stripe para esta cuenta.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div class="divide-y">
+                    <div
+                        v-for="invoice in invoices"
+                        :key="invoice.id"
+                        class="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"
+                    >
+                        <div>
+                            <p class="font-medium">{{ invoice.date }}</p>
+                            <p class="text-muted-foreground">
+                                {{
+                                    invoiceStatusLabels[invoice.status] ??
+                                    invoice.status
+                                }}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="font-medium">{{ invoice.total }}</span>
+                            <a
+                                v-if="invoice.url"
+                                :href="invoice.url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="text-sm underline underline-offset-4"
+                            >
+                                Ver factura
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+
         <p class="text-xs text-muted-foreground">
-            Las facturas, métodos de pago y cancelaciones se administran en el
-            portal de Stripe. Los anticipos de reservas siguen fuera de Stripe y
-            se registran manualmente; esta página no procesa pagos de renter.
+            Los métodos de pago y las cancelaciones se administran en el portal
+            de Stripe. Los anticipos de reservas siguen fuera de Stripe y se
+            registran manualmente; esta página no procesa pagos de renter.
         </p>
     </div>
 </template>

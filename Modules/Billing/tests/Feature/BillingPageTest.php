@@ -31,6 +31,23 @@ class BillingPageTest extends TestCase
                 ->where('subscription.stripe_configured', false));
     }
 
+    public function test_invoices_are_empty_without_a_stripe_customer_or_secret(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $team->stripe_id = 'cus_test_without_secret';
+        $team->save();
+
+        config(['cashier.secret' => null]);
+
+        $this->actingAs($owner)
+            ->get(route('billing.index', ['current_team' => $team->slug]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('invoices', 0)
+                ->where('subscription.has_customer', true)
+                ->where('subscription.stripe_configured', false));
+    }
+
     public function test_non_owner_member_cannot_open_billing_or_start_checkout(): void
     {
         [$owner, $team] = $this->ownerWithTeam();

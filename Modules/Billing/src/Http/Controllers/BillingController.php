@@ -76,6 +76,7 @@ class BillingController extends Controller
                 'limits' => (array) config('billing.limit_labels', []),
                 'features' => (array) config('billing.feature_labels', []),
             ],
+            'invoices' => $this->invoices($team),
             'checkoutResult' => $request->string('checkout')->toString(),
             'urls' => [
                 'index' => route('billing.index', ['current_team' => $team->slug]),
@@ -189,5 +190,37 @@ class BillingController extends Controller
             ->first();
 
         return $subscription;
+    }
+
+    /**
+     * @return array<int, array{id: string, date: string, total: string, status: string, url: string|null}>
+     */
+    private function invoices(Team $team): array
+    {
+        if (! $team->stripe_id || blank(config('cashier.secret'))) {
+            return [];
+        }
+
+        try {
+            $invoices = [];
+
+            foreach ($team->invoices() as $invoice) {
+                $stripeInvoice = $invoice->asStripeInvoice();
+
+                $invoices[] = [
+                    'id' => (string) $stripeInvoice->id,
+                    'date' => $invoice->date()->toDateString(),
+                    'total' => $invoice->total(),
+                    'status' => (string) $stripeInvoice->status,
+                    'url' => $stripeInvoice->hosted_invoice_url,
+                ];
+            }
+
+            return $invoices;
+        } catch (ApiErrorException $exception) {
+            report($exception);
+
+            return [];
+        }
     }
 }
