@@ -77,10 +77,10 @@ renter payments here.
 - Guest submission; no visitor account required.
 - Rate limiting, honeypot or equivalent anti-spam, and server-side validation.
 - On success:
-  - persist the inquiry;
-  - create or link a customer only for the owning account, never across accounts;
-  - queue an email to the owner and a confirmation to the visitor;
-  - show a success state without exposing another account's data.
+    - persist the inquiry;
+    - create or link a customer only for the owning account, never across accounts;
+    - queue an email to the owner and a confirmation to the visitor;
+    - show a success state without exposing another account's data.
 
 ## Owner flow
 

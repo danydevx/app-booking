@@ -133,7 +133,8 @@ mapping instead.
   weaken account isolation.
 - Keep module migrations in the module, but never edit migrations that have
   already run outside local development.
-- Module tests live in the module and must be covered by `phpunit.xml`.
+- Module tests live in the module and are auto-discovered by `phpunit.xml`
+  (`<directory>Modules</directory>`).
 
 ## What not to do
 

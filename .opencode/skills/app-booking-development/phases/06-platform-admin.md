@@ -46,11 +46,11 @@ full personal data in activity properties.
 - View account detail with owner, members, listings and billing status.
 - Suspend/restore account with a required reason and audit entry.
 - Suspension must:
-  - block owner login to account-scoped areas or clearly restrict access;
-  - hide the account's listings from public search;
-  - keep data intact;
-  - be reversible;
-  - send an explanatory notification if appropriate.
+    - block owner login to account-scoped areas or clearly restrict access;
+    - hide the account's listings from public search;
+    - keep data intact;
+    - be reversible;
+    - send an explanatory notification if appropriate.
 - Do not delete accounts from the platform UI in V1.
 
 ### Listings

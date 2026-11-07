@@ -57,7 +57,7 @@ listing_unavailability
 booking_inquiries
 customers
 booking_deposits
-account_settings
+listing_reports
 ```
 
 Rules:
@@ -87,8 +87,8 @@ Rules:
   listing visibility, booking conflicts and billing webhooks.
 - Unit tests cover pricing/entitlement and date/availability rules.
 - Use factories for domain models.
-- Use a separate in-memory SQLite database for tests unless a phase requires
-  database-specific behavior.
+- Use SQLite in memory for the default test suite; run the same suite against
+  MySQL 8.4 in CI to catch dialect issues. See `docs/development/DATABASE.md`.
 - Do not use real Stripe, mail, WhatsApp, AI or map credentials in tests. Fake the
   HTTP/client boundary.
 - Every phase must keep the full suite green, not only the new tests.

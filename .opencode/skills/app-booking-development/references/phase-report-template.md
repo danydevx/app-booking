@@ -20,8 +20,8 @@ Any product or architectural decision made, with reason.
 ## Packages and versions
 
 | Package | Version | Why |
-|---|---|---|
-| ... | ... | ... |
+| ------- | ------- | --- |
+| ...     | ...     | ... |
 
 ## Database changes
 
@@ -29,11 +29,11 @@ Migrations added, tables/columns/indexes and whether they were applied locally.
 
 ## Testing
 
-| Command | Result | Tests / assertions |
-|---|---|---|
-| `php artisan test` | PASS/FAIL | ... |
-| `npm run build` | PASS/FAIL | ... |
-| `vendor/bin/pint --test` | PASS/FAIL | ... |
+| Command                  | Result    | Tests / assertions |
+| ------------------------ | --------- | ------------------ |
+| `php artisan test`       | PASS/FAIL | ...                |
+| `npm run build`          | PASS/FAIL | ...                |
+| `vendor/bin/pint --test` | PASS/FAIL | ...                |
 
 ## Authorization and isolation checks
 

@@ -47,9 +47,9 @@ Extended `Modules/Platform/` with a protected moderation area:
 
 ## Packages and versions
 
-| Package                      | Version | Why                                   |
-| ---------------------------- | ------- | ------------------------------------- |
-| `spatie/laravel-activitylog` | 4.12.0  | Moderation and privilege audit trail  |
+| Package                      | Version | Why                                  |
+| ---------------------------- | ------- | ------------------------------------ |
+| `spatie/laravel-activitylog` | 4.12.0  | Moderation and privilege audit trail |
 
 ## Database changes
 

@@ -4,10 +4,9 @@
 
 ## Objective
 
-Create the real application at `/mnt/desarrollo/server/laravel/apps/app-booking`
-from the official Laravel 13 Vue Starter Kit. Establish Git, local configuration,
-authentication, email verification, local database, tests and a working build.
-No domain tables yet.
+Create the real application at the repository root from the official Laravel 13
+Vue Starter Kit. Establish Git, local configuration, authentication, email
+verification, local database, tests and a working build. No domain tables yet.
 
 ## Preconditions
 
@@ -22,7 +21,7 @@ The Laravel installer must create the application from the parent directory. Do
 not run it inside a non-empty `app-booking`.
 
 ```bash
-cd /mnt/desarrollo/server/laravel/apps
+cd /path/to/parent-directory
 
 # Only if app-booking is proven empty:
 rmdir app-booking
@@ -60,8 +59,8 @@ The framework must be Laravel 13.x. The frontend must be the Vue Starter Kit
 - `APP_LOCALE=es`, sensible fallback, UTC application timezone.
 - Local SQLite database; do not point local development at production.
 - Enable email verification if the starter kit did not already enable it:
-  - `App\Models\User` implements `MustVerifyEmail`.
-  - protected application routes use `verified` as appropriate.
+    - `App\Models\User` implements `MustVerifyEmail`.
+    - protected application routes use `verified` as appropriate.
 - Confirm Fortify registration, login, password reset, email verification and 2FA
   features are enabled unless product decisions say otherwise.
 - Configure the local mail transport for development. Use log or Mailpit; do not

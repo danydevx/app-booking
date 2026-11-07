@@ -46,8 +46,8 @@
 
 ## Packages and versions
 
-| Package | Version | Why |
-| ------- | ------- | --- |
+| Package | Version | Why                                                                       |
+| ------- | ------- | ------------------------------------------------------------------------- |
 | —       | —       | No new packages; Laravel notifications/Markdown mail and existing storage |
 
 ## Database changes
@@ -62,15 +62,15 @@ Applied locally:
 
 ## Testing
 
-| Command                    | Result | Tests / assertions         |
-| -------------------------- | ------ | -------------------------- |
-| `php artisan test`         | PASS   | 197 tests / 1,041 assertions |
-| Branding, email and WhatsApp tests | PASS | 16 tests / 82 assertions |
-| `npm run build`            | PASS   | 3,683 modules transformed  |
-| `vendor/bin/pint --test`   | PASS   | —                          |
-| `composer run types:check` | PASS   | 0 PHPStan errors           |
-| `npm run types:check`      | PASS   | 0 TypeScript errors        |
-| Bootstrap/jQuery scan      | PASS   | no matches                 |
+| Command                            | Result | Tests / assertions           |
+| ---------------------------------- | ------ | ---------------------------- |
+| `php artisan test`                 | PASS   | 197 tests / 1,041 assertions |
+| Branding, email and WhatsApp tests | PASS   | 16 tests / 82 assertions     |
+| `npm run build`                    | PASS   | 3,683 modules transformed    |
+| `vendor/bin/pint --test`           | PASS   | —                            |
+| `composer run types:check`         | PASS   | 0 PHPStan errors             |
+| `npm run types:check`              | PASS   | 0 TypeScript errors          |
+| Bootstrap/jQuery scan              | PASS   | no matches                   |
 
 Coverage includes:
 

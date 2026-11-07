@@ -5,8 +5,8 @@ description: Implement the app-booking Laravel 13 + Vue SaaS phase by phase, wit
 
 # App Booking Development
 
-Use this skill for any implementation work on the terrace-rental SaaS at
-`/mnt/desarrollo/server/laravel/apps/app-booking`.
+Use this skill for any implementation work on the terrace-rental SaaS at the
+repository root.
 
 ## Product in one paragraph
 
@@ -28,8 +28,8 @@ the whole application.
 - PHPUnit for backend tests unless the generated Starter Kit cannot support it;
   if that happens, stop and report before switching test frameworks.
 - Vite for frontend assets.
-- SQLite locally for the first phases; MySQL-compatible schema for staging and
-  production.
+- MySQL 8.4 for local, staging and production; SQLite remains legacy and the
+  default in-memory test driver. See `docs/development/DATABASE.md`.
 - Stripe through Laravel Cashier. No PayPal in the MVP.
 - Spatie Laravel Permission for platform-level access control.
 - Leaflet + OpenStreetMap for maps. No Google Maps requirement in the MVP.
@@ -151,15 +151,21 @@ instead of silently building a parallel subsystem.
 ## Default commands
 
 ```bash
-# Backend tests
+# Backend tests (SQLite in-memory by default)
 php artisan test
+composer test
 
 # Frontend build
 npm run build
+npm run build:ssr
 
 # Formatting / lint
 vendor/bin/pint --test
-npm run lint        # only if the starter kit provides it
+npm run check
+npm run check:fix
+
+# CI-equivalent
+composer ci:check
 
 # Framework and dependency facts
 php artisan --version

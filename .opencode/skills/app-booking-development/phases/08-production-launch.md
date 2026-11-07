@@ -12,11 +12,11 @@ explicitly authorizes it and provides the target environment.
 
 Use three clear environments:
 
-| Environment | Purpose | Data |
-|---|---|---|
-| Local | Development | SQLite or local MySQL; fake mail/Stripe |
-| Staging / Sandbox | Integration and release candidate | Isolated QA database and storage; Stripe test mode |
-| Production | Real customers | Dedicated database, storage, mail and Stripe live mode |
+| Environment       | Purpose                           | Data                                                   |
+| ----------------- | --------------------------------- | ------------------------------------------------------ |
+| Local             | Development                       | SQLite or local MySQL; fake mail/Stripe                |
+| Staging / Sandbox | Integration and release candidate | Isolated QA database and storage; Stripe test mode     |
+| Production        | Real customers                    | Dedicated database, storage, mail and Stripe live mode |
 
 - Never point staging at production data.
 - Never copy production `.env`, uploads or database dumps into Git.

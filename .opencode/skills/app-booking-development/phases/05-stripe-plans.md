@@ -57,13 +57,13 @@ Create a small `plans` table or equivalent config-backed catalog:
 
 Recommended initial limits (confirm in phase 0):
 
-| Capability | Free | Paid |
-|---|---:|---:|
-| Listings | 1 | 5 |
-| Photos per listing | 5 | 20 |
-| Videos per listing | 0 | 3 |
-| Customer CRM | No | Yes |
-| AI social posts | No | Future |
+| Capability         | Free |   Paid |
+| ------------------ | ---: | -----: |
+| Listings           |    1 |      5 |
+| Photos per listing |    5 |     20 |
+| Videos per listing |    0 |      3 |
+| Customer CRM       |   No |    Yes |
+| AI social posts    |   No | Future |
 
 Do not hardcode the Stripe price IDs in Vue or controllers. Read them from the plan
 catalog/configuration.

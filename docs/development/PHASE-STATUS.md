@@ -1,33 +1,41 @@
 # Development status
 
-Last updated: 2026-10-31
+> Git reality: all phases were committed directly to `main` (trunk-based).
+> Branch names in older phase reports are historical labels, not existing refs.
 
-| Phase                           | Status      | Evidence                                                                                                         | Commit         |
-| ------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------- | -------------- |
-| 0 — Product decisions           | PASS        | `docs/decisions/0001-mvp.md`, phase report                                                                       | docs commit    |
-| 1 — Bootstrap                   | PASS        | Laravel 13.39.0; 91 tests/328 assertions; build 3,614 modules; Pint PASS                                         | docs commit    |
-| 2 — Accounts and permissions    | PASS        | Spatie 8.3.2; `/platform` protected; modules convention; 103 tests/372 assertions; build 3,616 modules           | docs commit    |
-| 3 — Listings, media and map     | PASS        | `Modules/Listings`; Leaflet 1.9.4; radius search; 124 tests/491 assertions; build 3,638 modules                  | phase-3 commit |
-| 4 — Availability and bookings   | PASS        | `Modules/Bookings`; inquiries, customers, deposits, notifications; 146 tests/648 assertions; build 3,656 modules | phase-4 commit |
+Last updated: 2026-11-06
+
+| Phase                           | Status      | Evidence                                                                                                                    | Commit         |
+| ------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 0 — Product decisions           | PASS        | `docs/decisions/0001-mvp.md`, phase report                                                                                  | docs commit    |
+| 1 — Bootstrap                   | PASS        | Laravel 13.39.0; 91 tests/328 assertions; build 3,614 modules; Pint PASS                                                    | docs commit    |
+| 2 — Accounts and permissions    | PASS        | Spatie 8.3.2; `/platform` protected; modules convention; 103 tests/372 assertions; build 3,616 modules                      | docs commit    |
+| 3 — Listings, media and map     | PASS        | `Modules/Listings`; Leaflet 1.9.4; radius search; 124 tests/491 assertions; build 3,638 modules                             | phase-3 commit |
+| 4 — Availability and bookings   | PASS        | `Modules/Bookings`; inquiries, customers, deposits, notifications; 146 tests/648 assertions; build 3,656 modules            | phase-4 commit |
 | 5 — Stripe and plans            | PASS        | `Modules/Billing`; Cashier 16.9; test-mode checkout/portal/webhooks verified; 167 tests/764 assertions; build 3,658 modules | phase-5 commit |
-| 6 — Platform admin              | PASS        | `Modules/Platform`; activitylog 4.12; moderation, reports, audit; 181 tests/959 assertions; build 3,678 modules | phase-6 commit |
-| 7 — Branding and communications | PASS        | `Modules/Platform` branding + account branding, queued mail, WhatsApp; 197 tests/1,041 assertions; build 3,683 modules | phase-7 commit |
-| 8 — Production launch           | NOT STARTED | —                                                                                                                | —              |
-| 9 — Post-MVP                    | NOT STARTED | —                                                                                                                | —              |
+| 6 — Platform admin              | PASS        | `Modules/Platform`; activitylog 4.12; moderation, reports, audit; 181 tests/959 assertions; build 3,678 modules             | phase-6 commit |
+| 7 — Branding and communications | PASS        | `Modules/Platform` branding + account branding, queued mail, WhatsApp; 197 tests/1,041 assertions; build 3,683 modules      | phase-7 commit |
+| 8 — Production launch           | PARTIAL     | `docs/development/PRODUCTION.md` checklist; deployment pending target/approval                                              | —              |
+| 9 — Post-MVP                    | NOT STARTED | —                                                                                                                           | —              |
 
 ## Current blockers
 
-- None. Phase 7 completes account/platform branding and transactional email.
-  Phase 5 Stripe test-mode flows remain verified locally; live charges remain
-  disabled.
+- None. Database migration to MySQL phase 2 applied; SQLite remains
+  legacy/test-only.
+- CI verified locally: SQLite `composer ci:check` and MySQL 8.4 backend suite pass.
+- Production launch pending target environment and explicit approval; checklist in
+  `docs/development/PRODUCTION.md`.
 
 ## Environment facts
 
 - Laravel version: 13.39.0
 - PHP version: 8.3.6
-- Node version: 22.22.3
+- Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
-- Local database: SQLite
+- Test suite: 199 tests / 1,045 assertions (SQLite and MySQL 8.4)
+- Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
+- CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
+- Database migration: phase 2 applied (schema + data); SQLite remains legacy/test-only
 - Frontend: Vue 3 + Inertia 3 + Tailwind 4 + shadcn-vue
 - Bootstrap/jQuery: not installed
 - Business modules: `Modules/{Name}/` with module-owned backend, routes, migrations,

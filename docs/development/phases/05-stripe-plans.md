@@ -27,10 +27,10 @@ Built the billing capability inside `Modules/Billing/`:
 - The Team is the billable entity; `Cashier::useCustomerModel(Team::class)`.
 - Only the account owner can open billing, start checkout or open the portal.
 - Grace policy:
-  - active, trialing and canceling subscriptions keep paid access;
-  - past-due keeps paid access for 3 days after the last subscription update;
-  - after that, or after a canceled subscription's `ends_at`, the account falls
-    back to Free limits without deleting data.
+    - active, trialing and canceling subscriptions keep paid access;
+    - past-due keeps paid access for 3 days after the last subscription update;
+    - after that, or after a canceled subscription's `ends_at`, the account falls
+      back to Free limits without deleting data.
 - Paid state is derived from Cashier subscription rows synced by Stripe webhooks;
   a success redirect alone never unlocks anything.
 - Price ids stay in config/env. Vue receives only public plan metadata plus a
@@ -41,8 +41,8 @@ Built the billing capability inside `Modules/Billing/`:
 
 ## Packages and versions
 
-| Package           | Version | Why                                  |
-| ----------------- | ------- | ------------------------------------ |
+| Package           | Version | Why                                    |
+| ----------------- | ------- | -------------------------------------- |
 | `laravel/cashier` | 16.9.0  | Stripe subscriptions, portal, invoices |
 
 ## Database changes
@@ -119,12 +119,12 @@ Performed locally against the Stripe test account with `stripe listen
 - Customer Portal Session created: host `billing.stripe.com`.
 - Real test subscription created in Stripe for a local team, then synced only
   through webhooks:
-  - `customer.subscription.created` → 200;
-  - `invoice.payment_succeeded` → 200;
-  - local subscription row `active`, plan `pro`, listing limit 5, CRM enabled.
+    - `customer.subscription.created` → 200;
+    - `invoice.payment_succeeded` → 200;
+    - local subscription row `active`, plan `pro`, listing limit 5, CRM enabled.
 - `cancel_at_period_end` update:
-  - `customer.subscription.updated` → 200;
-  - local `ends_at` set to 2026-11-30, status `canceling`, plan still `pro`.
+    - `customer.subscription.updated` → 200;
+    - local `ends_at` set to 2026-11-30, status `canceling`, plan still `pro`.
 - Invoice sync returned one paid invoice for 499.00 MXN with a hosted URL.
 
 Test-mode product "Terraza Pro" (499.00 MXN/month) and price
