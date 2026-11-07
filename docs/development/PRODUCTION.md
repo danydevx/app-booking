@@ -112,6 +112,13 @@ No commitear valores reales.
 
 No ejecutar `composer update` en producción. No ejecutar migraciones destructivas.
 
+## Plantillas incluidas
+
+- `deploy/nginx.conf.example` — server block, document root, uploads, deny hidden files, TLS commented.
+- `deploy/supervisor.conf.example` — queue worker.
+- `deploy/crontab.example` — scheduler cada minuto.
+- `deploy/backup.sh.example` — dump MySQL + media con retención; copiar fuera del servidor.
+
 ## Colas y scheduler
 
 ```bash
@@ -127,7 +134,8 @@ Verificar `/up` y `php artisan queue:monitor` si se añade el paquete de monitor
 ## Backups y restauración
 
 - Dump MySQL programado (`mysqldump` o el backup del proveedor).
-- Backup del storage de media/logos.
+- Backup del storage de media/logos. Ejemplo: `deploy/backup.sh.example`.
+- Copiar los backups fuera del servidor o usar el backup gestionado del proveedor.
 - Cifrado y control de acceso.
 - Probar restaurar en un entorno descartable antes del lanzamiento.
 - Documentar el procedimiento de rollback y el commit anterior.

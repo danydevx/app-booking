@@ -1,0 +1,4 @@
+# Example crontab entry for the Laravel scheduler.
+# Install for the application user (for example, www-data).
+
+* * * * * cd /var/www/app-booking/current && php artisan schedule:run >> /dev/null 2>&1

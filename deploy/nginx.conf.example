@@ -1,0 +1,44 @@
+# Example Nginx server block for app-booking.
+# Replace domain, paths and PHP-FPM socket before using.
+
+server {
+    listen 80;
+    server_name app.example.com;
+    root /var/www/app-booking/current/public;
+    index index.php;
+
+    charset utf-8;
+    client_max_body_size 60M;
+
+    access_log /var/log/nginx/app-booking.access.log;
+    error_log  /var/log/nginx/app-booking.error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/run/php/php8.3-fpm.sock;
+        fastcgi_read_timeout 120s;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    location ~* \.(?:css|js|jpg|jpeg|png|webp|svg|ico|woff2?)$ {
+        expires 30d;
+        access_log off;
+        try_files $uri =404;
+    }
+
+    # Enable after TLS is configured.
+    # listen 443 ssl http2;
+    # ssl_certificate /etc/letsencrypt/live/app.example.com/fullchain.pem;
+    # ssl_certificate_key /etc/letsencrypt/live/app.example.com/privkey.pem;
+    # add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+}
