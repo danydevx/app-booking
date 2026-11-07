@@ -5,6 +5,8 @@ namespace Modules\Listings\Tests\Feature;
 use App\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Modules\Bookings\Enums\AvailabilityStatus;
+use Modules\Bookings\Models\ListingUnavailability;
 use Modules\Listings\Models\Listing;
 use Tests\TestCase;
 
@@ -60,6 +62,26 @@ class PublicListingTest extends TestCase
 
         $this->get(route('public.listings.show', ['listing' => $draft->slug]))
             ->assertNotFound();
+    }
+
+    public function test_public_detail_exposes_next_unavailable_dates(): void
+    {
+        $team = Team::factory()->create();
+        $listing = Listing::factory()->forTeam($team)->published()->create();
+        $date = now($listing->timezone)->addDays(3)->toDateString();
+
+        ListingUnavailability::factory()->forListing($listing)->create([
+            'date' => $date,
+            'status' => AvailabilityStatus::Blocked,
+        ]);
+
+        $this->get(route('public.listings.show', ['listing' => $listing->slug]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Listings/Public/Show')
+                ->has('unavailableDates', 1)
+                ->where('unavailableDates.0.date', $date)
+                ->where('unavailableDates.0.status', AvailabilityStatus::Blocked->value));
     }
 
     public function test_public_catalog_filters_by_service(): void

@@ -9,6 +9,12 @@ import type { ListingMedia, ListingPublicDetail } from '../../types';
 
 const props = defineProps<{
     listing: ListingPublicDetail;
+    unavailableDates: Array<{
+        date: string;
+        status: string;
+        label: string;
+        reason: string | null;
+    }>;
     urls: {
         index: string;
         report: string;
@@ -287,6 +293,34 @@ const whatsappUrl = computed(
                             WhatsApp abre una conversación manual; la plataforma
                             no envía el mensaje.
                         </p>
+                    </div>
+
+                    <div
+                        v-if="unavailableDates.length > 0"
+                        class="space-y-3 rounded-xl border bg-card p-5"
+                    >
+                        <h2 class="font-semibold">
+                            Próximas fechas no disponibles
+                        </h2>
+                        <ul class="space-y-1 text-sm">
+                            <li
+                                v-for="date in unavailableDates"
+                                :key="date.date"
+                                class="flex items-center justify-between gap-2"
+                            >
+                                <span class="text-muted-foreground">
+                                    {{ date.date }}
+                                </span>
+                                <span class="text-xs">{{ date.label }}</span>
+                            </li>
+                        </ul>
+                        <Button variant="outline" as-child class="w-full">
+                            <Link
+                                :href="`/terrazas/${listing.slug}/disponibilidad`"
+                            >
+                                Ver calendario completo
+                            </Link>
+                        </Button>
                     </div>
                 </aside>
             </div>
