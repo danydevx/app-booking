@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Button } from '@/components/ui/button';
@@ -51,6 +51,14 @@ const form = reactive({
 function search(): void {
     router.get(props.urls.index, { ...form }, { preserveScroll: true });
 }
+
+const exportUrl = computed(() => {
+    const query = form.search.trim();
+
+    return query === ''
+        ? props.urls.export
+        : `${props.urls.export}?search=${encodeURIComponent(query)}`;
+});
 
 const createOpen = ref(false);
 const createForm = useForm({
@@ -195,7 +203,7 @@ function createCustomer(): void {
                     </DialogContent>
                 </Dialog>
                 <Button variant="outline" as-child>
-                    <a :href="urls.export">Exportar CSV</a>
+                    <a :href="exportUrl">Exportar CSV</a>
                 </Button>
                 <Button variant="outline" as-child>
                     <Link :href="urls.bookings">Solicitudes</Link>

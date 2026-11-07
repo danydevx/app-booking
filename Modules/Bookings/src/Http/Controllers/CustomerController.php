@@ -108,7 +108,10 @@ class CustomerController extends Controller
             return $this->upgradeRedirect($team);
         }
 
-        return $export->stream($team);
+        return $export->stream(
+            $team,
+            trim($request->string('search')->toString()),
+        );
     }
 
     public function show(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse

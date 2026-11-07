@@ -149,6 +149,61 @@ class CustomerManagementTest extends TestCase
         $this->assertStringContainsString('export@example.test', $content);
     }
 
+    public function test_csv_export_applies_the_search_filter(): void
+    {
+        config(['billing.plans.pro.stripe_price_id' => 'price_pro_test']);
+
+        [$owner, $team] = $this->ownerWithTeam();
+        $this->subscribePro($team);
+        Customer::factory()->create([
+            'team_id' => $team->id,
+            'name' => 'Cliente Filtrado',
+            'email' => 'filtrado@example.test',
+        ]);
+        Customer::factory()->create([
+            'team_id' => $team->id,
+            'name' => 'Cliente Excluido',
+            'email' => 'excluido@example.test',
+        ]);
+
+        $response = $this->actingAs($owner)->get(route('bookings.customers.export', [
+            'current_team' => $team->slug,
+            'search' => 'Filtrado',
+        ]));
+
+        $response->assertOk()->assertDownload();
+
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString('Cliente Filtrado', $content);
+        $this->assertStringNotContainsString('Cliente Excluido', $content);
+    }
+
+    public function test_csv_export_neutralizes_spreadsheet_formulas(): void
+    {
+        config(['billing.plans.pro.stripe_price_id' => 'price_pro_test']);
+
+        [$owner, $team] = $this->ownerWithTeam();
+        $this->subscribePro($team);
+        Customer::factory()->create([
+            'team_id' => $team->id,
+            'name' => '=2+2',
+            'email' => 'formula@example.test',
+            'notes' => '@SUM(1,1)',
+        ]);
+
+        $response = $this->actingAs($owner)->get(
+            route('bookings.customers.export', ['current_team' => $team->slug]),
+        );
+
+        $response->assertOk()->assertDownload();
+
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString("'=2+2", $content);
+        $this->assertStringContainsString("'@SUM(1,1)", $content);
+    }
+
     public function test_free_plan_cannot_export_customers(): void
     {
         [$owner, $team] = $this->ownerWithTeam();
