@@ -129,8 +129,9 @@ Both dependency and import scans returned no matches.
 
 ## Residual risks
 
-- No automatic inquiry expiry job yet; the `expired` status exists but is not
-  scheduled.
+- Inquiry expiry implemented after phase 4: `bookings:expire-inquiries` runs
+  daily and expires new/contacted inquiries after their requested end date
+  (configurable grace via `BOOKINGS_EXPIRE_AFTER_END_DAYS`).
 - No payment processing; deposits remain manual as required.
 - No automated WhatsApp API.
 - Email delivery uses the local `log` mailer and queued jobs; a worker is needed

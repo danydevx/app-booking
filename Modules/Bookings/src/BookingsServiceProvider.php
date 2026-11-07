@@ -4,6 +4,7 @@ namespace Modules\Bookings;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Modules\Bookings\Console\Commands\ExpireBookingInquiries;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Policies\BookingInquiryPolicy;
@@ -27,5 +28,11 @@ final class BookingsServiceProvider extends ServiceProvider
 
         Gate::policy(BookingInquiry::class, BookingInquiryPolicy::class);
         Gate::policy(Customer::class, CustomerPolicy::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ExpireBookingInquiries::class,
+            ]);
+        }
     }
 }
