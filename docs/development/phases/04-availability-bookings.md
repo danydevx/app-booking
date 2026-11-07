@@ -137,7 +137,7 @@ Both dependency and import scans returned no matches.
 - Email delivery uses the local `log` mailer and queued jobs; a worker is needed
   to process queued notifications.
 - Calendar is intentionally lightweight and read-only; dates are blocked through
-  the owner form.
+  the owner form (single date or range).
 - Account suspension and plan limits remain phase 5/6 work.
 
 ## Next phase

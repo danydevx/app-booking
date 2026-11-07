@@ -19,7 +19,7 @@ const props = defineProps<{
     blocked_dates: BlockedDate[];
     urls: {
         bookings: string;
-        block: string;
+        block_range: string;
         unblock: string;
         public_listing: string;
     };
@@ -40,12 +40,13 @@ defineOptions({
 });
 
 const form = useForm({
-    date: '',
+    start_date: '',
+    end_date: '',
     reason: '',
 });
 
 function submit(): void {
-    form.post(props.urls.block, {
+    form.post(props.urls.block_range, {
         preserveScroll: true,
         onSuccess: () => form.reset(),
     });
@@ -102,17 +103,32 @@ function unblock(date: string): void {
                     class="rounded-xl border bg-card p-4"
                     @submit.prevent="submit"
                 >
-                    <h2 class="mb-3 font-semibold">Bloquear fecha</h2>
+                    <h2 class="mb-3 font-semibold">Bloquear fechas</h2>
                     <div class="grid gap-3">
-                        <div class="grid gap-2">
-                            <Label for="date">Fecha</Label>
-                            <Input
-                                id="date"
-                                v-model="form.date"
-                                type="date"
-                                required
-                            />
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="grid gap-2">
+                                <Label for="start_date">Desde</Label>
+                                <Input
+                                    id="start_date"
+                                    v-model="form.start_date"
+                                    type="date"
+                                    required
+                                />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="end_date">Hasta</Label>
+                                <Input
+                                    id="end_date"
+                                    v-model="form.end_date"
+                                    type="date"
+                                    required
+                                />
+                            </div>
                         </div>
+                        <p class="text-xs text-muted-foreground">
+                            Se incluyen ambas fechas. Para un solo día, usa la
+                            misma fecha en ambos campos.
+                        </p>
                         <div class="grid gap-2">
                             <Label for="reason">Motivo</Label>
                             <Input
@@ -122,7 +138,7 @@ function unblock(date: string): void {
                             />
                         </div>
                         <Button type="submit" :disabled="form.processing">
-                            Bloquear
+                            Bloquear rango
                         </Button>
                     </div>
                 </form>

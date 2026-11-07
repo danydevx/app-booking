@@ -11,7 +11,9 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Bookings\Actions\BlockListingDate;
+use Modules\Bookings\Actions\BlockListingDateRange;
 use Modules\Bookings\Actions\UnblockListingDate;
+use Modules\Bookings\Http\Requests\BlockListingDateRangeRequest;
 use Modules\Bookings\Http\Requests\BlockListingDateRequest;
 use Modules\Bookings\Support\AvailabilityService;
 use Modules\Listings\Models\Listing;
@@ -46,7 +48,7 @@ class AvailabilityController extends Controller
             'blocked_dates' => $availability->blockedDates($listing, $today, $end),
             'urls' => [
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
-                'block' => route('bookings.availability.block', [
+                'block_range' => route('bookings.availability.block-range', [
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                 ]),
@@ -79,6 +81,33 @@ class AvailabilityController extends Controller
         );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Fecha bloqueada.']);
+
+        return back();
+    }
+
+    public function blockRange(
+        BlockListingDateRangeRequest $request,
+        string $currentTeam,
+        Listing $listing,
+        BlockListingDateRange $blockRange,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($listing, $team->id);
+
+        Gate::authorize('update', $listing);
+
+        $count = $blockRange->handle(
+            $listing,
+            (string) $request->validated('start_date'),
+            (string) $request->validated('end_date'),
+            $request->validated('reason'),
+            $request->user(),
+        );
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $count === 1 ? 'Fecha bloqueada.' : "{$count} fechas bloqueadas.",
+        ]);
 
         return back();
     }

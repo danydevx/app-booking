@@ -46,6 +46,36 @@ final class AvailabilityService
      */
     public function conflictingDates(Listing $listing, string $start, string $end): array
     {
+        return $this->datesWithStatuses($listing, $start, $end, [
+            AvailabilityStatus::Blocked,
+            AvailabilityStatus::Held,
+            AvailabilityStatus::Booked,
+        ]);
+    }
+
+    /**
+     * Dates that cannot be overwritten by a manual block.
+     *
+     * @return array<int, string>
+     */
+    public function hardConflictingDates(Listing $listing, string $start, string $end): array
+    {
+        return $this->datesWithStatuses($listing, $start, $end, [
+            AvailabilityStatus::Held,
+            AvailabilityStatus::Booked,
+        ]);
+    }
+
+    /**
+     * @param  array<int, AvailabilityStatus>  $statuses
+     * @return array<int, string>
+     */
+    private function datesWithStatuses(
+        Listing $listing,
+        string $start,
+        string $end,
+        array $statuses,
+    ): array {
         $dates = DateRange::dates($start, $end);
 
         if ($dates === []) {
@@ -55,11 +85,7 @@ final class AvailabilityService
         $unavailable = ListingUnavailability::query()
             ->where('listing_id', $listing->id)
             ->whereIn('date', $dates)
-            ->whereIn('status', [
-                AvailabilityStatus::Blocked->value,
-                AvailabilityStatus::Held->value,
-                AvailabilityStatus::Booked->value,
-            ])
+            ->whereIn('status', array_map(fn (AvailabilityStatus $status): string => $status->value, $statuses))
             ->get(['date'])
             ->map(fn (ListingUnavailability $date): string => $date->date->toDateString())
             ->all();
