@@ -16,6 +16,7 @@ use Modules\Platform\Http\Requests\PlatformSearchRequest;
 use Modules\Platform\Queries\PlatformUserQuery;
 use Modules\Platform\Support\PlatformAccess;
 use Modules\Platform\Support\PlatformPermission;
+use Modules\Platform\Support\PlatformRoleManager;
 use Modules\Platform\Support\PlatformUserPresenter;
 use Spatie\Activitylog\Models\Activity;
 
@@ -59,10 +60,20 @@ class PlatformUserController extends Controller
             && ! $request->user()->is($user)
             && ! PlatformAccess::isSuperadmin($user);
 
+        $isSuperadmin = PlatformAccess::isSuperadmin($user);
+        $isSelf = $request->user()->is($user);
+        $isLastSuperadmin = $isSuperadmin && User::role(PlatformAccess::ROLE)->count() <= 1;
+        $canManageRoles = Gate::allows(PlatformPermission::USERS_MANAGE_ROLES)
+            && ! $isSelf
+            && ! $isLastSuperadmin;
+
         return Inertia::render('Platform/Users/Show', PlatformUserPresenter::detail(
             $user,
             $activities,
             $canSuspend,
+            $canManageRoles,
+            $isSelf,
+            $isLastSuperadmin,
         ));
     }
 
@@ -91,6 +102,36 @@ class PlatformUserController extends Controller
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => "Usuario {$user->email} restaurado.",
+        ]);
+
+        return back();
+    }
+
+    public function grantSuperadmin(
+        Request $request,
+        User $user,
+        PlatformRoleManager $roles,
+    ): RedirectResponse {
+        $roles->grant($user, $request->user());
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Acceso de superadmin otorgado a {$user->email}.",
+        ]);
+
+        return back();
+    }
+
+    public function revokeSuperadmin(
+        Request $request,
+        User $user,
+        PlatformRoleManager $roles,
+    ): RedirectResponse {
+        $roles->revoke($user, $request->user());
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Acceso de superadmin revocado a {$user->email}.",
         ]);
 
         return back();

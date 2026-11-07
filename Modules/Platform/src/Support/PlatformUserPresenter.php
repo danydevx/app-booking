@@ -38,8 +38,14 @@ final class PlatformUserPresenter
      * @param  Collection<int, Activity>  $activities
      * @return array<string, mixed>
      */
-    public static function detail(User $user, Collection $activities, bool $canSuspend): array
-    {
+    public static function detail(
+        User $user,
+        Collection $activities,
+        bool $canSuspend,
+        bool $canManageRoles,
+        bool $isSelf,
+        bool $isLastSuperadmin,
+    ): array {
         return [
             'user' => [
                 'id' => $user->id,
@@ -76,11 +82,16 @@ final class PlatformUserPresenter
                 ->all(),
             'can' => [
                 'suspend' => $canSuspend,
+                'manage_roles' => $canManageRoles,
+                'is_self' => $isSelf,
+                'is_last_superadmin' => $isLastSuperadmin,
             ],
             'urls' => [
                 'index' => route('platform.users.index'),
                 'suspend' => route('platform.users.suspend', ['user' => $user->id]),
                 'restore' => route('platform.users.restore', ['user' => $user->id]),
+                'grant_superadmin' => route('platform.users.grant-superadmin', ['user' => $user->id]),
+                'revoke_superadmin' => route('platform.users.revoke-superadmin', ['user' => $user->id]),
             ],
         ];
     }

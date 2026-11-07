@@ -5,10 +5,12 @@ namespace Modules\Platform\Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Platform\Notifications\UserRestored;
 use Modules\Platform\Notifications\UserSuspended;
 use Modules\Platform\Support\PlatformAccess;
+use Modules\Platform\Support\PlatformRoleManager;
 use Tests\TestCase;
 
 class PlatformUserManagementTest extends TestCase
@@ -123,6 +125,65 @@ class PlatformUserManagementTest extends TestCase
             ->assertSessionHasErrors('reason');
 
         $this->assertFalse($other->fresh()->isSuspended());
+    }
+
+    public function test_superadmin_can_grant_and_revoke_platform_role(): void
+    {
+        $admin = $this->superadmin();
+        $target = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->post(route('platform.users.grant-superadmin', ['user' => $target->id]))
+            ->assertRedirect();
+
+        $this->assertTrue($target->fresh()->hasRole(PlatformAccess::ROLE));
+        $this->assertDatabaseHas('activity_log', [
+            'description' => 'platform.superadmin.granted',
+            'subject_id' => $target->id,
+        ]);
+
+        $this->actingAs($admin)
+            ->post(route('platform.users.revoke-superadmin', ['user' => $target->id]))
+            ->assertRedirect();
+
+        $this->assertFalse($target->fresh()->hasRole(PlatformAccess::ROLE));
+        $this->assertDatabaseHas('activity_log', [
+            'description' => 'platform.superadmin.revoked',
+            'subject_id' => $target->id,
+        ]);
+    }
+
+    public function test_unverified_users_cannot_be_granted_platform_role(): void
+    {
+        $admin = $this->superadmin();
+        $target = User::factory()->unverified()->create();
+
+        $this->actingAs($admin)
+            ->post(route('platform.users.grant-superadmin', ['user' => $target->id]))
+            ->assertSessionHasErrors('user');
+
+        $this->assertFalse($target->fresh()->hasRole(PlatformAccess::ROLE));
+    }
+
+    public function test_superadmin_cannot_revoke_own_role(): void
+    {
+        $admin = $this->superadmin();
+
+        $this->actingAs($admin)
+            ->post(route('platform.users.revoke-superadmin', ['user' => $admin->id]))
+            ->assertSessionHasErrors('user');
+
+        $this->assertTrue($admin->fresh()->hasRole(PlatformAccess::ROLE));
+    }
+
+    public function test_last_superadmin_cannot_be_revoked(): void
+    {
+        $admin = $this->superadmin();
+        $actor = User::factory()->create();
+
+        $this->expectException(ValidationException::class);
+
+        app(PlatformRoleManager::class)->revoke($admin, $actor);
     }
 
     private function superadmin(): User

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,13 +47,44 @@ const props = defineProps<{
     current_team: { id: number; name: string; slug: string } | null;
     teams: TeamRow[];
     activities: ActivityRow[];
-    can: { suspend: boolean };
+    can: {
+        suspend: boolean;
+        manage_roles: boolean;
+        is_self: boolean;
+        is_last_superadmin: boolean;
+    };
     urls: {
         index: string;
         suspend: string;
         restore: string;
+        grant_superadmin: string;
+        revoke_superadmin: string;
     };
 }>();
+
+const roleForm = useForm({ user: '' });
+
+function grantSuperadmin(): void {
+    if (
+        !window.confirm(`¿Otorgar acceso de superadmin a ${props.user.email}?`)
+    ) {
+        return;
+    }
+
+    roleForm.post(props.urls.grant_superadmin, { preserveScroll: true });
+}
+
+function revokeSuperadmin(): void {
+    if (
+        !window.confirm(
+            `¿Revocar el acceso de superadmin de ${props.user.email}?`,
+        )
+    ) {
+        return;
+    }
+
+    roleForm.post(props.urls.revoke_superadmin, { preserveScroll: true });
+}
 
 function formatDate(value: string | null): string {
     if (!value) {
@@ -135,6 +166,53 @@ function reasonOf(activity: ActivityRow): string {
             description="Devuelve el acceso del usuario a la aplicación."
             submit-label="Restaurar"
         />
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Acceso de plataforma</CardTitle>
+                <CardDescription>
+                    El superadmin puede revisar cuentas, terrazas, reportes y
+                    moderación.
+                </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-3 text-sm">
+                <p>
+                    <span class="text-muted-foreground">Rol actual:</span>
+                    {{ user.is_superadmin ? 'Superadmin' : 'Usuario normal' }}
+                </p>
+
+                <p v-if="can.is_self" class="text-muted-foreground">
+                    No puedes cambiar tu propio acceso de plataforma.
+                </p>
+                <p
+                    v-else-if="can.is_last_superadmin"
+                    class="text-muted-foreground"
+                >
+                    Es el último superadmin; no se puede revocar.
+                </p>
+                <Button
+                    v-else-if="can.manage_roles && user.is_superadmin"
+                    type="button"
+                    variant="destructive"
+                    :disabled="roleForm.processing"
+                    @click="revokeSuperadmin"
+                >
+                    Revocar superadmin
+                </Button>
+                <Button
+                    v-else-if="can.manage_roles"
+                    type="button"
+                    :disabled="roleForm.processing"
+                    @click="grantSuperadmin"
+                >
+                    Otorgar superadmin
+                </Button>
+
+                <p v-if="roleForm.errors.user" class="text-sm text-destructive">
+                    {{ roleForm.errors.user }}
+                </p>
+            </CardContent>
+        </Card>
 
         <div class="grid gap-4 lg:grid-cols-2">
             <Card>

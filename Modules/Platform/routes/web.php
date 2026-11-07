@@ -52,6 +52,12 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::post('users/{user}/restore', [PlatformUserController::class, 'restore'])
             ->middleware('can:'.PlatformPermission::USERS_SUSPEND)
             ->name('users.restore');
+        Route::post('users/{user}/grant-superadmin', [PlatformUserController::class, 'grantSuperadmin'])
+            ->middleware('can:'.PlatformPermission::USERS_MANAGE_ROLES)
+            ->name('users.grant-superadmin');
+        Route::post('users/{user}/revoke-superadmin', [PlatformUserController::class, 'revokeSuperadmin'])
+            ->middleware('can:'.PlatformPermission::USERS_MANAGE_ROLES)
+            ->name('users.revoke-superadmin');
 
         Route::get('listings', [PlatformListingController::class, 'index'])
             ->middleware('can:'.PlatformPermission::LISTINGS_VIEW)

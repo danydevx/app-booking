@@ -117,8 +117,9 @@ rutas, migraciones, páginas Vue y tests.
     ```
 - Panel `/platform`: resumen, cuentas, usuarios registrados, terrazas,
   suscripciones, reportes y marca.
-- El superadmin puede suspender/restaurar cuentas, terrazas y usuarios; las
-  acciones quedan en el activity log y notifican por correo.
+- El superadmin puede suspender/restaurar cuentas, terrazas y usuarios, y
+  otorgar/revocar el rol de superadmin desde la ficha del usuario; las acciones
+  quedan en el activity log y notifican por correo cuando aplica.
 
 ## Licencia
 
