@@ -5,6 +5,13 @@ export type ServiceOption = {
     label: string;
 };
 
+export type ListingDetailField = {
+    label: string;
+    type: 'text' | 'select';
+    placeholder?: string;
+    options?: Record<string, string>;
+};
+
 export type ListingService = {
     key: string;
     label: string;
@@ -42,6 +49,7 @@ export type ListingFormData = {
     longitude: string | number | null;
     capacity: number | null;
     services: string[];
+    details: Record<string, string | null>;
     rules: string | null;
     contact_name: string | null;
     contact_email: string | null;
@@ -99,6 +107,7 @@ export type ListingPublicDetail = {
     longitude: number | null;
     capacity: number | null;
     services: ListingService[];
+    details: Array<{ key: string; label: string; value: string }>;
     rules: string | null;
     contact_name: string | null;
     contact_email: string | null;

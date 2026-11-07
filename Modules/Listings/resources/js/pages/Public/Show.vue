@@ -153,6 +153,27 @@ const whatsappUrl = computed(
                         </div>
                     </section>
 
+                    <section
+                        v-if="listing.details.length > 0"
+                        class="space-y-3"
+                    >
+                        <h2 class="text-lg font-semibold">Detalles</h2>
+                        <dl class="grid gap-2 sm:grid-cols-2">
+                            <div
+                                v-for="detail in listing.details"
+                                :key="detail.key"
+                                class="rounded-lg border p-3"
+                            >
+                                <dt class="text-xs text-muted-foreground">
+                                    {{ detail.label }}
+                                </dt>
+                                <dd class="text-sm font-medium">
+                                    {{ detail.value }}
+                                </dd>
+                            </div>
+                        </dl>
+                    </section>
+
                     <section v-if="listing.rules" class="space-y-2">
                         <h2 class="text-lg font-semibold">Reglas</h2>
                         <p class="whitespace-pre-line text-muted-foreground">

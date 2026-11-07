@@ -21,6 +21,14 @@ final class ListingFormData
     }
 
     /**
+     * @return array<string, array{label: string, type: string, options?: array<string, string>, placeholder?: string}>
+     */
+    public function detailFields(): array
+    {
+        return TerraceDetailCatalog::all();
+    }
+
+    /**
      * @return array<string, int>
      */
     public function mediaLimits(Team $team): array

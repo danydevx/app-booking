@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import ListingForm from '../components/ListingForm.vue';
-import type { ListingLimits, ServiceOption } from '../types';
+import type {
+    ListingDetailField,
+    ListingLimits,
+    ServiceOption,
+} from '../types';
 
 defineProps<{
     services: ServiceOption[];
+    detailFields: Record<string, ListingDetailField>;
     limits: ListingLimits;
     urls: {
         index: string;
@@ -40,7 +45,12 @@ defineOptions({
         </div>
 
         <div class="rounded-xl border bg-card p-5 sm:p-6">
-            <ListingForm mode="create" :services="services" :urls="urls" />
+            <ListingForm
+                mode="create"
+                :services="services"
+                :detail-fields="detailFields"
+                :urls="urls"
+            />
         </div>
     </div>
 </template>

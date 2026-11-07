@@ -234,6 +234,71 @@ class ListingManagementTest extends TestCase
         Storage::disk('public')->assertMissing($path);
     }
 
+    public function test_owner_can_save_terrace_details(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)->post(
+            route('listings.store', ['current_team' => $team->slug]),
+            $this->payload([
+                'details' => [
+                    'space_type' => 'rooftop',
+                    'access' => 'Elevador',
+                    'view' => 'Panorámica',
+                ],
+            ]),
+        )->assertRedirect();
+
+        $listing = Listing::query()->firstOrFail();
+
+        $this->assertSame('rooftop', $listing->details['space_type']);
+        $this->assertSame('Elevador', $listing->details['access']);
+        $this->assertSame('Panorámica', $listing->details['view']);
+    }
+
+    public function test_listing_rejects_unknown_detail_keys(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)->post(
+            route('listings.store', ['current_team' => $team->slug]),
+            $this->payload(['details' => ['unknown' => 'value']]),
+        )->assertSessionHasErrors('details');
+
+        $this->assertDatabaseCount('listings', 0);
+    }
+
+    public function test_listing_rejects_invalid_select_detail_values(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)->post(
+            route('listings.store', ['current_team' => $team->slug]),
+            $this->payload(['details' => ['space_type' => 'invalid']]),
+        )->assertSessionHasErrors('details.space_type');
+
+        $this->assertDatabaseCount('listings', 0);
+    }
+
+    public function test_public_listing_exposes_terrace_details(): void
+    {
+        $team = Team::factory()->create();
+        $listing = Listing::factory()->forTeam($team)->published()->create([
+            'details' => [
+                'space_type' => 'rooftop',
+                'view' => 'Panorámica',
+            ],
+        ]);
+
+        $this->get(route('public.listings.show', ['listing' => $listing->slug]))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Listings/Public/Show')
+                ->has('listing.details', 2)
+                ->where('listing.details.0.key', 'space_type')
+                ->where('listing.details.0.label', 'Tipo de espacio'));
+    }
+
     /**
      * @return array{0: User, 1: Team}
      */

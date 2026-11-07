@@ -5,18 +5,37 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { ListingFormData, ServiceOption } from '../types';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import type {
+    ListingDetailField,
+    ListingFormData,
+    ServiceOption,
+} from '../types';
 
 const props = defineProps<{
     mode: 'create' | 'edit';
     listing?: ListingFormData | null;
     services: ServiceOption[];
+    detailFields: Record<string, ListingDetailField>;
     urls: {
         store?: string;
         update?: string;
         index: string;
     };
 }>();
+
+const detailValues = Object.fromEntries(
+    Object.keys(props.detailFields).map((key) => [
+        key,
+        props.listing?.details?.[key] ?? '',
+    ]),
+);
 
 const form = useForm({
     name: props.listing?.name ?? '',
@@ -30,6 +49,7 @@ const form = useForm({
     longitude: props.listing?.longitude ?? '',
     capacity: props.listing?.capacity ?? '',
     services: props.listing?.services ?? [],
+    details: detailValues,
     rules: props.listing?.rules ?? '',
     contact_name: props.listing?.contact_name ?? '',
     contact_email: props.listing?.contact_email ?? '',
@@ -41,6 +61,12 @@ function toggleService(service: string): void {
     form.services = form.services.includes(service)
         ? form.services.filter((item) => item !== service)
         : [...form.services, service];
+}
+
+function detailError(key: string): string | undefined {
+    return (form.errors as Record<string, string | undefined>)[
+        `details.${key}`
+    ];
 }
 
 function submit(): void {
@@ -197,6 +223,52 @@ function submit(): void {
                 </label>
             </div>
             <InputError :message="form.errors.services" />
+        </section>
+
+        <section
+            v-if="Object.keys(detailFields).length > 0"
+            class="space-y-5 border-t pt-8"
+        >
+            <div>
+                <h2 class="text-lg font-semibold">Detalles del espacio</h2>
+                <p class="text-sm text-muted-foreground">
+                    Información adicional para que los visitantes elijan mejor.
+                </p>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div
+                    v-for="(field, key) in detailFields"
+                    :key="key"
+                    class="grid gap-2"
+                >
+                    <Label :for="`detail-${key}`">{{ field.label }}</Label>
+                    <Select
+                        v-if="field.type === 'select'"
+                        v-model="form.details[key]"
+                    >
+                        <SelectTrigger :id="`detail-${key}`" class="w-full">
+                            <SelectValue placeholder="Selecciona una opción" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="(label, value) in field.options"
+                                :key="value"
+                                :value="value"
+                            >
+                                {{ label }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Input
+                        v-else
+                        :id="`detail-${key}`"
+                        v-model="form.details[key]"
+                        :placeholder="field.placeholder"
+                    />
+                    <InputError :message="detailError(key)" />
+                </div>
+            </div>
         </section>
 
         <section class="space-y-5 border-t pt-8">

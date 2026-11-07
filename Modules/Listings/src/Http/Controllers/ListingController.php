@@ -84,6 +84,7 @@ class ListingController extends Controller
 
         return Inertia::render('Listings/Create', [
             'services' => $this->formData->services(),
+            'detailFields' => $this->formData->detailFields(),
             'limits' => $this->formData->mediaLimits($team),
             'urls' => [
                 'index' => route('listings.index', ['current_team' => $team->slug]),
@@ -133,6 +134,7 @@ class ListingController extends Controller
         return Inertia::render('Listings/Edit', [
             'listing' => ListingPresenter::ownerForm($listing, $team->slug),
             'services' => $this->formData->services(),
+            'detailFields' => $this->formData->detailFields(),
             'limits' => $this->formData->mediaLimits($team),
             'canPublish' => Gate::allows('publish', $listing),
             'canDelete' => Gate::allows('delete', $listing),

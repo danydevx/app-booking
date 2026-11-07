@@ -37,14 +37,13 @@ record the choice in a new ADR (or amend this one) instead of leaving it implici
 
 ## Post-MVP (Phase 9)
 
-| Decision                                         | Current state                 | Needed by                   |
-| ------------------------------------------------ | ----------------------------- | --------------------------- |
-| AI post provider, cost and retention             | Not started                   | Post-MVP                    |
-| WhatsApp Business API provider/consent/templates | Click-to-chat only            | Post-MVP                    |
-| Advanced CRM pipeline/tasks                      | Basic customer records only   | Post-MVP                    |
-| Per-member granular permissions                  | Owner/Admin/Member roles only | Post-MVP                    |
-| `details` JSON UI                                | Backend validated, no UI      | Second vertical or post-MVP |
-| Second vertical                                  | Not chosen                    | Post-MVP                    |
+| Decision                                         | Current state                 | Needed by |
+| ------------------------------------------------ | ----------------------------- | --------- |
+| AI post provider, cost and retention             | Not started                   | Post-MVP  |
+| WhatsApp Business API provider/consent/templates | Click-to-chat only            | Post-MVP  |
+| Advanced CRM pipeline/tasks                      | Basic customer records only   | Post-MVP  |
+| Per-member granular permissions                  | Owner/Admin/Member roles only | Post-MVP  |
+| Second vertical                                  | Not chosen                    | Post-MVP  |
 
 ## Rule
 

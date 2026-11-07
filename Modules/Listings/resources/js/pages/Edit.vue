@@ -4,11 +4,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ListingForm from '../components/ListingForm.vue';
 import MediaManager from '../components/MediaManager.vue';
-import type { ListingFormData, ListingLimits, ServiceOption } from '../types';
+import type {
+    ListingDetailField,
+    ListingFormData,
+    ListingLimits,
+    ServiceOption,
+} from '../types';
 
 const props = defineProps<{
     listing: ListingFormData;
     services: ServiceOption[];
+    detailFields: Record<string, ListingDetailField>;
     limits: ListingLimits;
     canPublish: boolean;
     canDelete: boolean;
@@ -117,6 +123,7 @@ function destroy(): void {
                 mode="edit"
                 :listing="listing"
                 :services="services"
+                :detail-fields="detailFields"
                 :urls="urls"
             />
 

@@ -52,6 +52,7 @@ final class ListingPresenter
             'longitude' => $listing->longitude,
             'capacity' => $listing->capacity,
             'services' => $listing->services ?? [],
+            'details' => $listing->details ?? [],
             'rules' => $listing->rules,
             'contact_name' => $listing->contact_name,
             'contact_email' => $listing->contact_email,
@@ -110,6 +111,15 @@ final class ListingPresenter
                 ->map(fn (string $key): array => [
                     'key' => $key,
                     'label' => TerraceServiceCatalog::label($key),
+                ])
+                ->values()
+                ->all(),
+            'details' => collect(TerraceDetailCatalog::keys())
+                ->filter(fn (string $key): bool => filled(($listing->details ?? [])[$key] ?? null))
+                ->map(fn (string $key): array => [
+                    'key' => $key,
+                    'label' => TerraceDetailCatalog::label($key),
+                    'value' => (string) (($listing->details ?? [])[$key] ?? ''),
                 ])
                 ->values()
                 ->all(),
