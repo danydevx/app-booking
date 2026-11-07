@@ -8,6 +8,10 @@ use App\Models\TeamInvitation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Modules\Bookings\Enums\InquiryStatus;
+use Modules\Bookings\Models\BookingInquiry;
+use Modules\Bookings\Models\Customer;
+use Modules\Listings\Models\Listing;
 use Tests\TestCase;
 
 class DashboardTest extends TestCase
@@ -33,6 +37,36 @@ class DashboardTest extends TestCase
             ->get(route('dashboard'));
 
         $response->assertOk();
+    }
+
+    public function test_dashboard_includes_current_team_overview(): void
+    {
+        $user = User::factory()->create();
+        $team = $user->currentTeam;
+        $listing = Listing::factory()->forTeam($team)->published()->create();
+        $timezone = $listing->timezone;
+
+        BookingInquiry::factory()->forListing($listing)->create([
+            'status' => InquiryStatus::New,
+        ]);
+        BookingInquiry::factory()->forListing($listing)->accepted()->create([
+            'start_date' => now($timezone)->addDays(3)->toDateString(),
+            'end_date' => now($timezone)->addDays(4)->toDateString(),
+        ]);
+        Customer::factory()->create(['team_id' => $team->id]);
+
+        $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Dashboard')
+                ->where('overview.listings', 1)
+                ->where('overview.published_listings', 1)
+                ->where('overview.new_inquiries', 1)
+                ->where('overview.upcoming_bookings', 1)
+                ->where('overview.customers', 1)
+                ->has('upcomingBookings', 1)
+                ->has('recentInquiries', 2));
     }
 
     public function test_dashboard_includes_pending_invitations_for_the_authenticated_user()
