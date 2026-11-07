@@ -7,6 +7,7 @@ import {
     History,
     LayoutDashboard,
     Palette,
+    Server,
     Shield,
     UserCog,
     Users,
@@ -36,6 +37,7 @@ const navigation = [
     },
     { title: 'Reportes', href: '/platform/reports', icon: Flag },
     { title: 'Auditoría', href: '/platform/activity', icon: History },
+    { title: 'Sistema', href: '/platform/system', icon: Server },
     { title: 'Marca', href: '/platform/branding', icon: Palette },
 ];
 

@@ -20,6 +20,10 @@ final class PlatformPermission
 
     public const ACTIVITY_VIEW = 'platform.activity.view';
 
+    public const SYSTEM_VIEW = 'platform.system.view';
+
+    public const SYSTEM_MANAGE = 'platform.system.manage';
+
     public const LISTINGS_VIEW = 'platform.listings.view';
 
     public const LISTINGS_MODERATE = 'platform.listings.moderate';
@@ -46,6 +50,8 @@ final class PlatformPermission
             self::USERS_MANAGE_ROLES,
             self::USERS_NOTIFY,
             self::ACTIVITY_VIEW,
+            self::SYSTEM_VIEW,
+            self::SYSTEM_MANAGE,
             self::LISTINGS_VIEW,
             self::LISTINGS_MODERATE,
             self::SUBSCRIPTIONS_VIEW,

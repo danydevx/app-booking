@@ -8,6 +8,7 @@ use Modules\Platform\Http\Controllers\PlatformDashboardController;
 use Modules\Platform\Http\Controllers\PlatformListingController;
 use Modules\Platform\Http\Controllers\PlatformReportController;
 use Modules\Platform\Http\Controllers\PlatformSubscriptionController;
+use Modules\Platform\Http\Controllers\PlatformSystemController;
 use Modules\Platform\Http\Controllers\PlatformUserController;
 use Modules\Platform\Http\Controllers\PublicListingReportController;
 use Modules\Platform\Support\PlatformPermission;
@@ -86,6 +87,16 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::get('activity', PlatformActivityController::class)
             ->middleware('can:'.PlatformPermission::ACTIVITY_VIEW)
             ->name('activity.index');
+
+        Route::get('system', PlatformSystemController::class)
+            ->middleware('can:'.PlatformPermission::SYSTEM_VIEW)
+            ->name('system.index');
+        Route::post('system/failed-jobs/{uuid}/retry', [PlatformSystemController::class, 'retryFailedJob'])
+            ->middleware('can:'.PlatformPermission::SYSTEM_MANAGE)
+            ->name('system.failed-jobs.retry');
+        Route::delete('system/failed-jobs/{uuid}', [PlatformSystemController::class, 'forgetFailedJob'])
+            ->middleware('can:'.PlatformPermission::SYSTEM_MANAGE)
+            ->name('system.failed-jobs.destroy');
 
         Route::get('reports', [PlatformReportController::class, 'index'])
             ->middleware('can:'.PlatformPermission::REPORTS_VIEW)
