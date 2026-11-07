@@ -10,6 +10,10 @@ final class PlatformPermission
 
     public const ACCOUNTS_SUSPEND = 'platform.accounts.suspend';
 
+    public const USERS_VIEW = 'platform.users.view';
+
+    public const USERS_SUSPEND = 'platform.users.suspend';
+
     public const LISTINGS_VIEW = 'platform.listings.view';
 
     public const LISTINGS_MODERATE = 'platform.listings.moderate';
@@ -31,6 +35,8 @@ final class PlatformPermission
             self::ACCESS,
             self::ACCOUNTS_VIEW,
             self::ACCOUNTS_SUSPEND,
+            self::USERS_VIEW,
+            self::USERS_SUSPEND,
             self::LISTINGS_VIEW,
             self::LISTINGS_MODERATE,
             self::SUBSCRIPTIONS_VIEW,

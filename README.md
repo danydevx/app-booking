@@ -101,6 +101,25 @@ rutas, migraciones, páginas Vue y tests.
 - Seguridad: `SECURITY.md`
 - Guía para agentes: `.opencode/skills/app-booking-development/SKILL.md`
 
+## Operación de plataforma
+
+- Crear un superadmin verificado:
+    ```bash
+    php artisan app:make-platform-superadmin correo@ejemplo.com
+    ```
+- Revocar acceso:
+    ```bash
+    php artisan app:revoke-platform-superadmin correo@ejemplo.com
+    ```
+- Sincronizar el rol y permisos de plataforma tras un cambio:
+    ```bash
+    php artisan platform:sync-permissions
+    ```
+- Panel `/platform`: resumen, cuentas, usuarios registrados, terrazas,
+  suscripciones, reportes y marca.
+- El superadmin puede suspender/restaurar cuentas, terrazas y usuarios; las
+  acciones quedan en el activity log y notifican por correo.
+
 ## Licencia
 
 MIT. Ver `LICENSE`.

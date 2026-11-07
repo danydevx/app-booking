@@ -7,6 +7,7 @@ import {
     LayoutDashboard,
     Palette,
     Shield,
+    UserCog,
     Users,
 } from '@lucide/vue';
 import { computed } from 'vue';
@@ -25,6 +26,7 @@ const appUrl = computed(() =>
 const navigation = [
     { title: 'Resumen', href: '/platform', icon: LayoutDashboard },
     { title: 'Cuentas', href: '/platform/accounts', icon: Users },
+    { title: 'Usuarios', href: '/platform/users', icon: UserCog },
     { title: 'Terrazas', href: '/platform/listings', icon: Building2 },
     {
         title: 'Suscripciones',

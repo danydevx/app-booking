@@ -7,6 +7,7 @@ use Modules\Platform\Http\Controllers\PlatformDashboardController;
 use Modules\Platform\Http\Controllers\PlatformListingController;
 use Modules\Platform\Http\Controllers\PlatformReportController;
 use Modules\Platform\Http\Controllers\PlatformSubscriptionController;
+use Modules\Platform\Http\Controllers\PlatformUserController;
 use Modules\Platform\Http\Controllers\PublicListingReportController;
 use Modules\Platform\Support\PlatformPermission;
 
@@ -38,6 +39,19 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::post('accounts/{account}/restore', [PlatformAccountController::class, 'restore'])
             ->middleware('can:'.PlatformPermission::ACCOUNTS_SUSPEND)
             ->name('accounts.restore');
+
+        Route::get('users', [PlatformUserController::class, 'index'])
+            ->middleware('can:'.PlatformPermission::USERS_VIEW)
+            ->name('users.index');
+        Route::get('users/{user}', [PlatformUserController::class, 'show'])
+            ->middleware('can:'.PlatformPermission::USERS_VIEW)
+            ->name('users.show');
+        Route::post('users/{user}/suspend', [PlatformUserController::class, 'suspend'])
+            ->middleware('can:'.PlatformPermission::USERS_SUSPEND)
+            ->name('users.suspend');
+        Route::post('users/{user}/restore', [PlatformUserController::class, 'restore'])
+            ->middleware('can:'.PlatformPermission::USERS_SUSPEND)
+            ->name('users.restore');
 
         Route::get('listings', [PlatformListingController::class, 'index'])
             ->middleware('can:'.PlatformPermission::LISTINGS_VIEW)

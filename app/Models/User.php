@@ -29,6 +29,8 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string|null $remember_token
  * @property int|null $current_team_id
  * @property array<string, bool>|null $notification_preferences
+ * @property Carbon|null $suspended_at
+ * @property string|null $suspension_reason
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Team|null $currentTeam
@@ -38,7 +40,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property-read Membership $pivot
  */
 #[Fillable(['name', 'email', 'password', 'current_team_id', 'notification_preferences'])]
-#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
+#[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token', 'suspended_at', 'suspension_reason'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
@@ -59,7 +61,16 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'notification_preferences' => 'array',
+            'suspended_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Determine if the user has been suspended by platform moderation.
+     */
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 
     /**

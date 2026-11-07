@@ -102,11 +102,13 @@ No commitear valores reales.
 5. `npm ci && npm run build:ssr` o desplegar el artefacto ya construido.
 6. Enlazar `.env` y storage persistente.
 7. `php artisan migrate --force` como paso controlado.
-8. `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`.
-9. `php artisan storage:link --force`.
-10. Reiniciar workers de cola.
-11. Cambiar el symlink `current` de forma atómica.
-12. Health check y smoke test.
+8. `php artisan platform:sync-permissions` (idempotente).
+9. Crear el primer superadmin con `php artisan app:make-platform-superadmin`.
+10. `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`.
+11. `php artisan storage:link --force`.
+12. Reiniciar workers de cola.
+13. Cambiar el symlink `current` de forma atómica.
+14. Health check y smoke test.
 
 No ejecutar `composer update` en producción. No ejecutar migraciones destructivas.
 

@@ -39,6 +39,7 @@ use Laravel\Cashier\Billable;
  * @property-read Collection<int, Membership> $memberships
  * @property-read Collection<int, User> $members
  * @property-read int $members_count
+ * @property-read Membership $pivot
  */
 #[Fillable(['name', 'slug', 'is_personal', 'timezone'])]
 class Team extends Model

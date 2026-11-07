@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Modules\Platform\Console\Commands\MakePlatformSuperadmin;
 use Modules\Platform\Console\Commands\RevokePlatformSuperadmin;
+use Modules\Platform\Console\Commands\SyncPlatformPermissions;
 
 final class PlatformServiceProvider extends ServiceProvider
 {
@@ -32,6 +33,7 @@ final class PlatformServiceProvider extends ServiceProvider
             $this->commands([
                 MakePlatformSuperadmin::class,
                 RevokePlatformSuperadmin::class,
+                SyncPlatformPermissions::class,
             ]);
         }
     }
