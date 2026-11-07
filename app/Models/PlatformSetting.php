@@ -35,11 +35,22 @@ class PlatformSetting extends Model
      */
     public static function current(): self
     {
-        return static::query()->first() ?? static::query()->create([
+        $settings = static::query()->orderBy('id')->first();
+
+        if ($settings !== null) {
+            return $settings;
+        }
+
+        static::query()->insertOrIgnore([
+            'id' => 1,
             'app_name' => (string) config('app.name', 'Terrazas'),
             'support_email' => config('mail.from.address'),
             'from_address' => config('mail.from.address'),
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
+
+        return static::query()->findOrFail(1);
     }
 
     public function logoUrl(): ?string
