@@ -32,7 +32,7 @@ Last updated: 2026-11-06
 - PHP version: 8.3.6
 - Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
-- Test suite: 227 tests / 1,195 assertions (SQLite and MySQL 8.4)
+- Test suite: 236 tests / 1,262 assertions (SQLite and MySQL 8.4)
 - Architecture decisions: `docs/decisions/README.md` (ADR 0001–0004)
 - Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
 - CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
