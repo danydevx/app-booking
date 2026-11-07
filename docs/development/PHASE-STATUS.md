@@ -15,7 +15,7 @@ Last updated: 2026-11-06
 | 5 — Stripe and plans            | PASS        | `Modules/Billing`; Cashier 16.9; test-mode checkout/portal/webhooks verified; 167 tests/764 assertions; build 3,658 modules | phase-5 commit |
 | 6 — Platform admin              | PASS        | `Modules/Platform`; activitylog 4.12; moderation, reports, audit; 181 tests/959 assertions; build 3,678 modules             | phase-6 commit |
 | 7 — Branding and communications | PASS        | `Modules/Platform` branding + account branding, queued mail, WhatsApp; 197 tests/1,041 assertions; build 3,683 modules      | phase-7 commit |
-| 8 — Production launch           | PARTIAL     | `docs/development/PRODUCTION.md` checklist; deployment pending target/approval                                              | —              |
+| 8 — Production launch           | PARTIAL     | `docs/development/PRODUCTION.md` + `app:production-check`; deployment pending target/approval                               | —              |
 | 9 — Post-MVP                    | NOT STARTED | —                                                                                                                           | —              |
 
 ## Current blockers
@@ -24,7 +24,7 @@ Last updated: 2026-11-06
   legacy/test-only.
 - CI verified locally: SQLite `composer ci:check` and MySQL 8.4 backend suite pass.
 - Production launch pending target environment and explicit approval; checklist in
-  `docs/development/PRODUCTION.md`.
+  `docs/development/PRODUCTION.md` and `composer production:check`.
 
 ## Environment facts
 
@@ -33,6 +33,7 @@ Last updated: 2026-11-06
 - Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
 - Test suite: 199 tests / 1,045 assertions (SQLite and MySQL 8.4)
+- Architecture decisions: `docs/decisions/README.md` (ADR 0001–0004)
 - Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
 - CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
 - Database migration: phase 2 applied (schema + data); SQLite remains legacy/test-only

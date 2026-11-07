@@ -4,11 +4,27 @@
 
 - **Fase 8: PARTIAL.** Checklist y requisitos documentados; **no se ha desplegado**
   a staging ni producción.
+- Decisiones asociadas: `docs/decisions/0003-production-operations.md` y
+  `docs/decisions/0004-open-decisions.md`.
 - El despliegue requiere un entorno objetivo y autorización explícita.
 - CI actual: SQLite + MySQL 8.4, Pint, PHPStan, tipos, build y auditorías.
 - Cobertura: `composer test:coverage`; requiere Xdebug/PCOV (no instalado
   localmente). CI no ejecuta cobertura por defecto.
 - E2E: Playwright aún no instalado.
+
+## Preflight
+
+Antes de desplegar, ejecutar en el entorno objetivo:
+
+```bash
+composer production:check
+# o
+php artisan app:production-check --json
+```
+
+Valida `APP_ENV`, `APP_DEBUG`, HTTPS, driver MySQL, timezone, sesión/caché/cola,
+mailer, conexión a base de datos, storage y Stripe. Falla si algún requisito
+obligatorio no se cumple. En local es normal que falle.
 
 ## Entornos
 

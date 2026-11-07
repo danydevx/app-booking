@@ -61,6 +61,7 @@ composer dev        # servidor + queue + pail + Vite
 composer test       # Pint + PHPStan + PHPUnit (SQLite en memoria)
 composer test:coverage # PHPUnit con cobertura (requiere Xdebug/PCOV)
 composer ci:check   # npm run check + vue-tsc + composer test
+composer production:check # preflight de configuración de producción
 composer ssr        # servidor Inertia SSR (requiere build:ssr)
 composer ssr:check  # health check del SSR
 
@@ -94,7 +95,7 @@ Monolito modular: el código compartido del starter kit vive en `app/` y
 rutas, migraciones, páginas Vue y tests.
 
 - Estructura de módulos: `docs/development/MODULES.md`
-- Decisiones de producto: `docs/decisions/0001-mvp.md`
+- Decisiones de arquitectura y producto: `docs/decisions/README.md`
 - Estado de fases: `docs/development/PHASE-STATUS.md`
 - Producción: `docs/development/PRODUCTION.md`
 - Seguridad: `SECURITY.md`
