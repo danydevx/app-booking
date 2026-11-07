@@ -26,8 +26,10 @@ const props = defineProps<{
     };
     statuses: StatusOption[];
     canUseCustomers: boolean;
+    canCreateBooking: boolean;
     urls: {
         index: string;
+        create: string;
         customers: string;
         billing: string;
     };
@@ -89,12 +91,19 @@ function statusVariant(
                     {{ team.name }}.
                 </p>
             </div>
-            <Button variant="outline" as-child>
-                <Link :href="canUseCustomers ? urls.customers : urls.billing">
-                    <Users />
-                    {{ canUseCustomers ? 'Clientes' : 'Clientes · Pro' }}
-                </Link>
-            </Button>
+            <div class="flex flex-wrap gap-2">
+                <Button v-if="canCreateBooking" as-child>
+                    <Link :href="urls.create">Nueva reserva</Link>
+                </Button>
+                <Button variant="outline" as-child>
+                    <Link
+                        :href="canUseCustomers ? urls.customers : urls.billing"
+                    >
+                        <Users />
+                        {{ canUseCustomers ? 'Clientes' : 'Clientes · Pro' }}
+                    </Link>
+                </Button>
+            </div>
         </div>
 
         <form

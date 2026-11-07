@@ -14,6 +14,11 @@ class BookingInquiryPolicy
         return $user->belongsToTeam($team);
     }
 
+    public function create(User $user, Team $team): bool
+    {
+        return $user->teamRole($team)?->isAtLeast(TeamRole::Admin) ?? false;
+    }
+
     public function view(User $user, BookingInquiry $inquiry): bool
     {
         return $this->belongsToListingTeam($user, $inquiry);

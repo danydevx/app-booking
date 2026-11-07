@@ -55,8 +55,10 @@ class BookingInquiryController extends Controller
             'filters' => $filters,
             'statuses' => BookingOptionCatalog::inquiryStatuses(),
             'canUseCustomers' => $this->entitlements->allows($team, 'customers'),
+            'canCreateBooking' => Gate::allows('create', [BookingInquiry::class, $team]),
             'urls' => [
                 'index' => route('bookings.index', ['current_team' => $team->slug]),
+                'create' => route('bookings.create', ['current_team' => $team->slug]),
                 'customers' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'billing' => route('billing.index', ['current_team' => $team->slug]),
             ],
