@@ -10,7 +10,7 @@
 
 ## 1. Resumen ejecutivo
 
-El proyecto es un SaaS multi-cuenta para renta de terrazas, construido sobre Laravel 13 + Inertia 3 + Vue 3/TypeScript + Tailwind 4 + shadcn-vue, con un monolito modular bajo `Modules/`. El MVP funcional (fases 0–7) está implementado y tiene una base de tests sólida: **199 tests / 1,045 aserciones, todos en verde**.
+El proyecto es un SaaS multi-cuenta para renta de terrazas, construido sobre Laravel 13 + Inertia 3 + Vue 3/TypeScript + Tailwind 4 + shadcn-vue, con un monolito modular bajo `Modules/`. El MVP funcional (fases 0–7) está implementado y tiene una base de tests sólida: **204 tests / 1,060 aserciones, todos en verde**.
 
 La calidad del backend es buena: Pint, PHPStan nivel 7, tipos de Vue y build pasan. Los **dos bloqueadores** detectados en la auditoría ya están resueltos:
 
@@ -19,7 +19,7 @@ La calidad del backend es buena: Pint, PHPStan nivel 7, tipos de Vue y build pas
 
 | Área                  | Comando                      | Resultado                                    |
 | --------------------- | ---------------------------- | -------------------------------------------- |
-| Tests backend         | `php artisan test`           | **PASS** — 199 tests, 1,045 assertions, ~8 s |
+| Tests backend         | `php artisan test`           | **PASS** — 204 tests, 1,060 assertions, ~8 s |
 | Formato PHP           | `vendor/bin/pint --test`     | **PASS**                                     |
 | Análisis estático     | `vendor/bin/phpstan analyse` | **PASS** — 0 errores, nivel 7                |
 | Tipos frontend        | `npm run types:check`        | **PASS**                                     |
@@ -70,12 +70,12 @@ El trabajo siguió un esquema de **fases 0–7 con documentación de cierre**:
 6. Commit con los archivos revisados.
 
 Esto se ve reflejado en los 8 reportes de fase existentes (`00` a `07`) y en las
-métricas de `PHASE-STATUS.md` (197 tests en fase 7, más los tests de
-localización y singleton añadidos después: 199 tests / 1,045 aserciones actuales).
+métricas de `PHASE-STATUS.md` (197 tests en fase 7, más los tests añadidos
+después: localización, singleton y clientes manuales; 204 tests / 1,060 aserciones actuales).
 
 ### 2.3 Fortalezas del proceso
 
-- **Cultura de tests:** 199 tests, 39 archivos con `RefreshDatabase`, 17 archivos con aserciones de Inertia. Se prueban autorización, aislamiento multi-cuenta, límites de plan, webhooks y doble reserva.
+- **Cultura de tests:** 204 tests, 40 archivos con `RefreshDatabase`, 17 archivos con aserciones de Inertia. Se prueban autorización, aislamiento multi-cuenta, límites de plan, webhooks y doble reserva.
 - **Documentación de decisiones:** `docs/decisions/0001-mvp.md` fija el alcance; `docs/PRODUCT-PLAN.md` describe el producto; `docs/development/MODULES.md` define la estructura modular.
 - **Disciplina de alcance:** no se introdujo Bootstrap/jQuery ni una segunda librería de componentes; se respetó el starter kit.
 - **Cierre por fase:** cada fase dejó reporte, estado y evidencia de comandos.
@@ -162,7 +162,7 @@ localización y singleton añadidos después: 199 tests / 1,045 aserciones actua
 
 | Comando                                  | Resultado | Evidencia                            |
 | ---------------------------------------- | --------- | ------------------------------------ |
-| `php artisan test`                       | PASS      | 199 passed, 1,045 assertions, 7.9 s  |
+| `php artisan test`                       | PASS      | 204 passed, 1,060 assertions, 7.9 s  |
 | `vendor/bin/pint --test`                 | PASS      | sin archivos por corregir            |
 | `vendor/bin/phpstan analyse`             | PASS      | 0 errores, nivel 7                   |
 | `npm run types:check`                    | PASS      | `vue-tsc --noEmit` sin errores       |
@@ -192,7 +192,7 @@ Estos resultados están alineados con `PHASE-STATUS.md` en tests y aserciones; l
 
 - **Estado:** resuelto el 2026-11-06.
 - **Evidencia:** `symfony/http-foundation`, `symfony/http-kernel`, `symfony/routing`, `symfony/serializer` y `symfony/yaml` actualizados a `v7.4.23`; `composer audit` → `No security vulnerability advisories found`.
-- **Verificación:** suite SQLite y suite MySQL 8.4 → 199 tests / 1,045 assertions en ambas.
+- **Verificación:** suite SQLite y suite MySQL 8.4 → 204 tests / 1,060 assertions en ambas.
 - **Nota:** se eliminó `@php artisan boost:update --ansi` de `post-update-cmd` porque fallaba cuando Boost no estaba inicializado (`boost:install`); el comando sigue disponible manualmente.
 
 ### 5.2 Prioridad media (P2)
@@ -358,7 +358,7 @@ $ php artisan --version
 Laravel Framework 13.39.0
 
 $ php artisan test
-{"tool":"phpunit","result":"passed","tests":199,"passed":199,"assertions":1045,"duration_ms":7900}
+{"tool":"phpunit","result":"passed","tests":204,"passed":204,"assertions":1060,"duration_ms":7900}
 
 $ vendor/bin/pint --test
 {"tool":"pint","result":"passed"}
@@ -391,8 +391,8 @@ $ php artisan route:list --except-vendor
 
 ### B. Inventario de tests
 
-- **Total:** 199 tests, 1,045 aserciones.
-- **Por área:** `tests/` 108; `Modules/Billing` 22; `Modules/Bookings` 24; `Modules/Listings` 20; `Modules/Platform` 25.
+- **Total:** 204 tests, 1,060 aserciones.
+- **Por área:** `tests/` 108; `Modules/Billing` 22; `Modules/Bookings` 29; `Modules/Listings` 20; `Modules/Platform` 25.
 - **Localización:** `tests/Unit/LocalizationTest.php` verifica mensajes de validación en español.
 - **Singleton:** `Modules/Platform/tests/Feature/PlatformSettingTest.php` verifica la fila única de `platform_settings`.
 - **Feature tests con `RefreshDatabase`:** 39 archivos.

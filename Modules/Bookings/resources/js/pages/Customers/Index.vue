@@ -1,8 +1,19 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
+import InputError from '@/components/InputError.vue';
 import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { CustomerCard, Paginated } from '../../types';
@@ -14,6 +25,7 @@ const props = defineProps<{
     urls: {
         bookings: string;
         index: string;
+        store: string;
     };
 }>();
 
@@ -38,6 +50,34 @@ const form = reactive({
 function search(): void {
     router.get(props.urls.index, { ...form }, { preserveScroll: true });
 }
+
+const createOpen = ref(false);
+const createForm = useForm({
+    name: '',
+    email: '',
+    phone: '',
+    whatsapp_phone: '',
+    notes: '',
+});
+
+function handleCreateOpen(value: boolean): void {
+    createOpen.value = value;
+
+    if (!value) {
+        createForm.reset();
+        createForm.clearErrors();
+    }
+}
+
+function createCustomer(): void {
+    createForm.post(props.urls.store, {
+        preserveScroll: true,
+        onSuccess: () => {
+            createOpen.value = false;
+            createForm.reset();
+        },
+    });
+}
 </script>
 
 <template>
@@ -51,9 +91,112 @@ function search(): void {
                     Personas que han solicitado una terraza de {{ team.name }}.
                 </p>
             </div>
-            <Button variant="outline" as-child>
-                <Link :href="urls.bookings">Solicitudes</Link>
-            </Button>
+            <div class="flex flex-wrap gap-2">
+                <Dialog :open="createOpen" @update:open="handleCreateOpen">
+                    <DialogTrigger as-child>
+                        <Button>Nuevo cliente</Button>
+                    </DialogTrigger>
+                    <DialogContent class="sm:max-w-lg">
+                        <form
+                            class="space-y-4"
+                            @submit.prevent="createCustomer"
+                        >
+                            <DialogHeader>
+                                <DialogTitle>Nuevo cliente</DialogTitle>
+                                <DialogDescription>
+                                    Registra un cliente manualmente para
+                                    {{ team.name }}.
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div class="grid gap-3">
+                                <div class="grid gap-2">
+                                    <Label for="customer-name">Nombre</Label>
+                                    <Input
+                                        id="customer-name"
+                                        v-model="createForm.name"
+                                        required
+                                    />
+                                    <InputError
+                                        :message="createForm.errors.name"
+                                    />
+                                </div>
+                                <div class="grid gap-2">
+                                    <Label for="customer-email">Correo</Label>
+                                    <Input
+                                        id="customer-email"
+                                        v-model="createForm.email"
+                                        type="email"
+                                        required
+                                    />
+                                    <InputError
+                                        :message="createForm.errors.email"
+                                    />
+                                </div>
+                                <div class="grid gap-3 sm:grid-cols-2">
+                                    <div class="grid gap-2">
+                                        <Label for="customer-phone"
+                                            >Teléfono</Label
+                                        >
+                                        <Input
+                                            id="customer-phone"
+                                            v-model="createForm.phone"
+                                        />
+                                        <InputError
+                                            :message="createForm.errors.phone"
+                                        />
+                                    </div>
+                                    <div class="grid gap-2">
+                                        <Label for="customer-whatsapp"
+                                            >WhatsApp</Label
+                                        >
+                                        <Input
+                                            id="customer-whatsapp"
+                                            v-model="createForm.whatsapp_phone"
+                                        />
+                                        <InputError
+                                            :message="
+                                                createForm.errors.whatsapp_phone
+                                            "
+                                        />
+                                    </div>
+                                </div>
+                                <div class="grid gap-2">
+                                    <Label for="customer-notes"
+                                        >Notas internas</Label
+                                    >
+                                    <textarea
+                                        id="customer-notes"
+                                        v-model="createForm.notes"
+                                        rows="3"
+                                        class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                    />
+                                    <InputError
+                                        :message="createForm.errors.notes"
+                                    />
+                                </div>
+                            </div>
+
+                            <DialogFooter class="gap-2">
+                                <DialogClose as-child>
+                                    <Button variant="secondary" type="button">
+                                        Cancelar
+                                    </Button>
+                                </DialogClose>
+                                <Button
+                                    type="submit"
+                                    :disabled="createForm.processing"
+                                >
+                                    Crear cliente
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+                <Button variant="outline" as-child>
+                    <Link :href="urls.bookings">Solicitudes</Link>
+                </Button>
+            </div>
         </div>
 
         <form class="flex flex-wrap items-end gap-3" @submit.prevent="search">
@@ -74,7 +217,7 @@ function search(): void {
         >
             <h2 class="font-medium">No hay clientes todavía</h2>
             <p class="mt-1 text-sm text-muted-foreground">
-                Se crean automáticamente al recibir una solicitud.
+                Se crean al recibir una solicitud o manualmente.
             </p>
         </div>
 

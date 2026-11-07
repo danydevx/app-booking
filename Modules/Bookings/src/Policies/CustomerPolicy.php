@@ -13,6 +13,11 @@ class CustomerPolicy
         return $user->belongsToTeam($team);
     }
 
+    public function create(User $user, Team $team): bool
+    {
+        return $user->belongsToTeam($team);
+    }
+
     public function view(User $user, Customer $customer): bool
     {
         return $user->belongsToTeam($customer->team);

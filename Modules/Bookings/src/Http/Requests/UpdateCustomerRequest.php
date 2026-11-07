@@ -3,6 +3,7 @@
 namespace Modules\Bookings\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateCustomerRequest extends FormRequest
 {
@@ -18,7 +19,14 @@ class UpdateCustomerRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email', 'max:255'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('customers', 'email')
+                    ->where(fn ($query) => $query->where('team_id', $this->user()?->current_team_id))
+                    ->ignore($this->route('customer')),
+            ],
             'phone' => ['nullable', 'string', 'max:40'],
             'whatsapp_phone' => ['nullable', 'string', 'max:40'],
             'notes' => ['nullable', 'string', 'max:5000'],

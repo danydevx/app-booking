@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Billing\Support\Entitlements;
+use Modules\Bookings\Actions\CreateCustomer;
+use Modules\Bookings\Http\Requests\StoreCustomerRequest;
 use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
@@ -64,7 +66,30 @@ class CustomerController extends Controller
             'urls' => [
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
+                'store' => route('bookings.customers.store', ['current_team' => $team->slug]),
             ],
+        ]);
+    }
+
+    public function store(
+        StoreCustomerRequest $request,
+        CreateCustomer $createCustomer,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+
+        Gate::authorize('create', [Customer::class, $team]);
+
+        if (! $this->entitlements->allows($team, 'customers')) {
+            return $this->upgradeRedirect($team);
+        }
+
+        $customer = $createCustomer->handle($team, $request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Cliente creado.']);
+
+        return to_route('bookings.customers.show', [
+            'current_team' => $team->slug,
+            'customer' => $customer->id,
         ]);
     }
 

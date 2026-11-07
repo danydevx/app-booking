@@ -22,6 +22,7 @@ Route::prefix('{current_team}/bookings')
         Route::get('/', [BookingInquiryController::class, 'index'])->name('index');
 
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+        Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
 
