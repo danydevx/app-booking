@@ -2,6 +2,8 @@
 /bootstrap/ssr
 /node_modules
 /public/build
+/build
+/database/legacy
 /public/fonts-manifest.dev.json
 /public/hot
 /public/storage
@@ -13,8 +15,8 @@
 /vendor
 .DS_Store
 .env
-.env.backup
-.env.production
+.env.*
+!.env.example
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
