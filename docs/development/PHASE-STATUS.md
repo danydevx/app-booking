@@ -32,7 +32,7 @@ Last updated: 2026-11-07
 - PHP version: 8.3.6
 - Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
-- Test suite: 242 tests / 1,284 assertions (SQLite and MySQL 8.4)
+- Test suite: 247 tests / 1,316 assertions (SQLite and MySQL 8.4)
 - Architecture decisions: `docs/decisions/README.md` (ADR 0001–0004)
 - Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
 - CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
@@ -44,4 +44,5 @@ Last updated: 2026-11-07
 - Current business modules: `Modules/Platform`, `Modules/Listings`,
   `Modules/Bookings`, `Modules/Billing`
 - Moderation audit: `spatie/laravel-activitylog` 4.12 with `moderation` log
+- Operational status: `/platform/system` shows queue, scheduler heartbeat and failed jobs
 - Local mailer: `log`; Mailpit optional via `MAIL_HOST`/`MAIL_PORT`
