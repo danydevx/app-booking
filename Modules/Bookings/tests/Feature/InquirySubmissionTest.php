@@ -72,20 +72,21 @@ class InquirySubmissionTest extends TestCase
         $team = Team::factory()->create();
         $listing = Listing::factory()->forTeam($team)->published()->create();
         $route = route('public.bookings.inquiries.store', ['listing' => $listing->slug]);
+        $timezone = $listing->timezone;
 
         $this->post($route, $this->payload([
-            'start_date' => now()->subDay()->toDateString(),
-            'end_date' => now()->toDateString(),
+            'start_date' => now($timezone)->subDay()->toDateString(),
+            'end_date' => now($timezone)->toDateString(),
         ]))->assertSessionHasErrors('start_date');
 
         $this->post($route, $this->payload([
-            'start_date' => now()->addDays(5)->toDateString(),
-            'end_date' => now()->addDays(1)->toDateString(),
+            'start_date' => now($timezone)->addDays(5)->toDateString(),
+            'end_date' => now($timezone)->addDays(1)->toDateString(),
         ]))->assertSessionHasErrors('end_date');
 
         $this->post($route, $this->payload([
-            'start_date' => now()->addDay()->toDateString(),
-            'end_date' => now()->addDays(60)->toDateString(),
+            'start_date' => now($timezone)->addDay()->toDateString(),
+            'end_date' => now($timezone)->addDays(60)->toDateString(),
         ]))->assertSessionHasErrors('end_date');
 
         $this->post($route, $this->payload(['website' => 'https://spam.test']))
