@@ -114,12 +114,15 @@ function reasonOf(activity: ActivityRow): string {
                     {{ account.name }}
                 </h1>
                 <p class="text-sm text-muted-foreground">
-                    /{{ account.slug }} · Alta {{ formatDate(account.created_at) }}
+                    /{{ account.slug }} · Alta
+                    {{ formatDate(account.created_at) }}
                 </p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2">
-                <Badge :variant="account.is_suspended ? 'destructive' : 'default'">
+                <Badge
+                    :variant="account.is_suspended ? 'destructive' : 'default'"
+                >
                     {{ account.is_suspended ? 'Suspendida' : 'Activa' }}
                 </Badge>
                 <Badge variant="outline">{{ billing.plan }}</Badge>
@@ -240,7 +243,9 @@ function reasonOf(activity: ActivityRow): string {
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <Badge variant="outline">{{ member.role_label }}</Badge>
+                            <Badge variant="outline">{{
+                                member.role_label
+                            }}</Badge>
                             <span class="text-xs text-muted-foreground">
                                 {{ member.joined_at ?? '—' }}
                             </span>
@@ -283,7 +288,9 @@ function reasonOf(activity: ActivityRow): string {
                                 {{ listing.status_label }}
                             </Badge>
                             <Button size="sm" variant="outline" as-child>
-                                <Link :href="listing.platform_url">Revisar</Link>
+                                <Link :href="listing.platform_url"
+                                    >Revisar</Link
+                                >
                             </Button>
                             <a
                                 v-if="listing.public_url"

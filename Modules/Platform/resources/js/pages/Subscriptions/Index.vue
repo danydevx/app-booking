@@ -89,7 +89,10 @@ function statusVariant(
                 </p>
             </div>
 
-            <form class="flex w-full max-w-md items-center gap-2" @submit.prevent="submit">
+            <form
+                class="flex w-full max-w-md items-center gap-2"
+                @submit.prevent="submit"
+            >
                 <Input
                     v-model="search"
                     type="search"
@@ -102,7 +105,9 @@ function statusVariant(
 
         <div class="overflow-x-auto rounded-xl border">
             <table class="w-full text-left text-sm">
-                <thead class="bg-muted/50 text-xs uppercase text-muted-foreground">
+                <thead
+                    class="bg-muted/50 text-xs text-muted-foreground uppercase"
+                >
                     <tr>
                         <th class="px-4 py-3">Cuenta</th>
                         <th class="px-4 py-3">Plan</th>
@@ -131,11 +136,15 @@ function statusVariant(
                             {{ account.stripe_status ?? '—' }}
                         </td>
                         <td class="px-4 py-3">{{ account.ends_at ?? '—' }}</td>
-                        <td class="px-4 py-3">{{ account.started_at ?? '—' }}</td>
+                        <td class="px-4 py-3">
+                            {{ account.started_at ?? '—' }}
+                        </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center justify-end gap-2">
                                 <Button size="sm" variant="outline" as-child>
-                                    <Link :href="account.account_url">Cuenta</Link>
+                                    <Link :href="account.account_url"
+                                        >Cuenta</Link
+                                    >
                                 </Button>
                                 <a
                                     v-if="account.stripe_dashboard_url"

@@ -74,7 +74,10 @@ function submit(): void {
         <p v-if="form.errors.status" class="text-sm text-destructive">
             {{ form.errors.status }}
         </p>
-        <p v-if="form.errors.resolution_action" class="text-sm text-destructive">
+        <p
+            v-if="form.errors.resolution_action"
+            class="text-sm text-destructive"
+        >
             {{ form.errors.resolution_action }}
         </p>
         <p v-if="form.errors.resolution_note" class="text-sm text-destructive">

@@ -110,8 +110,9 @@ function reasonOf(activity: ActivityRow): string {
                 </h1>
                 <p class="text-sm text-muted-foreground">
                     {{
-                        [listing.city, listing.state].filter(Boolean).join(', ') ||
-                        'Sin ubicación'
+                        [listing.city, listing.state]
+                            .filter(Boolean)
+                            .join(', ') || 'Sin ubicación'
                     }}
                     · Publicada {{ formatDate(listing.published_at) }}
                 </p>
@@ -132,7 +133,12 @@ function reasonOf(activity: ActivityRow): string {
                 <Badge v-if="listing.team.is_suspended" variant="destructive">
                     Cuenta suspendida
                 </Badge>
-                <Button v-if="listing.public_url" size="sm" variant="outline" as-child>
+                <Button
+                    v-if="listing.public_url"
+                    size="sm"
+                    variant="outline"
+                    as-child
+                >
                     <a
                         :href="listing.public_url"
                         target="_blank"
@@ -154,8 +160,8 @@ function reasonOf(activity: ActivityRow): string {
                 {{ listing.suspension_reason }}
             </p>
             <p class="mt-1 text-xs text-muted-foreground">
-                Suspendida el {{ formatDate(listing.suspended_at) }}. No
-                aparece en el catálogo público.
+                Suspendida el {{ formatDate(listing.suspended_at) }}. No aparece
+                en el catálogo público.
             </p>
         </div>
 
@@ -291,7 +297,9 @@ function reasonOf(activity: ActivityRow): string {
                             </p>
                         </div>
                         <div class="flex items-center gap-2">
-                            <Badge variant="outline">{{ report.status_label }}</Badge>
+                            <Badge variant="outline">{{
+                                report.status_label
+                            }}</Badge>
                             <span class="text-xs text-muted-foreground">
                                 {{ formatDate(report.created_at) }}
                             </span>

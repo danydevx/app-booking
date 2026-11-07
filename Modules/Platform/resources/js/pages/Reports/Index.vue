@@ -134,7 +134,10 @@ function formatDate(value: string | null): string {
             </form>
         </div>
 
-        <div v-if="reports.data.length === 0" class="rounded-xl border border-dashed p-10 text-center">
+        <div
+            v-if="reports.data.length === 0"
+            class="rounded-xl border border-dashed p-10 text-center"
+        >
             <Flag class="mx-auto mb-2 size-6 text-muted-foreground" />
             <p class="text-sm text-muted-foreground">
                 No hay reportes para este filtro.
@@ -153,7 +156,9 @@ function formatDate(value: string | null): string {
                             <Badge :variant="statusVariant(report.status)">
                                 {{ report.status_label }}
                             </Badge>
-                            <span class="font-medium">{{ report.reason_label }}</span>
+                            <span class="font-medium">{{
+                                report.reason_label
+                            }}</span>
                         </div>
                         <p class="text-sm text-muted-foreground">
                             <Link

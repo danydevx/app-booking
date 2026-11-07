@@ -122,7 +122,9 @@ function statusVariant(
 
         <div class="overflow-x-auto rounded-xl border">
             <table class="w-full text-left text-sm">
-                <thead class="bg-muted/50 text-xs uppercase text-muted-foreground">
+                <thead
+                    class="bg-muted/50 text-xs text-muted-foreground uppercase"
+                >
                     <tr>
                         <th class="px-4 py-3">Terraza</th>
                         <th class="px-4 py-3">Cuenta</th>
@@ -147,7 +149,9 @@ function statusVariant(
                                     />
                                 </div>
                                 <div>
-                                    <p class="font-medium">{{ listing.name }}</p>
+                                    <p class="font-medium">
+                                        {{ listing.name }}
+                                    </p>
                                     <p class="text-xs text-muted-foreground">
                                         {{ listing.city ?? 'Sin ciudad' }}
                                     </p>
@@ -173,7 +177,9 @@ function statusVariant(
                             {{ listing.images_count }} fotos ·
                             {{ listing.videos_count }} videos
                         </td>
-                        <td class="px-4 py-3">{{ listing.created_at ?? '—' }}</td>
+                        <td class="px-4 py-3">
+                            {{ listing.created_at ?? '—' }}
+                        </td>
                         <td class="px-4 py-3 text-right">
                             <Button size="sm" variant="outline" as-child>
                                 <Link :href="`${urls.index}/${listing.slug}`">

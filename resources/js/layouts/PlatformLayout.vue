@@ -14,12 +14,12 @@ import { dashboard } from '@/routes';
 
 const page = usePage();
 
-const currentUrl = computed(() => new URL(page.url, 'http://localhost').pathname);
+const currentUrl = computed(
+    () => new URL(page.url, 'http://localhost').pathname,
+);
 
 const appUrl = computed(() =>
-    page.props.currentTeam
-        ? dashboard(page.props.currentTeam.slug).url
-        : '/',
+    page.props.currentTeam ? dashboard(page.props.currentTeam.slug).url : '/',
 );
 
 const navigation = [

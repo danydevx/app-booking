@@ -75,10 +75,7 @@ function submit(): void {
                 <CardContent>
                     <form class="space-y-4" @submit.prevent="submit">
                         <div class="space-y-1">
-                            <label
-                                for="reason"
-                                class="text-sm font-medium"
-                            >
+                            <label for="reason" class="text-sm font-medium">
                                 Motivo
                             </label>
                             <select
@@ -104,10 +101,7 @@ function submit(): void {
                         </div>
 
                         <div class="space-y-1">
-                            <label
-                                for="message"
-                                class="text-sm font-medium"
-                            >
+                            <label for="message" class="text-sm font-medium">
                                 Mensaje
                             </label>
                             <textarea
@@ -146,7 +140,9 @@ function submit(): void {
                             </p>
                         </div>
 
-                        <div class="flex items-start gap-2 rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground">
+                        <div
+                            class="flex items-start gap-2 rounded-md border bg-muted/40 p-3 text-xs text-muted-foreground"
+                        >
                             <ShieldAlert class="mt-0.5 size-4 shrink-0" />
                             <p>
                                 Envía un reporte por terraza. El formulario está

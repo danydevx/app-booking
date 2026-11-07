@@ -51,10 +51,14 @@ const props = defineProps<{
 const search = ref(props.filters.q ?? '');
 
 function submit(): void {
-    router.get(props.urls.index, { q: search.value || undefined }, {
-        preserveState: true,
-        replace: true,
-    });
+    router.get(
+        props.urls.index,
+        { q: search.value || undefined },
+        {
+            preserveState: true,
+            replace: true,
+        },
+    );
 }
 
 function statusVariant(
@@ -89,7 +93,10 @@ function statusVariant(
                 </p>
             </div>
 
-            <form class="flex w-full max-w-md items-center gap-2" @submit.prevent="submit">
+            <form
+                class="flex w-full max-w-md items-center gap-2"
+                @submit.prevent="submit"
+            >
                 <Input
                     v-model="search"
                     type="search"
@@ -102,7 +109,9 @@ function statusVariant(
 
         <div class="overflow-x-auto rounded-xl border">
             <table class="w-full text-left text-sm">
-                <thead class="bg-muted/50 text-xs uppercase text-muted-foreground">
+                <thead
+                    class="bg-muted/50 text-xs text-muted-foreground uppercase"
+                >
                     <tr>
                         <th class="px-4 py-3">Cuenta</th>
                         <th class="px-4 py-3">Plan</th>
@@ -136,12 +145,12 @@ function statusVariant(
                         </td>
                         <td class="px-4 py-3">{{ account.listings_count }}</td>
                         <td class="px-4 py-3">{{ account.members_count }}</td>
-                        <td class="px-4 py-3">{{ account.created_at ?? '—' }}</td>
+                        <td class="px-4 py-3">
+                            {{ account.created_at ?? '—' }}
+                        </td>
                         <td class="px-4 py-3 text-right">
                             <Button size="sm" variant="outline" as-child>
-                                <Link
-                                    :href="`${urls.index}/${account.slug}`"
-                                >
+                                <Link :href="`${urls.index}/${account.slug}`">
                                     Ver
                                 </Link>
                             </Button>

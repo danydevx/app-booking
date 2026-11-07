@@ -183,7 +183,9 @@ function formatDate(value: string | null): string {
             <Card>
                 <CardHeader>
                     <CardTitle>Altas recientes</CardTitle>
-                    <CardDescription>Últimos usuarios registrados.</CardDescription>
+                    <CardDescription
+                        >Últimos usuarios registrados.</CardDescription
+                    >
                 </CardHeader>
                 <CardContent>
                     <ul class="divide-y text-sm">
@@ -272,7 +274,10 @@ function formatDate(value: string | null): string {
                                 {{ activity.description }}
                             </Badge>
                             <span class="font-medium">
-                                {{ activity.subject_name ?? activity.subject_type }}
+                                {{
+                                    activity.subject_name ??
+                                    activity.subject_type
+                                }}
                             </span>
                         </div>
                         <span class="text-xs text-muted-foreground">

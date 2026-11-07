@@ -32,7 +32,9 @@ function submit(): void {
         <form class="flex flex-col gap-2 sm:flex-row" @submit.prevent="submit">
             <Input
                 v-model="form.reason"
-                :placeholder="placeholder ?? 'Motivo obligatorio (mín. 5 caracteres)'"
+                :placeholder="
+                    placeholder ?? 'Motivo obligatorio (mín. 5 caracteres)'
+                "
                 aria-label="Motivo"
                 class="flex-1"
             />

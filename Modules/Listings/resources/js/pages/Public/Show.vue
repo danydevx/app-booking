@@ -189,8 +189,7 @@ const whatsappUrl = computed(
                     <div class="space-y-4 rounded-xl border bg-card p-5">
                         <div
                             v-if="
-                                listing.account.logo_url ||
-                                listing.account.name
+                                listing.account.logo_url || listing.account.name
                             "
                             class="flex items-center gap-3 border-b pb-3"
                         >
@@ -201,7 +200,9 @@ const whatsappUrl = computed(
                                 class="size-10 rounded-md border object-cover"
                             />
                             <div>
-                                <p class="text-xs uppercase text-muted-foreground">
+                                <p
+                                    class="text-xs text-muted-foreground uppercase"
+                                >
                                     Anfitrión
                                 </p>
                                 <p class="font-medium">
@@ -226,11 +227,7 @@ const whatsappUrl = computed(
                                     Consultar disponibilidad
                                 </Link>
                             </Button>
-                            <Button
-                                v-if="whatsappUrl"
-                                as-child
-                                class="w-full"
-                            >
+                            <Button v-if="whatsappUrl" as-child class="w-full">
                                 <a
                                     :href="whatsappUrl"
                                     target="_blank"
@@ -255,9 +252,7 @@ const whatsappUrl = computed(
                                 as-child
                                 class="w-full"
                             >
-                                <a :href="`tel:${contactPhone}`">
-                                    Llamar
-                                </a>
+                                <a :href="`tel:${contactPhone}`"> Llamar </a>
                             </Button>
                         </div>
 

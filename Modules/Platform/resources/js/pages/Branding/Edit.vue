@@ -90,7 +90,10 @@ function submit(): void {
                     <div class="grid gap-2">
                         <Label for="app_name">Nombre de la aplicación</Label>
                         <Input id="app_name" v-model="form.app_name" required />
-                        <p v-if="form.errors.app_name" class="text-sm text-destructive">
+                        <p
+                            v-if="form.errors.app_name"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors.app_name }}
                         </p>
                     </div>
@@ -121,14 +124,19 @@ function submit(): void {
                                 Quitar logo
                             </Button>
                         </div>
-                        <p v-if="form.errors.logo" class="text-sm text-destructive">
+                        <p
+                            v-if="form.errors.logo"
+                            class="text-sm text-destructive"
+                        >
                             {{ form.errors.logo }}
                         </p>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
                         <div class="grid gap-2">
-                            <Label for="from_address">Remitente por defecto</Label>
+                            <Label for="from_address"
+                                >Remitente por defecto</Label
+                            >
                             <Input
                                 id="from_address"
                                 v-model="form.from_address"
