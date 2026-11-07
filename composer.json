@@ -97,6 +97,9 @@
         "test:coverage": [
             "@php artisan test --coverage"
         ],
+        "production:check": [
+            "@php artisan app:production-check"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
