@@ -2,6 +2,7 @@
 
 namespace Modules\Bookings\Http\Controllers;
 
+use App\Concerns\ResolvesCurrentTeam;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,17 +16,14 @@ use Modules\Bookings\Actions\CancelBookingInquiry;
 use Modules\Bookings\Actions\DeclineBookingInquiry;
 use Modules\Bookings\Actions\MarkInquiryContacted;
 use Modules\Bookings\Actions\UpdateBookingDeposit;
-use Modules\Bookings\Enums\DepositMethod;
-use Modules\Bookings\Enums\DepositStatus;
-use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Http\Requests\BookingInquiryIndexRequest;
 use Modules\Bookings\Http\Requests\StoreBookingDepositRequest;
 use Modules\Bookings\Http\Requests\UpdateBookingDepositRequest;
 use Modules\Bookings\Models\BookingDeposit;
 use Modules\Bookings\Models\BookingInquiry;
+use Modules\Bookings\Queries\BookingInquiryQuery;
+use Modules\Bookings\Support\BookingOptionCatalog;
 use Modules\Bookings\Support\BookingPresenter;
-use Modules\Bookings\Support\ResolvesCurrentTeam;
-use Modules\Listings\Models\Listing;
 
 class BookingInquiryController extends Controller
 {
@@ -33,6 +31,7 @@ class BookingInquiryController extends Controller
 
     public function __construct(
         private readonly Entitlements $entitlements,
+        private readonly BookingInquiryQuery $inquiries,
     ) {}
 
     public function index(BookingInquiryIndexRequest $request): Response
@@ -43,42 +42,8 @@ class BookingInquiryController extends Controller
 
         $filters = $request->validated();
 
-        $inquiries = BookingInquiry::query()
-            ->where('team_id', $team->id)
-            ->with(['listing', 'customer'])
-            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
-            ->when($filters['listing'] ?? null, fn ($query, string $listing) => $query
-                ->whereHas('listing', fn ($listingQuery) => $listingQuery->where('slug', $listing)))
-            ->when($filters['search'] ?? null, function ($query, string $search): void {
-                $query->where(function ($searchQuery) use ($search): void {
-                    $searchQuery->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
-                });
-            })
-            ->latest()
-            ->paginate((int) config('bookings.per_page', 15))
-            ->withQueryString();
-
-        $inquiries->through(
-            fn (BookingInquiry $inquiry): array => BookingPresenter::inquiryCard($inquiry, $team->slug),
-        );
-
-        $listings = Listing::query()
-            ->where('team_id', $team->id)
-            ->orderBy('name')
-            ->get()
-            ->map(fn (Listing $listing): array => [
-                'id' => $listing->id,
-                'name' => $listing->name,
-                'slug' => $listing->slug,
-                'availability_url' => route('bookings.availability.edit', [
-                    'current_team' => $team->slug,
-                    'listing' => $listing->slug,
-                ]),
-            ])
-            ->values()
-            ->all();
+        $inquiries = $this->inquiries->paginate($team, $filters);
+        $listings = $this->inquiries->listings($team);
 
         return Inertia::render('Bookings/Index', [
             'team' => [
@@ -88,7 +53,7 @@ class BookingInquiryController extends Controller
             'inquiries' => $inquiries,
             'listings' => $listings,
             'filters' => $filters,
-            'statuses' => $this->inquiryStatuses(),
+            'statuses' => BookingOptionCatalog::inquiryStatuses(),
             'canUseCustomers' => $this->entitlements->allows($team, 'customers'),
             'urls' => [
                 'index' => route('bookings.index', ['current_team' => $team->slug]),
@@ -109,9 +74,9 @@ class BookingInquiryController extends Controller
 
         return Inertia::render('Bookings/Show', [
             'inquiry' => BookingPresenter::inquiryDetail($inquiry, $team->slug),
-            'statuses' => $this->inquiryStatuses(),
-            'depositStatuses' => $this->depositStatuses(),
-            'depositMethods' => $this->depositMethods(),
+            'statuses' => BookingOptionCatalog::inquiryStatuses(),
+            'depositStatuses' => BookingOptionCatalog::depositStatuses(),
+            'depositMethods' => BookingOptionCatalog::depositMethods(),
             'canManage' => Gate::allows('accept', $inquiry),
             'canManageDeposits' => Gate::allows('manageDeposits', $inquiry),
             'urls' => [
@@ -254,44 +219,5 @@ class BookingInquiryController extends Controller
     private function ensureOwned(BookingInquiry $inquiry, int $teamId): void
     {
         abort_unless($inquiry->team_id === $teamId, 404);
-    }
-
-    /**
-     * @return array<int, array{value: string, label: string}>
-     */
-    private function inquiryStatuses(): array
-    {
-        return collect(InquiryStatus::cases())
-            ->map(fn (InquiryStatus $status): array => [
-                'value' => $status->value,
-                'label' => $status->label(),
-            ])
-            ->all();
-    }
-
-    /**
-     * @return array<int, array{value: string, label: string}>
-     */
-    private function depositStatuses(): array
-    {
-        return collect(DepositStatus::cases())
-            ->map(fn (DepositStatus $status): array => [
-                'value' => $status->value,
-                'label' => $status->label(),
-            ])
-            ->all();
-    }
-
-    /**
-     * @return array<int, array{value: string, label: string}>
-     */
-    private function depositMethods(): array
-    {
-        return collect(DepositMethod::cases())
-            ->map(fn (DepositMethod $method): array => [
-                'value' => $method->value,
-                'label' => $method->label(),
-            ])
-            ->all();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Modules\Bookings\Http\Controllers;
 
+use App\Concerns\ResolvesCurrentTeam;
 use App\Http\Controllers\Controller;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -13,7 +14,6 @@ use Modules\Bookings\Actions\BlockListingDate;
 use Modules\Bookings\Actions\UnblockListingDate;
 use Modules\Bookings\Http\Requests\BlockListingDateRequest;
 use Modules\Bookings\Support\AvailabilityService;
-use Modules\Bookings\Support\ResolvesCurrentTeam;
 use Modules\Listings\Models\Listing;
 
 class AvailabilityController extends Controller

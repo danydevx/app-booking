@@ -2,6 +2,7 @@
 
 namespace Modules\Listings\Http\Controllers;
 
+use App\Concerns\ResolvesCurrentTeam;
 use App\Http\Controllers\Controller;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
@@ -21,6 +22,8 @@ use Modules\Listings\Models\ListingMedia;
 
 class ListingMediaController extends Controller
 {
+    use ResolvesCurrentTeam;
+
     public function __construct(
         private readonly Entitlements $entitlements,
     ) {}
@@ -31,7 +34,7 @@ class ListingMediaController extends Controller
         Listing $listing,
         AddListingMedia $addListingMedia,
     ): RedirectResponse {
-        $team = $this->team($request);
+        $team = $this->currentTeam($request);
         $this->ensureOwned($listing, $team);
 
         Gate::authorize('update', $listing);
@@ -76,7 +79,7 @@ class ListingMediaController extends Controller
         ListingMedia $media,
         DeleteListingMedia $deleteListingMedia,
     ): RedirectResponse {
-        $team = $this->team($request);
+        $team = $this->currentTeam($request);
         $this->ensureOwned($listing, $team);
 
         abort_unless($media->listing_id === $listing->id, 404);
@@ -99,7 +102,7 @@ class ListingMediaController extends Controller
         Listing $listing,
         ReorderListingMedia $reorderListingMedia,
     ): RedirectResponse {
-        $team = $this->team($request);
+        $team = $this->currentTeam($request);
         $this->ensureOwned($listing, $team);
 
         Gate::authorize('update', $listing);
@@ -107,13 +110,6 @@ class ListingMediaController extends Controller
         $reorderListingMedia->handle($listing, $request->validated('ids'));
 
         return back();
-    }
-
-    private function team(Request $request): Team
-    {
-        return Team::query()
-            ->whereKey($request->user()?->current_team_id)
-            ->firstOrFail();
     }
 
     private function ensureOwned(Listing $listing, Team $team): void

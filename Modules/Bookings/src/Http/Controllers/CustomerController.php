@@ -2,6 +2,7 @@
 
 namespace Modules\Bookings\Http\Controllers;
 
+use App\Concerns\ResolvesCurrentTeam;
 use App\Http\Controllers\Controller;
 use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +15,6 @@ use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Support\BookingPresenter;
-use Modules\Bookings\Support\ResolvesCurrentTeam;
 
 class CustomerController extends Controller
 {

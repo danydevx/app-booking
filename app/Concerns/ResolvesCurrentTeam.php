@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Bookings\Support;
+namespace App\Concerns;
 
 use App\Models\Team;
 use Illuminate\Http\Request;
