@@ -5,6 +5,7 @@ return [
     'max_stay_days' => 30,
     'max_block_days' => 365,
     'expire_after_end_days' => (int) env('BOOKINGS_EXPIRE_AFTER_END_DAYS', 0),
+    'reminder_days' => (int) env('BOOKINGS_REMINDER_DAYS', 3),
     'public_calendar_days' => 90,
     'deposit_currency' => 'MXN',
     'deposit_methods' => [

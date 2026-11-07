@@ -34,6 +34,7 @@ use Modules\Listings\Models\Listing;
  * @property string|null $ip_hash
  * @property CarbonImmutable|null $contacted_at
  * @property CarbonImmutable|null $accepted_at
+ * @property CarbonImmutable|null $reminder_sent_at
  * @property CarbonImmutable|null $declined_at
  * @property CarbonImmutable|null $cancelled_at
  * @property CarbonImmutable|null $expired_at
@@ -114,6 +115,7 @@ class BookingInquiry extends Model
             'consent_at' => 'datetime',
             'contacted_at' => 'datetime',
             'accepted_at' => 'datetime',
+            'reminder_sent_at' => 'datetime',
             'declined_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'expired_at' => 'datetime',

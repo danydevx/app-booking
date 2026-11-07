@@ -13,3 +13,7 @@ Schedule::call(function () {
 Schedule::command('bookings:expire-inquiries')
     ->daily()
     ->description('Expire new/contacted inquiries whose dates have passed');
+
+Schedule::command('bookings:send-reminders')
+    ->daily()
+    ->description('Send reminders for accepted bookings starting soon');
