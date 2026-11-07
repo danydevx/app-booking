@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Bookings\Enums\AvailabilityStatus;
 use Modules\Bookings\Models\ListingUnavailability;
+use Modules\Bookings\Support\DateRange;
 use Modules\Listings\Models\Listing;
 use Tests\TestCase;
 
@@ -233,6 +234,99 @@ class AvailabilityTest extends TestCase
         )->assertSessionHasErrors('end_date');
 
         $this->assertSame(0, ListingUnavailability::query()->count());
+    }
+
+    public function test_owner_can_unblock_a_range_of_manually_blocked_dates(): void
+    {
+        [$owner, $team, $listing] = $this->ownerListing();
+        $timezone = $listing->timezone;
+        $start = now($timezone)->addDays(5);
+        $end = now($timezone)->addDays(7);
+
+        foreach (DateRange::dates($start->toDateString(), $end->toDateString()) as $date) {
+            ListingUnavailability::factory()->forListing($listing)->create([
+                'date' => $date,
+                'status' => AvailabilityStatus::Blocked,
+            ]);
+        }
+
+        $this->actingAs($owner)->delete(
+            route('bookings.availability.unblock-range', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            [
+                'start_date' => $start->toDateString(),
+                'end_date' => $end->toDateString(),
+            ],
+        )->assertRedirect();
+
+        $this->assertSame(0, ListingUnavailability::query()
+            ->where('listing_id', $listing->id)
+            ->count());
+    }
+
+    public function test_range_unblock_rejects_reserved_dates_without_partial_changes(): void
+    {
+        [$owner, $team, $listing] = $this->ownerListing();
+        $timezone = $listing->timezone;
+
+        ListingUnavailability::factory()->forListing($listing)->create([
+            'date' => now($timezone)->addDays(5)->toDateString(),
+            'status' => AvailabilityStatus::Blocked,
+        ]);
+        ListingUnavailability::factory()->forListing($listing)->booked()->create([
+            'date' => now($timezone)->addDays(6)->toDateString(),
+        ]);
+        ListingUnavailability::factory()->forListing($listing)->create([
+            'date' => now($timezone)->addDays(7)->toDateString(),
+            'status' => AvailabilityStatus::Blocked,
+        ]);
+
+        $this->actingAs($owner)->delete(
+            route('bookings.availability.unblock-range', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            [
+                'start_date' => now($timezone)->addDays(5)->toDateString(),
+                'end_date' => now($timezone)->addDays(7)->toDateString(),
+            ],
+        )->assertSessionHasErrors('start_date');
+
+        $this->assertSame(3, ListingUnavailability::query()
+            ->where('listing_id', $listing->id)
+            ->count());
+    }
+
+    public function test_range_unblock_validates_order_and_max_days(): void
+    {
+        [$owner, $team, $listing] = $this->ownerListing();
+        $timezone = $listing->timezone;
+
+        $this->actingAs($owner)->delete(
+            route('bookings.availability.unblock-range', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            [
+                'start_date' => now($timezone)->addDays(5)->toDateString(),
+                'end_date' => now($timezone)->addDays(1)->toDateString(),
+            ],
+        )->assertSessionHasErrors('end_date');
+
+        config(['bookings.max_block_days' => 2]);
+
+        $this->actingAs($owner)->delete(
+            route('bookings.availability.unblock-range', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            [
+                'start_date' => now($timezone)->addDays(5)->toDateString(),
+                'end_date' => now($timezone)->addDays(8)->toDateString(),
+            ],
+        )->assertSessionHasErrors('end_date');
     }
 
     /**

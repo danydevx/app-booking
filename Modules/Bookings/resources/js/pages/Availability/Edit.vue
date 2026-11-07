@@ -2,6 +2,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AvailabilityCalendar from '../../components/AvailabilityCalendar.vue';
@@ -21,6 +22,7 @@ const props = defineProps<{
         bookings: string;
         block_range: string;
         unblock: string;
+        unblock_range: string;
         public_listing: string;
     };
 }>();
@@ -49,6 +51,18 @@ function submit(): void {
     form.post(props.urls.block_range, {
         preserveScroll: true,
         onSuccess: () => form.reset(),
+    });
+}
+
+const unblockForm = useForm({
+    start_date: '',
+    end_date: '',
+});
+
+function unblockRange(): void {
+    unblockForm.delete(props.urls.unblock_range, {
+        preserveScroll: true,
+        onSuccess: () => unblockForm.reset(),
     });
 }
 
@@ -139,6 +153,52 @@ function unblock(date: string): void {
                         </div>
                         <Button type="submit" :disabled="form.processing">
                             Bloquear rango
+                        </Button>
+                    </div>
+                </form>
+
+                <form
+                    class="rounded-xl border bg-card p-4"
+                    @submit.prevent="unblockRange"
+                >
+                    <h2 class="mb-3 font-semibold">Liberar rango</h2>
+                    <div class="grid gap-3">
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="grid gap-2">
+                                <Label for="unblock_start_date">Desde</Label>
+                                <Input
+                                    id="unblock_start_date"
+                                    v-model="unblockForm.start_date"
+                                    type="date"
+                                    required
+                                />
+                                <InputError
+                                    :message="unblockForm.errors.start_date"
+                                />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="unblock_end_date">Hasta</Label>
+                                <Input
+                                    id="unblock_end_date"
+                                    v-model="unblockForm.end_date"
+                                    type="date"
+                                    required
+                                />
+                                <InputError
+                                    :message="unblockForm.errors.end_date"
+                                />
+                            </div>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Solo libera fechas bloqueadas manualmente. Las
+                            reservadas o apartadas se conservan.
+                        </p>
+                        <Button
+                            type="submit"
+                            variant="outline"
+                            :disabled="unblockForm.processing"
+                        >
+                            Liberar rango
                         </Button>
                     </div>
                 </form>

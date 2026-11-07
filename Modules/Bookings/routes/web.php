@@ -29,6 +29,7 @@ Route::prefix('{current_team}/bookings')
         Route::get('/availability/{listing}', [AvailabilityController::class, 'edit'])->name('availability.edit');
         Route::post('/availability/{listing}/block', [AvailabilityController::class, 'block'])->name('availability.block');
         Route::post('/availability/{listing}/block-range', [AvailabilityController::class, 'blockRange'])->name('availability.block-range');
+        Route::delete('/availability/{listing}/block-range', [AvailabilityController::class, 'unblockRange'])->name('availability.unblock-range');
         Route::delete('/availability/{listing}/block/{date}', [AvailabilityController::class, 'unblock'])
             ->where('date', '\d{4}-\d{2}-\d{2}')
             ->name('availability.unblock');

@@ -13,8 +13,10 @@ use Inertia\Response;
 use Modules\Bookings\Actions\BlockListingDate;
 use Modules\Bookings\Actions\BlockListingDateRange;
 use Modules\Bookings\Actions\UnblockListingDate;
+use Modules\Bookings\Actions\UnblockListingDateRange;
 use Modules\Bookings\Http\Requests\BlockListingDateRangeRequest;
 use Modules\Bookings\Http\Requests\BlockListingDateRequest;
+use Modules\Bookings\Http\Requests\UnblockListingDateRangeRequest;
 use Modules\Bookings\Support\AvailabilityService;
 use Modules\Listings\Models\Listing;
 
@@ -56,6 +58,10 @@ class AvailabilityController extends Controller
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                     'date' => '__DATE__',
+                ]),
+                'unblock_range' => route('bookings.availability.unblock-range', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
                 ]),
                 'public_listing' => route('public.listings.show', ['listing' => $listing->slug]),
             ],
@@ -107,6 +113,33 @@ class AvailabilityController extends Controller
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => $count === 1 ? 'Fecha bloqueada.' : "{$count} fechas bloqueadas.",
+        ]);
+
+        return back();
+    }
+
+    public function unblockRange(
+        UnblockListingDateRangeRequest $request,
+        string $currentTeam,
+        Listing $listing,
+        UnblockListingDateRange $unblockRange,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($listing, $team->id);
+
+        Gate::authorize('update', $listing);
+
+        $count = $unblockRange->handle(
+            $listing,
+            (string) $request->validated('start_date'),
+            (string) $request->validated('end_date'),
+        );
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => $count === 0
+                ? 'No había fechas bloqueadas en ese rango.'
+                : ($count === 1 ? 'Fecha liberada.' : "{$count} fechas liberadas."),
         ]);
 
         return back();
