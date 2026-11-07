@@ -43,6 +43,7 @@ final class PlatformUserPresenter
         Collection $activities,
         bool $canSuspend,
         bool $canManageRoles,
+        bool $canNotify,
         bool $isSelf,
         bool $isLastSuperadmin,
     ): array {
@@ -83,6 +84,7 @@ final class PlatformUserPresenter
             'can' => [
                 'suspend' => $canSuspend,
                 'manage_roles' => $canManageRoles,
+                'notify' => $canNotify,
                 'is_self' => $isSelf,
                 'is_last_superadmin' => $isLastSuperadmin,
             ],
@@ -90,6 +92,8 @@ final class PlatformUserPresenter
                 'index' => route('platform.users.index'),
                 'suspend' => route('platform.users.suspend', ['user' => $user->id]),
                 'restore' => route('platform.users.restore', ['user' => $user->id]),
+                'resend_verification' => route('platform.users.resend-verification', ['user' => $user->id]),
+                'send_password_reset' => route('platform.users.send-password-reset', ['user' => $user->id]),
                 'grant_superadmin' => route('platform.users.grant-superadmin', ['user' => $user->id]),
                 'revoke_superadmin' => route('platform.users.revoke-superadmin', ['user' => $user->id]),
             ],

@@ -50,6 +50,7 @@ const props = defineProps<{
     can: {
         suspend: boolean;
         manage_roles: boolean;
+        notify: boolean;
         is_self: boolean;
         is_last_superadmin: boolean;
     };
@@ -57,12 +58,15 @@ const props = defineProps<{
         index: string;
         suspend: string;
         restore: string;
+        resend_verification: string;
+        send_password_reset: string;
         grant_superadmin: string;
         revoke_superadmin: string;
     };
 }>();
 
 const roleForm = useForm({ user: '' });
+const supportForm = useForm({ user: '' });
 
 function grantSuperadmin(): void {
     if (
@@ -84,6 +88,34 @@ function revokeSuperadmin(): void {
     }
 
     roleForm.post(props.urls.revoke_superadmin, { preserveScroll: true });
+}
+
+function resendVerification(): void {
+    if (
+        !window.confirm(
+            `¿Reenviar el correo de verificación a ${props.user.email}?`,
+        )
+    ) {
+        return;
+    }
+
+    supportForm.post(props.urls.resend_verification, {
+        preserveScroll: true,
+    });
+}
+
+function sendPasswordReset(): void {
+    if (
+        !window.confirm(
+            `¿Enviar un enlace de restablecimiento de contraseña a ${props.user.email}?`,
+        )
+    ) {
+        return;
+    }
+
+    supportForm.post(props.urls.send_password_reset, {
+        preserveScroll: true,
+    });
 }
 
 function formatDate(value: string | null): string {
@@ -166,6 +198,43 @@ function reasonOf(activity: ActivityRow): string {
             description="Devuelve el acceso del usuario a la aplicación."
             submit-label="Restaurar"
         />
+
+        <Card v-if="can.notify">
+            <CardHeader>
+                <CardTitle>Soporte de acceso</CardTitle>
+                <CardDescription>
+                    Reenvía correos de verificación o restablecimiento sin
+                    cambiar la contraseña del usuario.
+                </CardDescription>
+            </CardHeader>
+            <CardContent class="space-y-3">
+                <div class="flex flex-wrap gap-2">
+                    <Button
+                        v-if="!user.email_verified"
+                        type="button"
+                        variant="outline"
+                        :disabled="supportForm.processing"
+                        @click="resendVerification"
+                    >
+                        Reenviar verificación
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        :disabled="supportForm.processing"
+                        @click="sendPasswordReset"
+                    >
+                        Enviar restablecimiento de contraseña
+                    </Button>
+                </div>
+                <p
+                    v-if="supportForm.errors.user"
+                    class="text-sm text-destructive"
+                >
+                    {{ supportForm.errors.user }}
+                </p>
+            </CardContent>
+        </Card>
 
         <Card>
             <CardHeader>

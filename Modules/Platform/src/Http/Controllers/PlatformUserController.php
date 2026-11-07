@@ -9,7 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Platform\Actions\ResendUserVerification;
 use Modules\Platform\Actions\RestoreUser;
+use Modules\Platform\Actions\SendUserPasswordReset;
 use Modules\Platform\Actions\SuspendUser;
 use Modules\Platform\Http\Requests\ModerationReasonRequest;
 use Modules\Platform\Http\Requests\PlatformSearchRequest;
@@ -66,12 +68,15 @@ class PlatformUserController extends Controller
         $canManageRoles = Gate::allows(PlatformPermission::USERS_MANAGE_ROLES)
             && ! $isSelf
             && ! $isLastSuperadmin;
+        $canNotify = Gate::allows(PlatformPermission::USERS_NOTIFY)
+            && ! $isSelf;
 
         return Inertia::render('Platform/Users/Show', PlatformUserPresenter::detail(
             $user,
             $activities,
             $canSuspend,
             $canManageRoles,
+            $canNotify,
             $isSelf,
             $isLastSuperadmin,
         ));
@@ -102,6 +107,36 @@ class PlatformUserController extends Controller
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => "Usuario {$user->email} restaurado.",
+        ]);
+
+        return back();
+    }
+
+    public function resendVerification(
+        Request $request,
+        User $user,
+        ResendUserVerification $resendVerification,
+    ): RedirectResponse {
+        $resendVerification->handle($user, $request->user());
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Correo de verificación reenviado a {$user->email}.",
+        ]);
+
+        return back();
+    }
+
+    public function sendPasswordReset(
+        Request $request,
+        User $user,
+        SendUserPasswordReset $sendPasswordReset,
+    ): RedirectResponse {
+        $sendPasswordReset->handle($user, $request->user());
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Enlace de restablecimiento enviado a {$user->email}.",
         ]);
 
         return back();

@@ -53,6 +53,12 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::post('users/{user}/restore', [PlatformUserController::class, 'restore'])
             ->middleware('can:'.PlatformPermission::USERS_SUSPEND)
             ->name('users.restore');
+        Route::post('users/{user}/resend-verification', [PlatformUserController::class, 'resendVerification'])
+            ->middleware(['can:'.PlatformPermission::USERS_NOTIFY, 'throttle:10,1'])
+            ->name('users.resend-verification');
+        Route::post('users/{user}/send-password-reset', [PlatformUserController::class, 'sendPasswordReset'])
+            ->middleware(['can:'.PlatformPermission::USERS_NOTIFY, 'throttle:10,1'])
+            ->name('users.send-password-reset');
         Route::post('users/{user}/grant-superadmin', [PlatformUserController::class, 'grantSuperadmin'])
             ->middleware('can:'.PlatformPermission::USERS_MANAGE_ROLES)
             ->name('users.grant-superadmin');

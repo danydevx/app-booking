@@ -3,6 +3,8 @@
 namespace Modules\Platform\Tests\Feature;
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
@@ -125,6 +127,74 @@ class PlatformUserManagementTest extends TestCase
             ->assertSessionHasErrors('reason');
 
         $this->assertFalse($other->fresh()->isSuspended());
+    }
+
+    public function test_superadmin_can_resend_verification_for_unverified_user(): void
+    {
+        Notification::fake();
+
+        $admin = $this->superadmin();
+        $target = User::factory()->unverified()->create();
+
+        $this->actingAs($admin)
+            ->post(route('platform.users.resend-verification', ['user' => $target->id]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        Notification::assertSentTo($target, VerifyEmail::class);
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'moderation',
+            'description' => 'user.verification-resent',
+            'subject_id' => $target->id,
+        ]);
+    }
+
+    public function test_verification_is_not_resent_for_a_verified_user(): void
+    {
+        Notification::fake();
+
+        $admin = $this->superadmin();
+        $target = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->post(route('platform.users.resend-verification', ['user' => $target->id]))
+            ->assertSessionHasErrors('user');
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_superadmin_can_send_password_reset_email(): void
+    {
+        Notification::fake();
+
+        $admin = $this->superadmin();
+        $target = User::factory()->create();
+
+        $this->actingAs($admin)
+            ->post(route('platform.users.send-password-reset', ['user' => $target->id]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        Notification::assertSentTo($target, ResetPassword::class);
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'moderation',
+            'description' => 'user.password-reset-sent',
+            'subject_id' => $target->id,
+        ]);
+    }
+
+    public function test_normal_users_cannot_send_access_emails(): void
+    {
+        Notification::fake();
+
+        $actor = User::factory()->create();
+        $target = User::factory()->unverified()->create();
+
+        $this->actingAs($actor)
+            ->post(route('platform.users.resend-verification', ['user' => $target->id]))
+            ->assertForbidden();
+
+        Notification::assertNothingSent();
     }
 
     public function test_superadmin_can_grant_and_revoke_platform_role(): void
