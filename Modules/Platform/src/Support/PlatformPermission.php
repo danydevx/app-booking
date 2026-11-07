@@ -16,6 +16,8 @@ final class PlatformPermission
 
     public const USERS_MANAGE_ROLES = 'platform.users.roles';
 
+    public const ACTIVITY_VIEW = 'platform.activity.view';
+
     public const LISTINGS_VIEW = 'platform.listings.view';
 
     public const LISTINGS_MODERATE = 'platform.listings.moderate';
@@ -40,6 +42,7 @@ final class PlatformPermission
             self::USERS_VIEW,
             self::USERS_SUSPEND,
             self::USERS_MANAGE_ROLES,
+            self::ACTIVITY_VIEW,
             self::LISTINGS_VIEW,
             self::LISTINGS_MODERATE,
             self::SUBSCRIPTIONS_VIEW,

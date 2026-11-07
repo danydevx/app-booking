@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Platform\Http\Controllers\PlatformAccountController;
+use Modules\Platform\Http\Controllers\PlatformActivityController;
 use Modules\Platform\Http\Controllers\PlatformBrandingController;
 use Modules\Platform\Http\Controllers\PlatformDashboardController;
 use Modules\Platform\Http\Controllers\PlatformListingController;
@@ -75,6 +76,10 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::get('subscriptions', [PlatformSubscriptionController::class, 'index'])
             ->middleware('can:'.PlatformPermission::SUBSCRIPTIONS_VIEW)
             ->name('subscriptions.index');
+
+        Route::get('activity', PlatformActivityController::class)
+            ->middleware('can:'.PlatformPermission::ACTIVITY_VIEW)
+            ->name('activity.index');
 
         Route::get('reports', [PlatformReportController::class, 'index'])
             ->middleware('can:'.PlatformPermission::REPORTS_VIEW)

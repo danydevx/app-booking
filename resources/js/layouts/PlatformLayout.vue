@@ -4,6 +4,7 @@ import {
     Building2,
     CreditCard,
     Flag,
+    History,
     LayoutDashboard,
     Palette,
     Shield,
@@ -34,6 +35,7 @@ const navigation = [
         icon: CreditCard,
     },
     { title: 'Reportes', href: '/platform/reports', icon: Flag },
+    { title: 'Auditoría', href: '/platform/activity', icon: History },
     { title: 'Marca', href: '/platform/branding', icon: Palette },
 ];
 
