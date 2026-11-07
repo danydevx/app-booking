@@ -17,6 +17,8 @@ use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Support\BookingPresenter;
+use Modules\Bookings\Support\CustomerCsvExport;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
 {
@@ -67,6 +69,7 @@ class CustomerController extends Controller
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'store' => route('bookings.customers.store', ['current_team' => $team->slug]),
+                'export' => route('bookings.customers.export', ['current_team' => $team->slug]),
             ],
         ]);
     }
@@ -91,6 +94,21 @@ class CustomerController extends Controller
             'current_team' => $team->slug,
             'customer' => $customer->id,
         ]);
+    }
+
+    public function export(
+        Request $request,
+        CustomerCsvExport $export,
+    ): StreamedResponse|RedirectResponse {
+        $team = $this->currentTeam($request);
+
+        Gate::authorize('viewAny', [Customer::class, $team]);
+
+        if (! $this->entitlements->allows($team, 'customers')) {
+            return $this->upgradeRedirect($team);
+        }
+
+        return $export->stream($team);
     }
 
     public function show(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse

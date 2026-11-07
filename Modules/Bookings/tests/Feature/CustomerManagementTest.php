@@ -125,6 +125,39 @@ class CustomerManagementTest extends TestCase
         $this->assertSame('primero@example.test', $first->fresh()->email);
     }
 
+    public function test_pro_owner_can_export_customers_to_csv(): void
+    {
+        config(['billing.plans.pro.stripe_price_id' => 'price_pro_test']);
+
+        [$owner, $team] = $this->ownerWithTeam();
+        $this->subscribePro($team);
+        Customer::factory()->create([
+            'team_id' => $team->id,
+            'name' => 'Cliente Exportado',
+            'email' => 'export@example.test',
+        ]);
+
+        $response = $this->actingAs($owner)->get(
+            route('bookings.customers.export', ['current_team' => $team->slug]),
+        );
+
+        $response->assertOk()->assertDownload();
+
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString('Cliente Exportado', $content);
+        $this->assertStringContainsString('export@example.test', $content);
+    }
+
+    public function test_free_plan_cannot_export_customers(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)
+            ->get(route('bookings.customers.export', ['current_team' => $team->slug]))
+            ->assertRedirect(route('billing.index', ['current_team' => $team->slug]));
+    }
+
     /**
      * @return array{0: User, 1: Team}
      */

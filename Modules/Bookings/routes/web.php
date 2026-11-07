@@ -23,6 +23,7 @@ Route::prefix('{current_team}/bookings')
 
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+        Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
 

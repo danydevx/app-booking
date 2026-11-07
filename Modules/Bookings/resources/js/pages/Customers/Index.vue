@@ -26,6 +26,7 @@ const props = defineProps<{
         bookings: string;
         index: string;
         store: string;
+        export: string;
     };
 }>();
 
@@ -193,6 +194,9 @@ function createCustomer(): void {
                         </form>
                     </DialogContent>
                 </Dialog>
+                <Button variant="outline" as-child>
+                    <a :href="urls.export">Exportar CSV</a>
+                </Button>
                 <Button variant="outline" as-child>
                     <Link :href="urls.bookings">Solicitudes</Link>
                 </Button>
