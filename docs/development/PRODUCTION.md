@@ -118,6 +118,7 @@ No ejecutar `composer update` en producción. No ejecutar migraciones destructiv
 - `deploy/supervisor.conf.example` — queue worker.
 - `deploy/crontab.example` — scheduler cada minuto.
 - `deploy/backup.sh.example` — dump MySQL + media con retención; copiar fuera del servidor.
+- `deploy/restore.sh.example` — restauración con confirmación explícita; probar en un entorno descartable.
 
 ## Colas y scheduler
 
@@ -140,7 +141,9 @@ Añadir `php artisan queue:monitor` si se incorpora el paquete de monitorizació
 - Backup del storage de media/logos. Ejemplo: `deploy/backup.sh.example`.
 - Copiar los backups fuera del servidor o usar el backup gestionado del proveedor.
 - Cifrado y control de acceso.
-- Probar restaurar en un entorno descartable antes del lanzamiento.
+- Probar restaurar en un entorno descartable antes del lanzamiento con
+  `deploy/restore.sh.example` (`CONFIRM_RESTORE=yes`; `RESTORE_STORAGE=yes`
+  restaura también la media).
 - Documentar el procedimiento de rollback y el commit anterior.
 
 ## Stripe live

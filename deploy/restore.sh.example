@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#
+# Example restore for app-booking MySQL + media backups.
+# Copy outside the repository and run only in a disposable or approved environment.
+#
+# Required:
+#   DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
+#   BACKUP_FILE (path to db-YYYYmmdd-HHMMSS.sql.gz)
+#   CONFIRM_RESTORE=yes
+# Optional:
+#   APP_DIR (default /var/www/app-booking/current)
+#   STORAGE_FILE (required when RESTORE_STORAGE=yes)
+#   RESTORE_STORAGE=yes (default no)
+#
+# This script overwrites the target database and, optionally, media storage.
+# It does not create a safety backup automatically. Take one first.
+
+set -euo pipefail
+umask 077
+
+: "${DB_HOST:?DB_HOST is required}"
+: "${DB_DATABASE:?DB_DATABASE is required}"
+: "${DB_USERNAME:?DB_USERNAME is required}"
+: "${DB_PASSWORD:?DB_PASSWORD is required}"
+: "${BACKUP_FILE:?BACKUP_FILE is required}"
+
+DB_PORT="${DB_PORT:-3306}"
+APP_DIR="${APP_DIR:-/var/www/app-booking/current}"
+RESTORE_STORAGE="${RESTORE_STORAGE:-no}"
+CONFIRM_RESTORE="${CONFIRM_RESTORE:-no}"
+
+if [[ "$CONFIRM_RESTORE" != "yes" ]]; then
+    echo "Refusing to restore without CONFIRM_RESTORE=yes." >&2
+    echo "Target: $DB_USERNAME@$DB_HOST:$DB_PORT/$DB_DATABASE" >&2
+    exit 1
+fi
+
+if [[ ! -f "$BACKUP_FILE" ]]; then
+    echo "Backup not found: $BACKUP_FILE" >&2
+    exit 1
+fi
+
+gzip -t "$BACKUP_FILE"
+
+if [[ "$RESTORE_STORAGE" == "yes" ]]; then
+    : "${STORAGE_FILE:?STORAGE_FILE is required when RESTORE_STORAGE=yes}"
+    if [[ ! -f "$STORAGE_FILE" ]]; then
+        echo "Storage backup not found: $STORAGE_FILE" >&2
+        exit 1
+    fi
+    gzip -t "$STORAGE_FILE"
+fi
+
+echo "Restoring database $DB_DATABASE from $BACKUP_FILE ..." >&2
+
+gzip -dc "$BACKUP_FILE" | MYSQL_PWD="$DB_PASSWORD" mysql \
+    --host="$DB_HOST" \
+    --port="$DB_PORT" \
+    --user="$DB_USERNAME" \
+    --default-character-set=utf8mb4 \
+    "$DB_DATABASE"
+
+if [[ "$RESTORE_STORAGE" == "yes" ]]; then
+    echo "Restoring media storage from $STORAGE_FILE ..." >&2
+    mkdir -p "$APP_DIR"
+    tar -xzf "$STORAGE_FILE" -C "$APP_DIR"
+fi
+
+echo "Restore completed. Run smoke tests and verify queues/scheduler." >&2
