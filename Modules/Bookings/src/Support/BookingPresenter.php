@@ -87,6 +87,8 @@ final class BookingPresenter
             'notes' => $customer->notes,
             'pipeline_stage' => $customer->pipeline_stage->value,
             'pipeline_stage_label' => $customer->pipeline_stage->label(),
+            'is_archived' => $customer->archived_at !== null,
+            'is_anonymized' => $customer->anonymized_at !== null,
             'inquiries_count' => (int) ($customer->inquiries_count ?? 0),
             'accepted_inquiries_count' => (int) ($customer->accepted_inquiries_count ?? 0),
             'open_tasks_count' => (int) ($customer->open_tasks_count ?? 0),

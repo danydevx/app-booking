@@ -6,6 +6,8 @@ use Modules\Bookings\Http\Controllers\AvailabilityController;
 use Modules\Bookings\Http\Controllers\BookingInquiryController;
 use Modules\Bookings\Http\Controllers\CustomerActivityController;
 use Modules\Bookings\Http\Controllers\CustomerController;
+use Modules\Bookings\Http\Controllers\CustomerImportController;
+use Modules\Bookings\Http\Controllers\CustomerLifecycleController;
 use Modules\Bookings\Http\Controllers\CustomerPipelineController;
 use Modules\Bookings\Http\Controllers\CustomerTagController;
 use Modules\Bookings\Http\Controllers\CustomerTaskController;
@@ -32,6 +34,10 @@ Route::prefix('{current_team}/bookings')
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
         Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+        Route::get('/customers/import', [CustomerImportController::class, 'create'])
+            ->name('customers.import');
+        Route::post('/customers/import', [CustomerImportController::class, 'store'])
+            ->name('customers.import.store');
         Route::post('/customers/tags', [CustomerTagController::class, 'store'])
             ->name('customers.tags.store');
         Route::delete('/customers/tags/{tag}', [CustomerTagController::class, 'destroy'])
@@ -42,6 +48,14 @@ Route::prefix('{current_team}/bookings')
             ->name('customers.tags.sync');
         Route::patch('/customers/{customer}/pipeline', [CustomerPipelineController::class, 'update'])
             ->name('customers.pipeline.update');
+        Route::post('/customers/{customer}/merge', [CustomerLifecycleController::class, 'merge'])
+            ->name('customers.merge');
+        Route::patch('/customers/{customer}/archive', [CustomerLifecycleController::class, 'archive'])
+            ->name('customers.archive');
+        Route::patch('/customers/{customer}/restore', [CustomerLifecycleController::class, 'restore'])
+            ->name('customers.restore');
+        Route::patch('/customers/{customer}/anonymize', [CustomerLifecycleController::class, 'anonymize'])
+            ->name('customers.anonymize');
         Route::post('/customers/{customer}/activities', [CustomerActivityController::class, 'store'])
             ->name('customers.activities.store');
         Route::delete('/customers/{customer}/activities/{activity}', [CustomerActivityController::class, 'destroy'])

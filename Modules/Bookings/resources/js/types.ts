@@ -69,6 +69,8 @@ export type CustomerCard = {
     notes: string | null;
     pipeline_stage: string;
     pipeline_stage_label: string;
+    is_archived: boolean;
+    is_anonymized: boolean;
     inquiries_count: number;
     accepted_inquiries_count: number;
     open_tasks_count: number;

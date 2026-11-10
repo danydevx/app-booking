@@ -23,6 +23,10 @@ use Modules\Bookings\Enums\CustomerPipelineStage;
  * @property string|null $whatsapp_phone
  * @property string|null $notes
  * @property CustomerPipelineStage $pipeline_stage
+ * @property int|null $merged_into_id
+ * @property Carbon|null $merged_at
+ * @property Carbon|null $archived_at
+ * @property Carbon|null $anonymized_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Team $team
@@ -89,6 +93,9 @@ class Customer extends Model
     {
         return [
             'pipeline_stage' => CustomerPipelineStage::class,
+            'merged_at' => 'datetime',
+            'archived_at' => 'datetime',
+            'anonymized_at' => 'datetime',
         ];
     }
 

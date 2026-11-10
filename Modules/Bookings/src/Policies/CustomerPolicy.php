@@ -2,6 +2,7 @@
 
 namespace Modules\Bookings\Policies;
 
+use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
 use Modules\Bookings\Models\Customer;
@@ -26,5 +27,26 @@ class CustomerPolicy
     public function update(User $user, Customer $customer): bool
     {
         return $this->view($user, $customer);
+    }
+
+    public function merge(User $user, Customer $customer): bool
+    {
+        return $this->canAdminister($user, $customer);
+    }
+
+    public function archive(User $user, Customer $customer): bool
+    {
+        return $this->canAdminister($user, $customer);
+    }
+
+    public function anonymize(User $user, Customer $customer): bool
+    {
+        return $this->canAdminister($user, $customer);
+    }
+
+    private function canAdminister(User $user, Customer $customer): bool
+    {
+        return $user->belongsToTeam($customer->team)
+            && ($user->teamRole($customer->team)?->isAtLeast(TeamRole::Admin) ?? false);
     }
 }

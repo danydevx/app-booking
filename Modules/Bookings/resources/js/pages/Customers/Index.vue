@@ -29,12 +29,14 @@ const props = defineProps<{
     customers: Paginated<CustomerCard>;
     tags: CustomerTag[];
     pipelineStages: StatusOption[];
+    archived: boolean;
     filters: { search?: string; tag?: string; stage?: string };
     urls: {
         bookings: string;
         index: string;
         store: string;
         export: string;
+        import: string;
     };
 }>();
 
@@ -59,7 +61,14 @@ const form = reactive({
 });
 
 function search(): void {
-    router.get(props.urls.index, { ...form }, { preserveScroll: true });
+    router.get(
+        props.urls.index,
+        {
+            ...form,
+            archived: props.archived ? 1 : undefined,
+        },
+        { preserveScroll: true },
+    );
 }
 
 const exportUrl = computed(() => {
@@ -216,6 +225,18 @@ function createCustomer(): void {
                     <a :href="exportUrl">Exportar CSV</a>
                 </Button>
                 <Button variant="outline" as-child>
+                    <Link :href="urls.import">Importar CSV</Link>
+                </Button>
+                <Button variant="outline" as-child>
+                    <Link
+                        :href="
+                            archived ? urls.index : `${urls.index}?archived=1`
+                        "
+                    >
+                        {{ archived ? 'Ver activos' : 'Ver archivados' }}
+                    </Link>
+                </Button>
+                <Button variant="outline" as-child>
                     <Link :href="urls.bookings">Solicitudes</Link>
                 </Button>
             </div>
@@ -285,9 +306,14 @@ function createCustomer(): void {
                             {{ customer.name }}
                         </Link>
                     </h2>
-                    <Badge variant="outline">
-                        {{ customer.pipeline_stage_label }}
-                    </Badge>
+                    <div class="flex flex-wrap items-center gap-1">
+                        <Badge variant="outline">
+                            {{ customer.pipeline_stage_label }}
+                        </Badge>
+                        <Badge v-if="customer.is_archived" variant="secondary">
+                            Archivado
+                        </Badge>
+                    </div>
                 </div>
                 <p class="text-sm text-muted-foreground">
                     {{ customer.email }}

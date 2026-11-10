@@ -29,6 +29,12 @@ const props = defineProps<{
     >;
     canManageTags: boolean;
     pipelineStages: StatusOption[];
+    isArchived: boolean;
+    isAnonymized: boolean;
+    canManageLifecycle: boolean;
+    canMerge: boolean;
+    canAnonymize: boolean;
+    mergeCandidates: Array<{ id: number; name: string; email: string }>;
     metrics: {
         total_inquiries: number;
         accepted_inquiries: number;
@@ -50,6 +56,10 @@ const props = defineProps<{
         tags_store: string;
         tags_sync: string;
         pipeline_update: string;
+        merge: string;
+        archive: string;
+        restore: string;
+        anonymize: string;
     };
 }>();
 
@@ -107,6 +117,15 @@ const pipelineForm = useForm({
     stage: props.customer.pipeline_stage,
 });
 
+const mergeForm = useForm({
+    target_id: '',
+    reason: '',
+});
+
+const anonymizeForm = useForm({
+    reason: '',
+});
+
 function submit(): void {
     form.patch(props.urls.update, { preserveScroll: true });
 }
@@ -150,6 +169,42 @@ function saveTags(): void {
 
 function savePipeline(): void {
     pipelineForm.patch(props.urls.pipeline_update, { preserveScroll: true });
+}
+
+function mergeCustomer(): void {
+    if (
+        !window.confirm(
+            '¿Fusionar este cliente con el destino? El cliente actual quedará archivado.',
+        )
+    ) {
+        return;
+    }
+
+    mergeForm.post(props.urls.merge);
+}
+
+function archiveCustomer(): void {
+    if (!window.confirm('¿Archivar este cliente?')) {
+        return;
+    }
+
+    router.patch(props.urls.archive, {}, { preserveScroll: true });
+}
+
+function restoreCustomer(): void {
+    router.patch(props.urls.restore, {}, { preserveScroll: true });
+}
+
+function anonymizeCustomer(): void {
+    if (
+        !window.confirm(
+            '¿Anonimizar este cliente? Se eliminarán sus datos personales y los de sus solicitudes. Esta acción no se puede deshacer.',
+        )
+    ) {
+        return;
+    }
+
+    anonymizeForm.patch(props.urls.anonymize);
 }
 
 function toggleTag(tagId: number): void {
@@ -268,6 +323,12 @@ function statusVariant(
                         </h1>
                         <Badge variant="outline">
                             {{ customer.pipeline_stage_label }}
+                        </Badge>
+                        <Badge v-if="isArchived" variant="secondary">
+                            Archivado
+                        </Badge>
+                        <Badge v-if="isAnonymized" variant="destructive">
+                            Anonimizado
                         </Badge>
                         <Badge
                             v-if="customer.tags.length > 0"
@@ -809,6 +870,125 @@ function statusVariant(
                             Guardar etapa
                         </Button>
                     </form>
+                </section>
+
+                <section
+                    v-if="canManageLifecycle"
+                    class="rounded-xl border bg-card p-5"
+                >
+                    <h2 class="text-lg font-semibold">Ciclo de vida</h2>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Archiva, fusiona o anonimiza este cliente.
+                    </p>
+
+                    <div class="mt-4">
+                        <Button
+                            v-if="isArchived"
+                            type="button"
+                            variant="outline"
+                            @click="restoreCustomer"
+                        >
+                            Restaurar cliente
+                        </Button>
+                        <Button
+                            v-else
+                            type="button"
+                            variant="outline"
+                            @click="archiveCustomer"
+                        >
+                            Archivar cliente
+                        </Button>
+                    </div>
+
+                    <details
+                        v-if="canMerge && mergeCandidates.length > 0"
+                        class="mt-4 border-t pt-4"
+                    >
+                        <summary class="cursor-pointer text-sm font-medium">
+                            Fusionar con otro cliente
+                        </summary>
+                        <form
+                            class="mt-3 grid gap-3"
+                            @submit.prevent="mergeCustomer"
+                        >
+                            <select
+                                v-model="mergeForm.target_id"
+                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+                                required
+                            >
+                                <option value="">Cliente destino</option>
+                                <option
+                                    v-for="candidate in mergeCandidates"
+                                    :key="candidate.id"
+                                    :value="String(candidate.id)"
+                                >
+                                    {{ candidate.name }} · {{ candidate.email }}
+                                </option>
+                            </select>
+                            <Input
+                                v-model="mergeForm.reason"
+                                placeholder="Motivo de la fusión"
+                                required
+                            />
+                            <p
+                                v-if="mergeForm.errors.target_id"
+                                class="text-sm text-destructive"
+                            >
+                                {{ mergeForm.errors.target_id }}
+                            </p>
+                            <p
+                                v-if="mergeForm.errors.reason"
+                                class="text-sm text-destructive"
+                            >
+                                {{ mergeForm.errors.reason }}
+                            </p>
+                            <Button
+                                type="submit"
+                                variant="outline"
+                                :disabled="mergeForm.processing"
+                            >
+                                Fusionar clientes
+                            </Button>
+                        </form>
+                    </details>
+
+                    <details
+                        v-if="canAnonymize && !isAnonymized"
+                        class="mt-4 border-t pt-4"
+                    >
+                        <summary
+                            class="cursor-pointer text-sm font-medium text-destructive"
+                        >
+                            Anonimizar cliente
+                        </summary>
+                        <form
+                            class="mt-3 grid gap-3"
+                            @submit.prevent="anonymizeCustomer"
+                        >
+                            <p class="text-xs text-muted-foreground">
+                                Elimina datos personales del cliente y sus
+                                solicitudes; conserva reservas y anticipos.
+                            </p>
+                            <Input
+                                v-model="anonymizeForm.reason"
+                                placeholder="Motivo de la anonimización"
+                                required
+                            />
+                            <p
+                                v-if="anonymizeForm.errors.reason"
+                                class="text-sm text-destructive"
+                            >
+                                {{ anonymizeForm.errors.reason }}
+                            </p>
+                            <Button
+                                type="submit"
+                                variant="destructive"
+                                :disabled="anonymizeForm.processing"
+                            >
+                                Anonimizar definitivamente
+                            </Button>
+                        </form>
+                    </details>
                 </section>
 
                 <form

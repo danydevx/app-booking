@@ -54,10 +54,16 @@ class CustomerController extends Controller
         $search = $request->string('search')->toString();
         $tag = $request->string('tag')->toString();
         $stage = $request->string('stage')->toString();
+        $archived = $request->boolean('archived');
 
         $customers = Customer::query()
             ->where('team_id', $team->id)
             ->with('tags')
+            ->when(
+                $archived,
+                fn ($query) => $query->whereNotNull('archived_at'),
+                fn ($query) => $query->whereNull('archived_at'),
+            )
             ->when($stage !== '', fn ($query) => $query->where('pipeline_stage', $stage))
             ->when($tag !== '', fn ($query) => $query->whereHas(
                 'tags',
@@ -104,12 +110,14 @@ class CustomerController extends Controller
             'customers' => $customers,
             'tags' => $tags,
             'pipelineStages' => CustomerPipelineStage::options(),
+            'archived' => $archived,
             'filters' => ['search' => $search, 'tag' => $tag, 'stage' => $stage],
             'urls' => [
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'store' => route('bookings.customers.store', ['current_team' => $team->slug]),
                 'export' => route('bookings.customers.export', ['current_team' => $team->slug]),
+                'import' => route('bookings.customers.import', ['current_team' => $team->slug]),
             ],
         ]);
     }
@@ -216,6 +224,20 @@ class CustomerController extends Controller
 
         $metrics = $this->metrics->for($customer);
 
+        $mergeCandidates = Customer::query()
+            ->where('team_id', $team->id)
+            ->whereKeyNot($customer->id)
+            ->whereNull('archived_at')
+            ->whereNull('merged_into_id')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email'])
+            ->map(fn (Customer $candidate): array => [
+                'id' => $candidate->id,
+                'name' => $candidate->name,
+                'email' => $candidate->email,
+            ])
+            ->all();
+
         $activities = $customer->activities()
             ->with(['user', 'team'])
             ->latest('occurred_at')
@@ -258,6 +280,12 @@ class CustomerController extends Controller
             'tags' => $tags,
             'canManageTags' => $canManageTags,
             'pipelineStages' => CustomerPipelineStage::options(),
+            'isArchived' => $customer->archived_at !== null,
+            'isAnonymized' => $customer->anonymized_at !== null,
+            'canManageLifecycle' => Gate::allows('archive', $customer),
+            'canMerge' => Gate::allows('merge', $customer),
+            'canAnonymize' => Gate::allows('anonymize', $customer),
+            'mergeCandidates' => $mergeCandidates,
             'urls' => [
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'update' => route('bookings.customers.update', [
@@ -278,6 +306,22 @@ class CustomerController extends Controller
                     'customer' => $customer->id,
                 ]),
                 'pipeline_update' => route('bookings.customers.pipeline.update', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'merge' => route('bookings.customers.merge', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'archive' => route('bookings.customers.archive', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'restore' => route('bookings.customers.restore', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'anonymize' => route('bookings.customers.anonymize', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,
                 ]),
