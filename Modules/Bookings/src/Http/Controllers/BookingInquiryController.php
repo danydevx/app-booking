@@ -83,7 +83,7 @@ class BookingInquiryController extends Controller
             ->where('log_name', 'bookings')
             ->where('subject_type', BookingInquiry::class)
             ->where('subject_id', $inquiry->id)
-            ->latest()
+            ->latest('id')
             ->limit(25)
             ->get()
             ->map(fn (Activity $activity): array => BookingActivityPresenter::present($activity))
@@ -272,7 +272,7 @@ class BookingInquiryController extends Controller
 
         Gate::authorize('manageDeposits', $inquiry);
 
-        $addDeposit->handle($inquiry, $request->validated());
+        $addDeposit->handle($inquiry, $request->validated(), $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Anticipo registrado.']);
 
@@ -293,7 +293,7 @@ class BookingInquiryController extends Controller
 
         Gate::authorize('manageDeposits', $inquiry);
 
-        $updateDeposit->handle($deposit, $request->validated());
+        $updateDeposit->handle($deposit, $request->validated(), $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Anticipo actualizado.']);
 

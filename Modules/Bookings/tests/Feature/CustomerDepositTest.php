@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Cashier\Subscription;
 use Modules\Bookings\Enums\DepositMethod;
 use Modules\Bookings\Enums\DepositStatus;
@@ -65,6 +66,12 @@ class CustomerDepositTest extends TestCase
         $this->assertSame('MXN', $deposit->currency);
         $this->assertSame(DepositStatus::Pending, $deposit->status);
         $this->assertSame(DepositMethod::Transfer, $deposit->method);
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'bookings',
+            'description' => 'deposit.added',
+            'subject_type' => BookingInquiry::class,
+            'subject_id' => $inquiry->id,
+        ]);
 
         $this->actingAs($owner)->patch(route('bookings.deposits.update', [
             'current_team' => $team->slug,
@@ -79,6 +86,22 @@ class CustomerDepositTest extends TestCase
 
         $this->assertSame(DepositStatus::Received, $deposit->status);
         $this->assertNotNull($deposit->received_at);
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'bookings',
+            'description' => 'deposit.updated',
+            'subject_type' => BookingInquiry::class,
+            'subject_id' => $inquiry->id,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('bookings.show', [
+                'current_team' => $team->slug,
+                'inquiry' => $inquiry->id,
+            ]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('activities', 2)
+                ->where('activities.0.label', 'Anticipo actualizado')
+                ->where('activities.1.label', 'Anticipo registrado'));
     }
 
     public function test_owner_can_update_customer_notes_but_not_another_account_customer(): void
