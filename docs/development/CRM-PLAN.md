@@ -13,7 +13,7 @@
 | 1. Timeline y notas                 | Completado el 2026-11-10 |
 | 2. Tareas                           | Completado el 2026-11-10 |
 | 3. Etiquetas                        | Pendiente                |
-| 4. Métricas                         | Pendiente                |
+| 4. Métricas                         | Completado el 2026-11-10 |
 | 5. Pipeline                         | Pendiente                |
 | 6. Importación/fusión/ciclo de vida | Pendiente                |
 | 7. Comunicaciones                   | Pendiente                |
