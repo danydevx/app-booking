@@ -11,6 +11,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
+use Modules\Bookings\Models\ListingUnavailability;
 use Modules\Listings\Models\Listing;
 use Tests\TestCase;
 
@@ -54,6 +55,9 @@ class DashboardTest extends TestCase
             'end_date' => now($timezone)->addDays(4)->toDateString(),
         ]);
         Customer::factory()->create(['team_id' => $team->id]);
+        ListingUnavailability::factory()->forListing($listing)->booked()->create([
+            'date' => now($timezone)->addDays(3)->toDateString(),
+        ]);
 
         $this->actingAs($user)
             ->get(route('dashboard'))
@@ -65,6 +69,9 @@ class DashboardTest extends TestCase
                 ->where('overview.new_inquiries', 1)
                 ->where('overview.upcoming_bookings', 1)
                 ->where('overview.customers', 1)
+                ->where('overview.occupancy_percent', 3.3)
+                ->where('overview.conversion_percent', 50)
+                ->where('overview.booked_days_30d', 1)
                 ->has('upcomingBookings', 1)
                 ->has('recentInquiries', 2));
     }

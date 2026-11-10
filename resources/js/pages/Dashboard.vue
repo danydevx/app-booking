@@ -40,6 +40,9 @@ const props = defineProps<{
         new_inquiries: number;
         upcoming_bookings: number;
         customers: number;
+        occupancy_percent: number;
+        conversion_percent: number;
+        booked_days_30d: number;
         deposits_received_cents: number;
         currency: string;
     };
@@ -179,6 +182,40 @@ function statusVariant(
                     <Link :href="urls.customers" class="underline">
                         Ver clientes
                     </Link>
+                </CardContent>
+            </Card>
+        </div>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+            <Card>
+                <CardHeader>
+                    <CardDescription
+                        >Ocupación próximos 30 días</CardDescription
+                    >
+                    <CardTitle class="text-3xl">
+                        {{ props.overview.occupancy_percent }}%
+                    </CardTitle>
+                </CardHeader>
+                <CardContent class="text-sm text-muted-foreground">
+                    {{ props.overview.booked_days_30d }} días reservados en
+                    {{ props.overview.listings }}
+                    {{
+                        props.overview.listings === 1 ? 'terraza' : 'terrazas'
+                    }}.
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardDescription
+                        >Conversión últimos 30 días</CardDescription
+                    >
+                    <CardTitle class="text-3xl">
+                        {{ props.overview.conversion_percent }}%
+                    </CardTitle>
+                </CardHeader>
+                <CardContent class="text-sm text-muted-foreground">
+                    Solicitudes aceptadas sobre el total recibido.
                 </CardContent>
             </Card>
         </div>

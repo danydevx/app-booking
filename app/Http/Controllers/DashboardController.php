@@ -7,11 +7,13 @@ use App\Models\TeamInvitation;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Bookings\Enums\AvailabilityStatus;
 use Modules\Bookings\Enums\DepositStatus;
 use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingDeposit;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
+use Modules\Bookings\Models\ListingUnavailability;
 use Modules\Listings\Models\Listing;
 
 class DashboardController extends Controller
@@ -88,10 +90,34 @@ class DashboardController extends Controller
             ->where('status', DepositStatus::Received)
             ->sum('amount_cents');
 
+        $listingsCount = Listing::query()->where('team_id', $team->id)->count();
+        $periodEnd = now($team->timezone)->addDays(30)->toDateString();
+        $bookedDays = ListingUnavailability::query()
+            ->whereHas('listing', fn ($query) => $query->where('team_id', $team->id))
+            ->where('status', AvailabilityStatus::Booked)
+            ->whereBetween('date', [$today, $periodEnd])
+            ->count();
+
+        $recentSince = now()->subDays(30);
+        $recentInquiryQuery = BookingInquiry::query()
+            ->where('team_id', $team->id)
+            ->where('created_at', '>=', $recentSince);
+        $recentInquiryCount = (clone $recentInquiryQuery)->count();
+        $acceptedInquiryCount = (clone $recentInquiryQuery)
+            ->where('status', InquiryStatus::Accepted)
+            ->count();
+
+        $occupancyPercent = $listingsCount > 0
+            ? min(100, round(($bookedDays / ($listingsCount * 30)) * 100, 1))
+            : 0.0;
+        $conversionPercent = $recentInquiryCount > 0
+            ? round(($acceptedInquiryCount / $recentInquiryCount) * 100, 1)
+            : 0.0;
+
         return Inertia::render('Dashboard', [
             'pendingInvitations' => $pendingInvitations,
             'overview' => [
-                'listings' => Listing::query()->where('team_id', $team->id)->count(),
+                'listings' => $listingsCount,
                 'published_listings' => Listing::query()
                     ->where('team_id', $team->id)
                     ->published()
@@ -106,6 +132,9 @@ class DashboardController extends Controller
                     ->where('start_date', '>=', $today)
                     ->count(),
                 'customers' => Customer::query()->where('team_id', $team->id)->count(),
+                'occupancy_percent' => $occupancyPercent,
+                'conversion_percent' => $conversionPercent,
+                'booked_days_30d' => $bookedDays,
                 'deposits_received_cents' => (int) $depositsReceived,
                 'currency' => (string) config('bookings.deposit_currency', 'MXN'),
             ],
