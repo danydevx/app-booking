@@ -1,9 +1,22 @@
 # Plan de evolución del CRM
 
-**Estado:** planificado, sin implementar
+**Estado:** Paso 1 implementado; pasos 2–7 pendientes
 **Módulo actual:** `Modules/Bookings`
 **Plan comercial:** Pro (`features.customers = true`)
 **Última actualización:** 2026-11-10
+
+## Estado de implementación
+
+| Paso                                | Estado                   |
+| ----------------------------------- | ------------------------ |
+| 0. CRUD base                        | Completado               |
+| 1. Timeline y notas                 | Completado el 2026-11-10 |
+| 2. Tareas                           | Pendiente                |
+| 3. Etiquetas                        | Pendiente                |
+| 4. Métricas                         | Pendiente                |
+| 5. Pipeline                         | Pendiente                |
+| 6. Importación/fusión/ciclo de vida | Pendiente                |
+| 7. Comunicaciones                   | Pendiente                |
 
 ## 1. Punto de partida
 

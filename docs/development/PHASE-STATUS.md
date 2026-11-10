@@ -3,7 +3,7 @@
 > Git reality: all phases were committed directly to `main` (trunk-based).
 > Branch names in older phase reports are historical labels, not existing refs.
 
-Last updated: 2026-11-07
+Last updated: 2026-11-10
 
 | Phase                           | Status      | Evidence                                                                                                                    | Commit         |
 | ------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------- | -------------- |
@@ -16,7 +16,7 @@ Last updated: 2026-11-07
 | 6 — Platform admin              | PASS        | `Modules/Platform`; activitylog 4.12; moderation, reports, audit; 181 tests/959 assertions; build 3,678 modules             | phase-6 commit |
 | 7 — Branding and communications | PASS        | `Modules/Platform` branding + account branding, queued mail, WhatsApp; 197 tests/1,041 assertions; build 3,683 modules      | phase-7 commit |
 | 8 — Production launch           | PARTIAL     | `docs/development/PRODUCTION.md` + `app:production-check`; deployment pending target/approval                               | —              |
-| 9 — Post-MVP                    | NOT STARTED | Plan CRM: `docs/development/CRM-PLAN.md`; sin implementación                                                                | —              |
+| 9 — Post-MVP                    | IN PROGRESS | CRM Paso 1: timeline y notas; plan en `docs/development/CRM-PLAN.md`                                                        | —              |
 
 ## Current blockers
 
@@ -32,7 +32,7 @@ Last updated: 2026-11-07
 - PHP version: 8.3.6
 - Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
-- Test suite: 271 tests / 1,490 assertions (SQLite and MySQL 8.4)
+- Test suite: 276 tests / 1,520 assertions (SQLite and MySQL 8.4)
 - Architecture decisions: `docs/decisions/README.md` (ADR 0001–0004)
 - Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
 - CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
@@ -45,4 +45,5 @@ Last updated: 2026-11-07
   `Modules/Bookings`, `Modules/Billing`
 - Moderation audit: `spatie/laravel-activitylog` 4.12 with `moderation` log
 - Operational status: `/platform/system` shows queue, scheduler heartbeat and failed jobs
+- CRM: timeline and notes are available in the customer detail (Paso 1)
 - Local mailer: `log`; Mailpit optional via `MAIL_HOST`/`MAIL_PORT`
