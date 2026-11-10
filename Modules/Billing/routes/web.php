@@ -4,7 +4,7 @@ use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 use Modules\Billing\Http\Controllers\BillingController;
 
-Route::prefix('{current_team}/billing')
+Route::prefix('app/{current_team}/billing')
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('billing.')
     ->group(function (): void {

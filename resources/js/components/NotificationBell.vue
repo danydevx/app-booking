@@ -44,7 +44,7 @@ async function fetchNotifications(): Promise<void> {
     loading.value = true;
 
     try {
-        const response = await fetch('/notifications', {
+        const response = await fetch('/app/notifications', {
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -73,7 +73,7 @@ async function markRead(item: NotificationItem): Promise<void> {
         return;
     }
 
-    const response = await fetch(`/notifications/${item.id}/read`, {
+    const response = await fetch(`/app/notifications/${item.id}/read`, {
         method: 'PATCH',
         headers: {
             Accept: 'application/json',
@@ -91,7 +91,7 @@ async function markRead(item: NotificationItem): Promise<void> {
 }
 
 async function markAll(): Promise<void> {
-    const response = await fetch('/notifications/read-all', {
+    const response = await fetch('/app/notifications/read-all', {
         method: 'POST',
         headers: {
             Accept: 'application/json',

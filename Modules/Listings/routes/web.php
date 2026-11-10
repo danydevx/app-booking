@@ -13,7 +13,7 @@ Route::middleware('web')->group(function (): void {
         ->name('public.listings.show');
 });
 
-Route::prefix('{current_team}/listings')
+Route::prefix('app/{current_team}/listings')
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('listings.')
     ->group(function (): void {

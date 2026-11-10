@@ -27,24 +27,24 @@ const appUrl = computed(() =>
 );
 
 const navigation = [
-    { title: 'Resumen', href: '/platform', icon: LayoutDashboard },
-    { title: 'Cuentas', href: '/platform/accounts', icon: Users },
-    { title: 'Usuarios', href: '/platform/users', icon: UserCog },
-    { title: 'Terrazas', href: '/platform/listings', icon: Building2 },
+    { title: 'Resumen', href: '/app/platform', icon: LayoutDashboard },
+    { title: 'Cuentas', href: '/app/platform/accounts', icon: Users },
+    { title: 'Usuarios', href: '/app/platform/users', icon: UserCog },
+    { title: 'Terrazas', href: '/app/platform/listings', icon: Building2 },
     {
         title: 'Suscripciones',
-        href: '/platform/subscriptions',
+        href: '/app/platform/subscriptions',
         icon: CreditCard,
     },
-    { title: 'Reportes', href: '/platform/reports', icon: Flag },
-    { title: 'Auditoría', href: '/platform/activity', icon: History },
-    { title: 'Sistema', href: '/platform/system', icon: Server },
-    { title: 'Marca', href: '/platform/branding', icon: Palette },
+    { title: 'Reportes', href: '/app/platform/reports', icon: Flag },
+    { title: 'Auditoría', href: '/app/platform/activity', icon: History },
+    { title: 'Sistema', href: '/app/platform/system', icon: Server },
+    { title: 'Marca', href: '/app/platform/branding', icon: Palette },
 ];
 
 function isActive(href: string): boolean {
-    if (href === '/platform') {
-        return currentUrl.value === '/platform';
+    if (href === '/app/platform') {
+        return currentUrl.value === '/app/platform';
     }
 
     return currentUrl.value.startsWith(href);
@@ -58,7 +58,7 @@ function isActive(href: string): boolean {
                 class="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6"
             >
                 <div class="flex flex-wrap items-center justify-between gap-3">
-                    <Link href="/platform" class="flex items-center gap-2">
+                    <Link href="/app/platform" class="flex items-center gap-2">
                         <span
                             class="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"
                         >

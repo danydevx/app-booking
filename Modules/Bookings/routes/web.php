@@ -61,147 +61,149 @@ Route::middleware('web')->group(function (): void {
         ->name('public.bookings.portal.contract.accept');
 });
 
-Route::get('{current_team}/listings/{listing}/bookings', [BookingInquiryController::class, 'listing'])
-    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
-    ->name('bookings.listing');
-
-Route::get('{current_team}/listings/{listing}/bookings/create', [ManualBookingController::class, 'createForListing'])
-    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
-    ->name('bookings.listing.create');
-
-Route::post('{current_team}/listings/{listing}/bookings/create', [ManualBookingController::class, 'storeForListing'])
-    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
-    ->name('bookings.listing.create.store');
-
-Route::get('{current_team}/listings/{listing}/customers', [CustomerController::class, 'forListing'])
-    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
-    ->name('bookings.listing.customers');
-Route::post('{current_team}/listings/{listing}/customers', [CustomerController::class, 'storeForListing'])
-    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
-    ->name('bookings.listing.customers.store');
-Route::get('{current_team}/listings/{listing}/customers/{customer}', [CustomerController::class, 'showForListing'])
-    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
-    ->name('bookings.listing.customers.show');
-
-foreach ([
-    'tasks' => 'tasksForListing',
-    'timeline' => 'timelineForListing',
-    'emails' => 'emailsForListing',
-    'quotes' => 'quotesForListing',
-    'inquiries' => 'inquiriesForListing',
-    'data' => 'dataForListing',
-    'tags' => 'tagsForListing',
-    'lifecycle' => 'lifecycleForListing',
-] as $path => $method) {
-    Route::get("{current_team}/listings/{listing}/customers/{customer}/{$path}", [CustomerController::class, $method])
+Route::prefix('app')->group(function (): void {
+    Route::get('{current_team}/listings/{listing}/bookings', [BookingInquiryController::class, 'listing'])
         ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
-        ->name("bookings.listing.customers.{$path}");
-}
+        ->name('bookings.listing');
 
-Route::prefix('{current_team}/bookings')
-    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
-    ->name('bookings.')
-    ->group(function (): void {
-        Route::get('/', [BookingInquiryController::class, 'index'])->name('index');
-        Route::get('/today', CrmTodayController::class)->name('today');
-        Route::get('/reports', CrmReportController::class)->name('reports');
+    Route::get('{current_team}/listings/{listing}/bookings/create', [ManualBookingController::class, 'createForListing'])
+        ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+        ->name('bookings.listing.create');
 
-        Route::get('/create', [ManualBookingController::class, 'create'])->name('create');
-        Route::post('/create', [ManualBookingController::class, 'store'])->name('create.store');
+    Route::post('{current_team}/listings/{listing}/bookings/create', [ManualBookingController::class, 'storeForListing'])
+        ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+        ->name('bookings.listing.create.store');
 
-        Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
-        Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
-        Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
-        Route::get('/customers/import', [CustomerImportController::class, 'create'])
-            ->name('customers.import');
-        Route::post('/customers/import', [CustomerImportController::class, 'store'])
-            ->name('customers.import.store');
-        Route::post('/customers/tags', [CustomerTagController::class, 'store'])
-            ->name('customers.tags.store');
-        Route::delete('/customers/tags/{tag}', [CustomerTagController::class, 'destroy'])
-            ->name('customers.tags.destroy');
-        Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::get('{current_team}/listings/{listing}/customers', [CustomerController::class, 'forListing'])
+        ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+        ->name('bookings.listing.customers');
+    Route::post('{current_team}/listings/{listing}/customers', [CustomerController::class, 'storeForListing'])
+        ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+        ->name('bookings.listing.customers.store');
+    Route::get('{current_team}/listings/{listing}/customers/{customer}', [CustomerController::class, 'showForListing'])
+        ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+        ->name('bookings.listing.customers.show');
 
-        foreach ([
-            'tasks' => 'tasks',
-            'timeline' => 'timeline',
-            'emails' => 'emails',
-            'quotes' => 'quotes',
-            'inquiries' => 'inquiries',
-            'data' => 'data',
-            'tags' => 'tags',
-            'lifecycle' => 'lifecycle',
-        ] as $path => $method) {
-            Route::get("/customers/{customer}/{$path}", [CustomerController::class, $method])
-                ->name("customers.{$path}");
-        }
+    foreach ([
+        'tasks' => 'tasksForListing',
+        'timeline' => 'timelineForListing',
+        'emails' => 'emailsForListing',
+        'quotes' => 'quotesForListing',
+        'inquiries' => 'inquiriesForListing',
+        'data' => 'dataForListing',
+        'tags' => 'tagsForListing',
+        'lifecycle' => 'lifecycleForListing',
+    ] as $path => $method) {
+        Route::get("{current_team}/listings/{listing}/customers/{customer}/{$path}", [CustomerController::class, $method])
+            ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+            ->name("bookings.listing.customers.{$path}");
+    }
 
-        Route::post('/customers/{customer}/emails', [CustomerEmailController::class, 'send'])
-            ->name('customers.emails.send');
-        Route::patch('/customers/{customer}/email-opt-in', [CustomerEmailController::class, 'optIn'])
-            ->name('customers.email-opt-in');
-        Route::post('/customers/{customer}/quotes', [CustomerQuoteController::class, 'store'])
-            ->name('customers.quotes.store');
+    Route::prefix('{current_team}/bookings')
+        ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+        ->name('bookings.')
+        ->group(function (): void {
+            Route::get('/', [BookingInquiryController::class, 'index'])->name('index');
+            Route::get('/today', CrmTodayController::class)->name('today');
+            Route::get('/reports', CrmReportController::class)->name('reports');
 
-        Route::get('/templates', [EmailTemplateController::class, 'index'])->name('templates.index');
-        Route::post('/templates', [EmailTemplateController::class, 'store'])->name('templates.store');
-        Route::patch('/templates/{template}', [EmailTemplateController::class, 'update'])->name('templates.update');
-        Route::delete('/templates/{template}', [EmailTemplateController::class, 'destroy'])->name('templates.destroy');
+            Route::get('/create', [ManualBookingController::class, 'create'])->name('create');
+            Route::post('/create', [ManualBookingController::class, 'store'])->name('create.store');
 
-        Route::get('/quotes', [CustomerQuoteController::class, 'index'])->name('quotes.index');
-        Route::get('/quotes/{quote}', [CustomerQuoteController::class, 'show'])->name('quotes.show');
-        Route::patch('/quotes/{quote}', [CustomerQuoteController::class, 'update'])->name('quotes.update');
-        Route::post('/quotes/{quote}/send', [CustomerQuoteController::class, 'send'])->name('quotes.send');
-        Route::post('/quotes/{quote}/convert', [CustomerQuoteController::class, 'convert'])->name('quotes.convert');
-        Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
-        Route::patch('/customers/{customer}/tags', [CustomerTagController::class, 'sync'])
-            ->name('customers.tags.sync');
-        Route::patch('/customers/{customer}/pipeline', [CustomerPipelineController::class, 'update'])
-            ->name('customers.pipeline.update');
-        Route::post('/customers/{customer}/merge', [CustomerLifecycleController::class, 'merge'])
-            ->name('customers.merge');
-        Route::patch('/customers/{customer}/archive', [CustomerLifecycleController::class, 'archive'])
-            ->name('customers.archive');
-        Route::patch('/customers/{customer}/restore', [CustomerLifecycleController::class, 'restore'])
-            ->name('customers.restore');
-        Route::patch('/customers/{customer}/anonymize', [CustomerLifecycleController::class, 'anonymize'])
-            ->name('customers.anonymize');
-        Route::post('/customers/{customer}/activities', [CustomerActivityController::class, 'store'])
-            ->name('customers.activities.store');
-        Route::delete('/customers/{customer}/activities/{activity}', [CustomerActivityController::class, 'destroy'])
-            ->name('customers.activities.destroy');
-        Route::post('/customers/{customer}/tasks', [CustomerTaskController::class, 'store'])
-            ->name('customers.tasks.store');
-        Route::patch('/customers/{customer}/tasks/{task}', [CustomerTaskController::class, 'update'])
-            ->name('customers.tasks.update');
-        Route::patch('/customers/{customer}/tasks/{task}/complete', [CustomerTaskController::class, 'complete'])
-            ->name('customers.tasks.complete');
-        Route::patch('/customers/{customer}/tasks/{task}/cancel', [CustomerTaskController::class, 'cancel'])
-            ->name('customers.tasks.cancel');
+            Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
+            Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
+            Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+            Route::get('/customers/import', [CustomerImportController::class, 'create'])
+                ->name('customers.import');
+            Route::post('/customers/import', [CustomerImportController::class, 'store'])
+                ->name('customers.import.store');
+            Route::post('/customers/tags', [CustomerTagController::class, 'store'])
+                ->name('customers.tags.store');
+            Route::delete('/customers/tags/{tag}', [CustomerTagController::class, 'destroy'])
+                ->name('customers.tags.destroy');
+            Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
 
-        Route::get('/availability/{listing}', [AvailabilityController::class, 'edit'])->name('availability.edit');
-        Route::post('/availability/{listing}/block', [AvailabilityController::class, 'block'])->name('availability.block');
-        Route::post('/availability/{listing}/block-range', [AvailabilityController::class, 'blockRange'])->name('availability.block-range');
-        Route::delete('/availability/{listing}/block-range', [AvailabilityController::class, 'unblockRange'])->name('availability.unblock-range');
-        Route::delete('/availability/{listing}/block/{date}', [AvailabilityController::class, 'unblock'])
-            ->where('date', '\d{4}-\d{2}-\d{2}')
-            ->name('availability.unblock');
-        Route::post('/availability/{listing}/series', [AvailabilityBlockSeriesController::class, 'store'])
-            ->name('availability.series.store');
-        Route::delete('/availability/{listing}/series/{series}', [AvailabilityBlockSeriesController::class, 'destroy'])
-            ->name('availability.series.destroy');
+            foreach ([
+                'tasks' => 'tasks',
+                'timeline' => 'timeline',
+                'emails' => 'emails',
+                'quotes' => 'quotes',
+                'inquiries' => 'inquiries',
+                'data' => 'data',
+                'tags' => 'tags',
+                'lifecycle' => 'lifecycle',
+            ] as $path => $method) {
+                Route::get("/customers/{customer}/{$path}", [CustomerController::class, $method])
+                    ->name("customers.{$path}");
+            }
 
-        Route::get('/inquiries/{inquiry}', [BookingInquiryController::class, 'show'])->name('show');
-        Route::get('/inquiries/{inquiry}/edit', [BookingInquiryController::class, 'edit'])->name('inquiries.edit');
-        Route::patch('/inquiries/{inquiry}', [BookingInquiryController::class, 'update'])->name('inquiries.update');
-        Route::patch('/inquiries/{inquiry}/contacted', [BookingInquiryController::class, 'contacted'])->name('inquiries.contacted');
-        Route::patch('/inquiries/{inquiry}/accept', [BookingInquiryController::class, 'accept'])->name('inquiries.accept');
-        Route::patch('/inquiries/{inquiry}/decline', [BookingInquiryController::class, 'decline'])->name('inquiries.decline');
-        Route::patch('/inquiries/{inquiry}/cancel', [BookingInquiryController::class, 'cancel'])->name('inquiries.cancel');
+            Route::post('/customers/{customer}/emails', [CustomerEmailController::class, 'send'])
+                ->name('customers.emails.send');
+            Route::patch('/customers/{customer}/email-opt-in', [CustomerEmailController::class, 'optIn'])
+                ->name('customers.email-opt-in');
+            Route::post('/customers/{customer}/quotes', [CustomerQuoteController::class, 'store'])
+                ->name('customers.quotes.store');
 
-        Route::post('/inquiries/{inquiry}/deposits', [BookingInquiryController::class, 'storeDeposit'])->name('deposits.store');
-        Route::patch('/inquiries/{inquiry}/deposits/{deposit}', [BookingInquiryController::class, 'updateDeposit'])->name('deposits.update');
-        Route::post('/inquiries/{inquiry}/contract', [BookingContractController::class, 'store'])->name('contracts.store');
-        Route::patch('/contracts/{contract}', [BookingContractController::class, 'update'])->name('contracts.update');
-        Route::post('/contracts/{contract}/publish', [BookingContractController::class, 'publish'])->name('contracts.publish');
-    });
+            Route::get('/templates', [EmailTemplateController::class, 'index'])->name('templates.index');
+            Route::post('/templates', [EmailTemplateController::class, 'store'])->name('templates.store');
+            Route::patch('/templates/{template}', [EmailTemplateController::class, 'update'])->name('templates.update');
+            Route::delete('/templates/{template}', [EmailTemplateController::class, 'destroy'])->name('templates.destroy');
+
+            Route::get('/quotes', [CustomerQuoteController::class, 'index'])->name('quotes.index');
+            Route::get('/quotes/{quote}', [CustomerQuoteController::class, 'show'])->name('quotes.show');
+            Route::patch('/quotes/{quote}', [CustomerQuoteController::class, 'update'])->name('quotes.update');
+            Route::post('/quotes/{quote}/send', [CustomerQuoteController::class, 'send'])->name('quotes.send');
+            Route::post('/quotes/{quote}/convert', [CustomerQuoteController::class, 'convert'])->name('quotes.convert');
+            Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+            Route::patch('/customers/{customer}/tags', [CustomerTagController::class, 'sync'])
+                ->name('customers.tags.sync');
+            Route::patch('/customers/{customer}/pipeline', [CustomerPipelineController::class, 'update'])
+                ->name('customers.pipeline.update');
+            Route::post('/customers/{customer}/merge', [CustomerLifecycleController::class, 'merge'])
+                ->name('customers.merge');
+            Route::patch('/customers/{customer}/archive', [CustomerLifecycleController::class, 'archive'])
+                ->name('customers.archive');
+            Route::patch('/customers/{customer}/restore', [CustomerLifecycleController::class, 'restore'])
+                ->name('customers.restore');
+            Route::patch('/customers/{customer}/anonymize', [CustomerLifecycleController::class, 'anonymize'])
+                ->name('customers.anonymize');
+            Route::post('/customers/{customer}/activities', [CustomerActivityController::class, 'store'])
+                ->name('customers.activities.store');
+            Route::delete('/customers/{customer}/activities/{activity}', [CustomerActivityController::class, 'destroy'])
+                ->name('customers.activities.destroy');
+            Route::post('/customers/{customer}/tasks', [CustomerTaskController::class, 'store'])
+                ->name('customers.tasks.store');
+            Route::patch('/customers/{customer}/tasks/{task}', [CustomerTaskController::class, 'update'])
+                ->name('customers.tasks.update');
+            Route::patch('/customers/{customer}/tasks/{task}/complete', [CustomerTaskController::class, 'complete'])
+                ->name('customers.tasks.complete');
+            Route::patch('/customers/{customer}/tasks/{task}/cancel', [CustomerTaskController::class, 'cancel'])
+                ->name('customers.tasks.cancel');
+
+            Route::get('/availability/{listing}', [AvailabilityController::class, 'edit'])->name('availability.edit');
+            Route::post('/availability/{listing}/block', [AvailabilityController::class, 'block'])->name('availability.block');
+            Route::post('/availability/{listing}/block-range', [AvailabilityController::class, 'blockRange'])->name('availability.block-range');
+            Route::delete('/availability/{listing}/block-range', [AvailabilityController::class, 'unblockRange'])->name('availability.unblock-range');
+            Route::delete('/availability/{listing}/block/{date}', [AvailabilityController::class, 'unblock'])
+                ->where('date', '\d{4}-\d{2}-\d{2}')
+                ->name('availability.unblock');
+            Route::post('/availability/{listing}/series', [AvailabilityBlockSeriesController::class, 'store'])
+                ->name('availability.series.store');
+            Route::delete('/availability/{listing}/series/{series}', [AvailabilityBlockSeriesController::class, 'destroy'])
+                ->name('availability.series.destroy');
+
+            Route::get('/inquiries/{inquiry}', [BookingInquiryController::class, 'show'])->name('show');
+            Route::get('/inquiries/{inquiry}/edit', [BookingInquiryController::class, 'edit'])->name('inquiries.edit');
+            Route::patch('/inquiries/{inquiry}', [BookingInquiryController::class, 'update'])->name('inquiries.update');
+            Route::patch('/inquiries/{inquiry}/contacted', [BookingInquiryController::class, 'contacted'])->name('inquiries.contacted');
+            Route::patch('/inquiries/{inquiry}/accept', [BookingInquiryController::class, 'accept'])->name('inquiries.accept');
+            Route::patch('/inquiries/{inquiry}/decline', [BookingInquiryController::class, 'decline'])->name('inquiries.decline');
+            Route::patch('/inquiries/{inquiry}/cancel', [BookingInquiryController::class, 'cancel'])->name('inquiries.cancel');
+
+            Route::post('/inquiries/{inquiry}/deposits', [BookingInquiryController::class, 'storeDeposit'])->name('deposits.store');
+            Route::patch('/inquiries/{inquiry}/deposits/{deposit}', [BookingInquiryController::class, 'updateDeposit'])->name('deposits.update');
+            Route::post('/inquiries/{inquiry}/contract', [BookingContractController::class, 'store'])->name('contracts.store');
+            Route::patch('/contracts/{contract}', [BookingContractController::class, 'update'])->name('contracts.update');
+            Route::post('/contracts/{contract}/publish', [BookingContractController::class, 'publish'])->name('contracts.publish');
+        });
+});

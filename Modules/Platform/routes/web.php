@@ -22,7 +22,7 @@ Route::middleware('web')->group(function (): void {
 });
 
 Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS])
-    ->prefix('platform')
+    ->prefix('app/platform')
     ->name('platform.')
     ->group(function (): void {
         Route::get('/', PlatformDashboardController::class)

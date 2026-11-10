@@ -49,39 +49,39 @@ const mainNavItems = computed<NavItem[]>(() => {
     if (page.props.currentTeam) {
         items.push({
             title: 'Terrazas',
-            href: `/${page.props.currentTeam.slug}/listings`,
+            href: `/app/${page.props.currentTeam.slug}/listings`,
             icon: Building2,
         });
         items.push({
             title: 'Solicitudes',
-            href: `/${page.props.currentTeam.slug}/bookings`,
+            href: `/app/${page.props.currentTeam.slug}/bookings`,
             icon: Inbox,
         });
         items.push({
             title: 'Hoy',
-            href: `/${page.props.currentTeam.slug}/bookings/today`,
+            href: `/app/${page.props.currentTeam.slug}/bookings/today`,
             icon: ListChecks,
         });
         items.push({
             title: 'Cotizaciones',
-            href: `/${page.props.currentTeam.slug}/bookings/quotes`,
+            href: `/app/${page.props.currentTeam.slug}/bookings/quotes`,
             icon: FileText,
         });
         items.push({
             title: 'Plantillas',
-            href: `/${page.props.currentTeam.slug}/bookings/templates`,
+            href: `/app/${page.props.currentTeam.slug}/bookings/templates`,
             icon: Mail,
         });
         items.push({
             title: 'Reportes',
-            href: `/${page.props.currentTeam.slug}/bookings/reports`,
+            href: `/app/${page.props.currentTeam.slug}/bookings/reports`,
             icon: ChartColumn,
         });
 
         if (page.props.currentTeam.role === 'owner') {
             items.push({
                 title: 'Facturación',
-                href: `/${page.props.currentTeam.slug}/billing`,
+                href: `/app/${page.props.currentTeam.slug}/billing`,
                 icon: CreditCard,
             });
         }
@@ -90,7 +90,7 @@ const mainNavItems = computed<NavItem[]>(() => {
     if (page.props.platform?.isSuperadmin) {
         items.push({
             title: 'Plataforma',
-            href: '/platform',
+            href: '/app/platform',
             icon: Shield,
         });
     }

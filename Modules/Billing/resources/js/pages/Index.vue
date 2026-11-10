@@ -69,7 +69,7 @@ defineOptions({
         breadcrumbs: [
             {
                 title: 'Facturación',
-                href: `/${props.team.slug}/dashboard`,
+                href: `/app/${props.team.slug}/dashboard`,
             },
         ],
     }),

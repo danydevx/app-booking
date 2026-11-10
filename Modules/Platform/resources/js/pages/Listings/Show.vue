@@ -219,7 +219,7 @@ function reasonOf(activity: ActivityRow): string {
                         {{ reports.length }} reportes recibidos.
                     </p>
                     <Link
-                        href="/platform/reports"
+                        href="/app/platform/reports"
                         class="text-primary underline"
                     >
                         Abrir cola de reportes

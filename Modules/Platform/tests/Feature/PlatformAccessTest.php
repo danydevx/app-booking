@@ -17,14 +17,14 @@ class PlatformAccessTest extends TestCase
 
     public function test_guests_are_redirected_from_the_platform_area(): void
     {
-        $this->get('/platform')->assertRedirect('/login');
+        $this->get('/app/platform')->assertRedirect('/login');
     }
 
     public function test_normal_users_cannot_access_the_platform_area(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)->get('/platform')->assertForbidden();
+        $this->actingAs($user)->get('/app/platform')->assertForbidden();
     }
 
     public function test_command_promotes_an_existing_verified_user_idempotently(): void
@@ -81,7 +81,7 @@ class PlatformAccessTest extends TestCase
         ])->assertSuccessful();
 
         $this->actingAs($user->fresh())
-            ->get('/platform')
+            ->get('/app/platform')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Platform/Dashboard')
