@@ -127,7 +127,7 @@ class BookingInquiryController extends Controller
 
         Gate::authorize('view', $inquiry);
 
-        $inquiry->load(['listing', 'customer', 'deposits']);
+        $inquiry->load(['listing', 'customer', 'deposits', 'contract.bookingInquiry']);
 
         $activities = Activity::query()
             ->with('causer')
@@ -179,6 +179,10 @@ class BookingInquiryController extends Controller
                     'inquiry' => $inquiry->id,
                 ]),
                 'deposits_store' => route('bookings.deposits.store', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+                'contract_store' => route('bookings.contracts.store', [
                     'current_team' => $team->slug,
                     'inquiry' => $inquiry->id,
                 ]),

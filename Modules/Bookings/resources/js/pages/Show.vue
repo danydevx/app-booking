@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import DepositForm from '../components/DepositForm.vue';
@@ -29,6 +30,7 @@ const props = defineProps<{
         decline: string;
         cancel: string;
         deposits_store: string;
+        contract_store: string;
     };
 }>();
 
@@ -45,6 +47,61 @@ defineOptions({
         ],
     },
 });
+
+const contractForm = useForm({
+    title: props.inquiry.contract?.title ?? 'Contrato de renta',
+    body: props.inquiry.contract?.body ?? '',
+});
+
+const contractFormError = computed<string | null>(() => {
+    const errors = contractForm.errors as Record<string, string | undefined>;
+
+    return errors.contract ?? null;
+});
+
+function saveContract(): void {
+    if (props.inquiry.contract) {
+        contractForm.patch(props.inquiry.contract.update_url, {
+            preserveScroll: true,
+        });
+
+        return;
+    }
+
+    contractForm.post(props.urls.contract_store, { preserveScroll: true });
+}
+
+function publishContract(): void {
+    if (!props.inquiry.contract) {
+        return;
+    }
+
+    if (!window.confirm('¿Publicar el contrato en el portal del cliente?')) {
+        return;
+    }
+
+    router.post(
+        props.inquiry.contract.publish_url,
+        {},
+        {
+            preserveScroll: true,
+        },
+    );
+}
+
+function contractStatusVariant(
+    status: string,
+): 'default' | 'secondary' | 'outline' {
+    if (status === 'accepted') {
+        return 'default';
+    }
+
+    if (status === 'sent') {
+        return 'secondary';
+    }
+
+    return 'outline';
+}
 
 function statusVariant(
     status: InquiryStatus,
@@ -296,6 +353,144 @@ function formatActivityDate(value: string | null): string {
                     >
                         {{ inquiry.feedback_comment }}
                     </p>
+                </section>
+
+                <section class="rounded-xl border bg-card p-5">
+                    <div
+                        class="mb-4 flex flex-wrap items-start justify-between gap-3"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">Contrato</h2>
+                            <p class="text-sm text-muted-foreground">
+                                Términos que el cliente puede aceptar desde su
+                                portal.
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <Badge
+                                v-if="inquiry.contract"
+                                :variant="
+                                    contractStatusVariant(
+                                        inquiry.contract.status,
+                                    )
+                                "
+                            >
+                                {{ inquiry.contract.status_label }}
+                            </Badge>
+                            <Button
+                                v-if="inquiry.contract"
+                                size="sm"
+                                variant="outline"
+                                as-child
+                            >
+                                <a
+                                    :href="inquiry.contract.public_url"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    Ver contrato
+                                </a>
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div
+                        v-if="
+                            inquiry.contract &&
+                            inquiry.contract.status === 'accepted'
+                        "
+                        class="space-y-3"
+                    >
+                        <p class="text-sm text-muted-foreground">
+                            Aceptado por
+                            <strong>{{
+                                inquiry.contract.accepted_by_name
+                            }}</strong>
+                            <span v-if="inquiry.contract.accepted_at">
+                                el
+                                {{
+                                    formatActivityDate(
+                                        inquiry.contract.accepted_at,
+                                    )
+                                }}
+                            </span>
+                        </p>
+                        <div
+                            class="rounded-lg border bg-muted/20 p-4 text-sm whitespace-pre-line"
+                        >
+                            {{ inquiry.contract.body }}
+                        </div>
+                    </div>
+
+                    <form
+                        v-else
+                        class="grid gap-3"
+                        @submit.prevent="saveContract"
+                    >
+                        <div class="grid gap-2">
+                            <Label for="contract-title">Título</Label>
+                            <Input
+                                id="contract-title"
+                                v-model="contractForm.title"
+                                maxlength="120"
+                                required
+                            />
+                            <p
+                                v-if="contractForm.errors.title"
+                                class="text-sm text-destructive"
+                            >
+                                {{ contractForm.errors.title }}
+                            </p>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="contract-body">Términos</Label>
+                            <textarea
+                                id="contract-body"
+                                v-model="contractForm.body"
+                                rows="10"
+                                maxlength="20000"
+                                required
+                                class="min-h-48 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                placeholder="Escribe las condiciones de la renta, anticipo, cancelación y reglas de la terraza."
+                            />
+                            <p
+                                v-if="contractForm.errors.body"
+                                class="text-sm text-destructive"
+                            >
+                                {{ contractForm.errors.body }}
+                            </p>
+                        </div>
+                        <p
+                            v-if="contractFormError"
+                            class="text-sm text-destructive"
+                        >
+                            {{ contractFormError }}
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <Button
+                                type="submit"
+                                :disabled="contractForm.processing"
+                            >
+                                {{
+                                    inquiry.contract
+                                        ? 'Guardar contrato'
+                                        : 'Crear contrato'
+                                }}
+                            </Button>
+                            <Button
+                                v-if="inquiry.contract?.can_edit"
+                                type="button"
+                                variant="outline"
+                                @click="publishContract"
+                            >
+                                {{
+                                    inquiry.contract.status === 'sent'
+                                        ? 'Actualizar en portal'
+                                        : 'Publicar en portal'
+                                }}
+                            </Button>
+                        </div>
+                    </form>
                 </section>
 
                 <section class="rounded-xl border bg-card p-5">

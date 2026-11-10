@@ -8,11 +8,15 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Bookings\Actions\RecordCustomerActivity;
+use Modules\Bookings\Enums\ContractStatus;
 use Modules\Bookings\Enums\CustomerActivityType;
+use Modules\Bookings\Http\Requests\AcceptBookingContractRequest;
 use Modules\Bookings\Http\Requests\BookingFeedbackRequest;
 use Modules\Bookings\Http\Requests\ConfirmBookingPortalRequest;
+use Modules\Bookings\Models\BookingContract;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Notifications\BookingConfirmedByCustomer;
+use Modules\Bookings\Notifications\BookingContractAccepted;
 use Modules\Bookings\Notifications\BookingFeedbackReceived;
 
 class PublicBookingPortalController extends Controller
@@ -28,6 +32,71 @@ class PublicBookingPortalController extends Controller
         return Inertia::render('Bookings/Public/BookingPortal', [
             'booking' => $this->present($booking),
         ]);
+    }
+
+    public function contract(string $token): Response
+    {
+        $booking = $this->findBooking($token);
+        $contract = $booking->contract;
+
+        abort_if($contract === null || $contract->status->value === 'draft', 404);
+
+        return Inertia::render('Bookings/Public/Contract', [
+            'booking' => $this->present($booking),
+            'contract' => $this->contractData($booking, $contract),
+        ]);
+    }
+
+    public function acceptContract(
+        AcceptBookingContractRequest $request,
+        string $token,
+    ): RedirectResponse {
+        $booking = $this->findBooking($token);
+        $contract = $booking->contract;
+
+        if ($contract === null || ! $contract->canBeAccepted()) {
+            return back()->withErrors([
+                'contract' => 'El contrato ya no está disponible para aceptar.',
+            ]);
+        }
+
+        $data = $request->validated();
+
+        $contract->forceFill([
+            'status' => ContractStatus::Accepted,
+            'accepted_at' => now(),
+            'accepted_by_name' => $data['name'],
+            'accepted_ip_hash' => $request->ip()
+                ? hash_hmac('sha256', $request->ip(), (string) config('app.key'))
+                : null,
+        ])->save();
+
+        if ($booking->customer) {
+            $this->activityLogger->handle(
+                $booking->customer,
+                CustomerActivityType::System,
+                'El cliente aceptó el contrato de la reserva.',
+                null,
+                null,
+                [
+                    'booking_inquiry_id' => $booking->id,
+                    'booking_contract_id' => $contract->id,
+                ],
+            );
+        }
+
+        $owner = $booking->listing->team?->owner();
+
+        if ($owner !== null) {
+            $owner->notify(new BookingContractAccepted($contract));
+        }
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Contrato aceptado.',
+        ]);
+
+        return back();
     }
 
     public function confirm(
@@ -171,7 +240,7 @@ class PublicBookingPortalController extends Controller
     private function findBooking(string $token): BookingInquiry
     {
         return BookingInquiry::query()
-            ->with(['listing.team', 'customer'])
+            ->with(['listing.team', 'customer', 'contract'])
             ->where('portal_token', $token)
             ->firstOrFail();
     }
@@ -211,11 +280,35 @@ class PublicBookingPortalController extends Controller
             ],
             'can_confirm' => $booking->canBeConfirmedByCustomer(),
             'can_feedback' => $booking->canReceiveFeedback(),
+            'contract' => $booking->contract
+                ? $this->contractData($booking, $booking->contract)
+                : null,
             'urls' => [
+                'portal' => route('public.bookings.portal', ['token' => $booking->portal_token]),
                 'confirm' => route('public.bookings.portal.confirm', ['token' => $booking->portal_token]),
                 'feedback' => route('public.bookings.portal.feedback', ['token' => $booking->portal_token]),
                 'calendar' => route('public.bookings.portal.calendar', ['token' => $booking->portal_token]),
             ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function contractData(BookingInquiry $booking, BookingContract $contract): array
+    {
+        return [
+            'id' => $contract->id,
+            'title' => $contract->title,
+            'body' => $contract->body,
+            'status' => $contract->status->value,
+            'status_label' => $contract->status->label(),
+            'sent_at' => $contract->sent_at?->toIso8601String(),
+            'accepted_at' => $contract->accepted_at?->toIso8601String(),
+            'accepted_by_name' => $contract->accepted_by_name,
+            'can_accept' => $contract->canBeAccepted(),
+            'url' => route('public.bookings.portal.contract', ['token' => $booking->portal_token]),
+            'accept_url' => route('public.bookings.portal.contract.accept', ['token' => $booking->portal_token]),
         ];
     }
 

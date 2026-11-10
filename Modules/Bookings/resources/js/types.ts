@@ -83,6 +83,23 @@ export type CustomerCard = {
     show_url: string;
 };
 
+export type BookingContractCard = {
+    id: number;
+    title: string;
+    body: string;
+    status: string;
+    status_label: string;
+    sent_at: string | null;
+    accepted_at: string | null;
+    accepted_by_name: string | null;
+    can_accept: boolean;
+    can_edit: boolean;
+    update_url: string;
+    publish_url: string;
+    public_url: string;
+    accept_url: string;
+};
+
 export type InquiryDetail = InquiryCard & {
     whatsapp_phone: string | null;
     event_type: string | null;
@@ -100,6 +117,7 @@ export type InquiryDetail = InquiryCard & {
     feedback_rating: number | null;
     feedback_comment: string | null;
     feedback_at: string | null;
+    contract: BookingContractCard | null;
     consent_at: string | null;
     contacted_at: string | null;
     accepted_at: string | null;

@@ -37,6 +37,19 @@ type PortalBooking = {
     };
     can_confirm: boolean;
     can_feedback: boolean;
+    contract: {
+        id: number;
+        title: string;
+        body: string;
+        status: string;
+        status_label: string;
+        sent_at: string | null;
+        accepted_at: string | null;
+        accepted_by_name: string | null;
+        can_accept: boolean;
+        url: string;
+        accept_url: string;
+    } | null;
     urls: {
         confirm: string;
         feedback: string;
@@ -60,6 +73,11 @@ const feedbackForm = useForm({
     comment: '',
 });
 
+const contractForm = useForm({
+    name: props.booking.customer.name,
+    accepted: false,
+});
+
 const confirmBookingError = computed<string | null>(() => {
     const errors = confirmForm.errors as Record<string, string | undefined>;
 
@@ -70,6 +88,12 @@ const feedbackError = computed<string | null>(() => {
     const errors = feedbackForm.errors as Record<string, string | undefined>;
 
     return errors.feedback ?? null;
+});
+
+const contractError = computed<string | null>(() => {
+    const errors = contractForm.errors as Record<string, string | undefined>;
+
+    return errors.contract ?? null;
 });
 
 const statusVariant = computed<
@@ -114,6 +138,16 @@ function confirm(): void {
 
 function sendFeedback(): void {
     feedbackForm.post(props.booking.urls.feedback, { preserveScroll: true });
+}
+
+function acceptContract(): void {
+    if (!props.booking.contract) {
+        return;
+    }
+
+    contractForm.post(props.booking.contract.accept_url, {
+        preserveScroll: true,
+    });
 }
 </script>
 
@@ -266,6 +300,109 @@ function sendFeedback(): void {
                         </Button>
                     </div>
                 </form>
+            </section>
+
+            <section
+                v-if="booking.contract"
+                class="rounded-xl border bg-card p-5"
+            >
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg font-semibold">
+                            {{ booking.contract.title }}
+                        </h2>
+                        <p class="text-sm text-muted-foreground">
+                            {{ booking.contract.status_label }}
+                        </p>
+                    </div>
+                    <Button variant="outline" size="sm" as-child>
+                        <a
+                            :href="booking.contract.url"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Ver imprimible
+                        </a>
+                    </Button>
+                </div>
+
+                <div
+                    class="mt-4 rounded-lg border bg-muted/20 p-4 text-sm whitespace-pre-line"
+                >
+                    {{ booking.contract.body }}
+                </div>
+
+                <div
+                    v-if="booking.contract.status === 'accepted'"
+                    class="mt-3 text-sm text-muted-foreground"
+                >
+                    Aceptado por
+                    <strong>{{ booking.contract.accepted_by_name }}</strong>
+                    <span v-if="booking.contract.accepted_at">
+                        el
+                        {{
+                            new Date(
+                                booking.contract.accepted_at,
+                            ).toLocaleDateString('es-MX', {
+                                dateStyle: 'medium',
+                            })
+                        }}
+                    </span>
+                </div>
+
+                <form
+                    v-else-if="booking.contract.can_accept"
+                    class="mt-4 grid gap-3 border-t pt-4"
+                    @submit.prevent="acceptContract"
+                >
+                    <label class="flex items-start gap-3 text-sm">
+                        <input
+                            v-model="contractForm.accepted"
+                            type="checkbox"
+                            class="mt-0.5 size-4 rounded border-input"
+                        />
+                        <span>
+                            He leído y acepto los términos del contrato.
+                        </span>
+                    </label>
+                    <p
+                        v-if="contractForm.errors.accepted"
+                        class="text-sm text-destructive"
+                    >
+                        {{ contractForm.errors.accepted }}
+                    </p>
+                    <div class="grid gap-2 sm:max-w-sm">
+                        <Label for="contract-name">
+                            Nombre de quien acepta
+                        </Label>
+                        <Input
+                            id="contract-name"
+                            v-model="contractForm.name"
+                            maxlength="120"
+                            required
+                        />
+                        <p
+                            v-if="contractForm.errors.name"
+                            class="text-sm text-destructive"
+                        >
+                            {{ contractForm.errors.name }}
+                        </p>
+                    </div>
+                    <p v-if="contractError" class="text-sm text-destructive">
+                        {{ contractError }}
+                    </p>
+                    <div>
+                        <Button
+                            type="submit"
+                            :disabled="contractForm.processing"
+                        >
+                            Aceptar contrato
+                        </Button>
+                    </div>
+                </form>
+                <p v-else class="mt-3 text-sm text-muted-foreground">
+                    El contrato todavía no está disponible para aceptar.
+                </p>
             </section>
 
             <section

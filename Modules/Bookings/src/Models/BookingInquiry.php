@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use Modules\Bookings\Database\Factories\BookingInquiryFactory;
 use Modules\Bookings\Enums\InquiryStatus;
@@ -56,6 +57,7 @@ use Modules\Listings\Models\Listing;
  * @property-read Team $team
  * @property-read Listing $listing
  * @property-read Customer|null $customer
+ * @property-read BookingContract|null $contract
  * @property-read Collection<int, BookingDeposit> $deposits
  */
 #[Fillable([
@@ -117,6 +119,14 @@ class BookingInquiry extends Model
     public function deposits(): HasMany
     {
         return $this->hasMany(BookingDeposit::class)->latest();
+    }
+
+    /**
+     * @return HasOne<BookingContract, $this>
+     */
+    public function contract(): HasOne
+    {
+        return $this->hasOne(BookingContract::class);
     }
 
     /**

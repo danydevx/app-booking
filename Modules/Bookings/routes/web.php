@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 use Modules\Bookings\Http\Controllers\AvailabilityBlockSeriesController;
 use Modules\Bookings\Http\Controllers\AvailabilityController;
+use Modules\Bookings\Http\Controllers\BookingContractController;
 use Modules\Bookings\Http\Controllers\BookingInquiryController;
 use Modules\Bookings\Http\Controllers\CrmReportController;
 use Modules\Bookings\Http\Controllers\CrmTodayController;
@@ -53,6 +54,11 @@ Route::middleware('web')->group(function (): void {
         ->name('public.bookings.portal.feedback');
     Route::get('reserva/{token}/calendario.ics', [PublicBookingPortalController::class, 'calendar'])
         ->name('public.bookings.portal.calendar');
+    Route::get('reserva/{token}/contrato', [PublicBookingPortalController::class, 'contract'])
+        ->name('public.bookings.portal.contract');
+    Route::post('reserva/{token}/contrato/aceptar', [PublicBookingPortalController::class, 'acceptContract'])
+        ->middleware('throttle:10,1')
+        ->name('public.bookings.portal.contract.accept');
 });
 
 Route::get('{current_team}/listings/{listing}/bookings', [BookingInquiryController::class, 'listing'])
@@ -165,4 +171,7 @@ Route::prefix('{current_team}/bookings')
 
         Route::post('/inquiries/{inquiry}/deposits', [BookingInquiryController::class, 'storeDeposit'])->name('deposits.store');
         Route::patch('/inquiries/{inquiry}/deposits/{deposit}', [BookingInquiryController::class, 'updateDeposit'])->name('deposits.update');
+        Route::post('/inquiries/{inquiry}/contract', [BookingContractController::class, 'store'])->name('contracts.store');
+        Route::patch('/contracts/{contract}', [BookingContractController::class, 'update'])->name('contracts.update');
+        Route::post('/contracts/{contract}/publish', [BookingContractController::class, 'publish'])->name('contracts.publish');
     });

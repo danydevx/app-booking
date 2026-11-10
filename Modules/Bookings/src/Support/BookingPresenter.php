@@ -64,6 +64,9 @@ final class BookingPresenter
             'feedback_rating' => $inquiry->feedback_rating,
             'feedback_comment' => $inquiry->feedback_comment,
             'feedback_at' => $inquiry->feedback_at?->toISOString(),
+            'contract' => $inquiry->contract
+                ? BookingContractPresenter::present($inquiry->contract, $teamSlug)
+                : null,
             'consent_at' => $inquiry->consent_at?->toISOString(),
             'contacted_at' => $inquiry->contacted_at?->toISOString(),
             'accepted_at' => $inquiry->accepted_at?->toISOString(),
