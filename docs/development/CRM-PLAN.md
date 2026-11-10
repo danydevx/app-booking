@@ -1,6 +1,6 @@
 # Plan de evolución del CRM
 
-**Estado:** Pasos 1–12 implementados; envío automatizado de WhatsApp pendiente de proveedor
+**Estado:** Pasos 1–13 implementados; envío automatizado de WhatsApp pendiente de proveedor
 **Módulo actual:** `Modules/Bookings`
 **Plan comercial:** Pro (`features.customers = true`)
 **Última actualización:** 2026-11-10
@@ -22,6 +22,7 @@
 | 10. Plantillas y correo             | Completado el 2026-11-10 (correo con opt-out; WhatsApp sigue manual)                 |
 | 11. Medición y notificaciones       | Completado el 2026-11-10                                                             |
 | 12. Portal del cliente y opiniones  | Completado el 2026-11-10                                                             |
+| 13. Contratos y aceptación          | Completado el 2026-11-10                                                             |
 
 ## 1. Punto de partida
 
@@ -520,6 +521,27 @@ reserva, y recoger feedback post-evento.
 
 **Criterio de aceptación:** el cliente confirma sus datos y deja opinión sin
 crear cuenta; el propietario ve ambos en la ficha de la reserva.
+
+**Esfuerzo:** M.
+
+---
+
+### Paso 13 — Contratos y aceptación de términos
+
+**Objetivo:** formalizar la reserva con términos aceptados por el cliente.
+
+**Implementado:**
+
+- Contrato por reserva con título y cuerpo editable.
+- Estados: borrador, publicado y aceptado.
+- Publicación del contrato en el portal del cliente.
+- Aceptación con nombre, checkbox e IP hash.
+- Página imprimible del contrato para guardar como PDF.
+- Bloqueo de edición después de la aceptación.
+- Actividad en el timeline y notificación al propietario.
+
+**Criterio de aceptación:** el cliente acepta los términos desde su portal y el
+propietario ve la aceptación con fecha y nombre.
 
 **Esfuerzo:** M.
 
