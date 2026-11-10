@@ -1,6 +1,6 @@
 # Plan de evolución del CRM
 
-**Estado:** Pasos 1–11 implementados; envío automatizado de WhatsApp pendiente de proveedor
+**Estado:** Pasos 1–12 implementados; envío automatizado de WhatsApp pendiente de proveedor
 **Módulo actual:** `Modules/Bookings`
 **Plan comercial:** Pro (`features.customers = true`)
 **Última actualización:** 2026-11-10
@@ -21,6 +21,7 @@
 | 9. Cotizador                        | Completado el 2026-11-10                                                             |
 | 10. Plantillas y correo             | Completado el 2026-11-10 (correo con opt-out; WhatsApp sigue manual)                 |
 | 11. Medición y notificaciones       | Completado el 2026-11-10                                                             |
+| 12. Portal del cliente y opiniones  | Completado el 2026-11-10                                                             |
 
 ## 1. Punto de partida
 
@@ -496,6 +497,29 @@ cliente puede darse de baja sin intervención del negocio.
 
 **Criterio de aceptación:** el propietario entiende de dónde vienen los leads y
 recibe avisos sin revisar el correo.
+
+**Esfuerzo:** M.
+
+---
+
+### Paso 12 — Portal del cliente y opiniones
+
+**Objetivo:** dar al cliente un enlace seguro para consultar y confirmar su
+reserva, y recoger feedback post-evento.
+
+**Implementado:**
+
+- Token público por reserva y ruta `/reserva/{token}`.
+- Consulta de fechas, terraza, invitados, evento y estado.
+- Confirmación o actualización de nombre, teléfono, WhatsApp e invitados.
+- Notificación al propietario al confirmar.
+- Descarga de calendario `.ics` con las fechas del evento.
+- Opinión de 1 a 5 con comentario después de la fecha del evento.
+- Notificación y registro en el timeline al recibir una opinión.
+- Promedio de opiniones en el reporte del CRM.
+
+**Criterio de aceptación:** el cliente confirma sus datos y deja opinión sin
+crear cuenta; el propietario ve ambos en la ficha de la reserva.
 
 **Esfuerzo:** M.
 

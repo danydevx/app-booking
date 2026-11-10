@@ -29,6 +29,7 @@ Las vistas de administración usan todo el ancho disponible; la distribución se
 - Clientes vinculados a la terraza por sus solicitudes o porque se registraron/importaron desde esta administración.
 - Cotizaciones de la terraza desde la ficha del cliente, con link público y conversión a reserva.
 - Correo de seguimiento con plantillas y baja voluntaria.
+- Portal del cliente para confirmar datos, agregar el evento al calendario y dejar opinión.
 - Próximas fechas no disponibles.
 - Enlaces a:
     - Solicitudes/reservaciones de la terraza en `/{current_team}/listings/{listing}/bookings`.
