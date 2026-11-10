@@ -35,7 +35,7 @@ defineOptions({
 <template>
     <Head title="Nueva terraza" />
 
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-6 p-4">
         <div>
             <h1 class="text-2xl font-semibold">Nueva terraza</h1>
             <p class="text-sm text-muted-foreground">

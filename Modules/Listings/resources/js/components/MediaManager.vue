@@ -67,7 +67,7 @@ function remove(media: ListingMedia): void {
 </script>
 
 <template>
-    <section class="space-y-5 border-t pt-8">
+    <section class="space-y-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h2 class="text-lg font-semibold">Fotos y videos</h2>
@@ -126,7 +126,10 @@ function remove(media: ListingMedia): void {
             </div>
         </form>
 
-        <div v-if="media.length > 0" class="grid gap-4 sm:grid-cols-2">
+        <div
+            v-if="media.length > 0"
+            class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4"
+        >
             <article
                 v-for="(item, index) in media"
                 :key="item.id"

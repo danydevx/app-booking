@@ -92,16 +92,32 @@ function submit(): void {
                 </p>
             </div>
 
-            <div class="grid gap-2">
-                <Label for="name">Nombre de la terraza</Label>
-                <Input
-                    id="name"
-                    v-model="form.name"
-                    required
-                    maxlength="120"
-                    placeholder="Terraza del Jardín"
-                />
-                <InputError :message="form.errors.name" />
+            <div
+                class="grid gap-4 sm:grid-cols-[minmax(0,2fr)_minmax(10rem,1fr)]"
+            >
+                <div class="grid gap-2">
+                    <Label for="name">Nombre de la terraza</Label>
+                    <Input
+                        id="name"
+                        v-model="form.name"
+                        required
+                        maxlength="120"
+                        placeholder="Terraza del Jardín"
+                    />
+                    <InputError :message="form.errors.name" />
+                </div>
+
+                <div class="grid gap-2">
+                    <Label for="capacity">Capacidad aproximada</Label>
+                    <Input
+                        id="capacity"
+                        v-model.number="form.capacity"
+                        type="number"
+                        min="1"
+                        placeholder="80"
+                    />
+                    <InputError :message="form.errors.capacity" />
+                </div>
             </div>
 
             <div class="grid gap-2">
@@ -109,24 +125,12 @@ function submit(): void {
                 <textarea
                     id="description"
                     v-model="form.description"
-                    rows="5"
+                    rows="4"
                     maxlength="5000"
-                    class="min-h-28 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    class="min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     placeholder="Describe el espacio, el ambiente y el tipo de eventos."
                 />
                 <InputError :message="form.errors.description" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="capacity">Capacidad aproximada</Label>
-                <Input
-                    id="capacity"
-                    v-model.number="form.capacity"
-                    type="number"
-                    min="1"
-                    placeholder="80"
-                />
-                <InputError :message="form.errors.capacity" />
             </div>
         </section>
 
@@ -149,7 +153,7 @@ function submit(): void {
                 <InputError :message="form.errors.address" />
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="grid gap-2">
                     <Label for="city">Ciudad</Label>
                     <Input id="city" v-model="form.city" maxlength="120" />
@@ -178,6 +182,9 @@ function submit(): void {
                     />
                     <InputError :message="form.errors.postal_code" />
                 </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
                 <div class="grid gap-2">
                     <Label for="latitude">Latitud</Label>
                     <Input
@@ -209,7 +216,7 @@ function submit(): void {
                 </p>
             </div>
 
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <label
                     v-for="service in services"
                     :key="service.value"
@@ -236,7 +243,7 @@ function submit(): void {
                 </p>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
+            <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div
                     v-for="(field, key) in detailFields"
                     :key="key"
@@ -279,57 +286,59 @@ function submit(): void {
                 </p>
             </div>
 
-            <div class="grid gap-2">
-                <Label for="rules">Reglas del espacio</Label>
-                <textarea
-                    id="rules"
-                    v-model="form.rules"
-                    rows="4"
-                    maxlength="2000"
-                    class="min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    placeholder="No fumar, música hasta las 23:00, etc."
-                />
-                <InputError :message="form.errors.rules" />
-            </div>
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div class="grid content-start gap-2">
+                    <Label for="rules">Reglas del espacio</Label>
+                    <textarea
+                        id="rules"
+                        v-model="form.rules"
+                        rows="6"
+                        maxlength="2000"
+                        class="min-h-32 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        placeholder="No fumar, música hasta las 23:00, etc."
+                    />
+                    <InputError :message="form.errors.rules" />
+                </div>
 
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div class="grid gap-2">
-                    <Label for="contact_name">Nombre de contacto</Label>
-                    <Input
-                        id="contact_name"
-                        v-model="form.contact_name"
-                        maxlength="120"
-                    />
-                    <InputError :message="form.errors.contact_name" />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="contact_email">Correo</Label>
-                    <Input
-                        id="contact_email"
-                        v-model="form.contact_email"
-                        type="email"
-                        maxlength="255"
-                    />
-                    <InputError :message="form.errors.contact_email" />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="contact_phone">Teléfono</Label>
-                    <Input
-                        id="contact_phone"
-                        v-model="form.contact_phone"
-                        maxlength="40"
-                    />
-                    <InputError :message="form.errors.contact_phone" />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="whatsapp_phone">WhatsApp</Label>
-                    <Input
-                        id="whatsapp_phone"
-                        v-model="form.whatsapp_phone"
-                        maxlength="40"
-                        placeholder="5215555555555"
-                    />
-                    <InputError :message="form.errors.whatsapp_phone" />
+                <div class="grid content-start gap-4 sm:grid-cols-2">
+                    <div class="grid gap-2">
+                        <Label for="contact_name">Nombre de contacto</Label>
+                        <Input
+                            id="contact_name"
+                            v-model="form.contact_name"
+                            maxlength="120"
+                        />
+                        <InputError :message="form.errors.contact_name" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="contact_email">Correo</Label>
+                        <Input
+                            id="contact_email"
+                            v-model="form.contact_email"
+                            type="email"
+                            maxlength="255"
+                        />
+                        <InputError :message="form.errors.contact_email" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="contact_phone">Teléfono</Label>
+                        <Input
+                            id="contact_phone"
+                            v-model="form.contact_phone"
+                            maxlength="40"
+                        />
+                        <InputError :message="form.errors.contact_phone" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="whatsapp_phone">WhatsApp</Label>
+                        <Input
+                            id="whatsapp_phone"
+                            v-model="form.whatsapp_phone"
+                            maxlength="40"
+                            placeholder="5215555555555"
+                        />
+                        <InputError :message="form.errors.whatsapp_phone" />
+                    </div>
                 </div>
             </div>
         </section>
