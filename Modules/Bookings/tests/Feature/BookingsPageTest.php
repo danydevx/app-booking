@@ -41,6 +41,45 @@ class BookingsPageTest extends TestCase
                 ->where('inquiry.id', $inquiry->id));
     }
 
+    public function test_owner_can_render_a_listing_scoped_booking_inbox(): void
+    {
+        [$owner, $team, $listing] = $this->ownerListing();
+        $otherListing = Listing::factory()->forTeam($team)->published()->create();
+        $inquiry = BookingInquiry::factory()->forListing($listing)->create();
+        BookingInquiry::factory()->forListing($otherListing)->create();
+
+        $this->actingAs($owner)
+            ->get(route('bookings.listing', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Bookings/Index')
+                ->has('inquiries.data', 1)
+                ->where('inquiries.data.0.id', $inquiry->id)
+                ->where('activeListing.id', $listing->id)
+                ->where('filters.listing', $listing->slug)
+                ->where('management.bookings', route('bookings.listing', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ])));
+    }
+
+    public function test_listing_scoped_inbox_is_isolated_by_team(): void
+    {
+        [$owner, $team] = $this->ownerListing();
+        $foreignTeam = Team::factory()->create();
+        $foreignListing = Listing::factory()->forTeam($foreignTeam)->published()->create();
+
+        $this->actingAs($owner)
+            ->get(route('bookings.listing', [
+                'current_team' => $team->slug,
+                'listing' => $foreignListing->slug,
+            ]))
+            ->assertNotFound();
+    }
+
     public function test_owner_can_render_customers_and_availability_pages(): void
     {
         [$owner, $team, $listing] = $this->ownerListing();

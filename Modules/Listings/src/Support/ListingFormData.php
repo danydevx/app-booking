@@ -70,7 +70,7 @@ final class ListingFormData
                 'current_team' => $team->slug,
                 'listing' => $listing->slug,
             ]),
-            'bookings' => route('bookings.index', [
+            'bookings' => route('bookings.listing', [
                 'current_team' => $team->slug,
                 'listing' => $listing->slug,
             ]),

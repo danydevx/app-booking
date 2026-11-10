@@ -4,6 +4,7 @@ namespace Modules\Bookings\Http\Controllers;
 
 use App\Concerns\ResolvesCurrentTeam;
 use App\Http\Controllers\Controller;
+use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -46,15 +47,42 @@ class BookingInquiryController extends Controller
         Gate::authorize('viewAny', [BookingInquiry::class, $team]);
 
         $filters = $request->validated();
-
-        $inquiries = $this->inquiries->paginate($team, $filters);
-        $listings = $this->inquiries->listings($team);
         $activeListing = $filters['listing'] ?? null
             ? Listing::query()
                 ->where('team_id', $team->id)
                 ->where('slug', $filters['listing'])
                 ->first(['id', 'name', 'slug'])
             : null;
+
+        return $this->renderIndex($team, $filters, $activeListing);
+    }
+
+    public function listing(
+        BookingInquiryIndexRequest $request,
+        string $currentTeam,
+        Listing $listing,
+    ): Response {
+        $team = $this->currentTeam($request);
+        $this->ensureOwnedListing($listing, $team->id);
+
+        Gate::authorize('viewAny', [BookingInquiry::class, $team]);
+
+        $filters = $request->validated();
+        $filters['listing'] = $listing->slug;
+
+        return $this->renderIndex($team, $filters, $listing);
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function renderIndex(
+        Team $team,
+        array $filters,
+        ?Listing $activeListing,
+    ): Response {
+        $inquiries = $this->inquiries->paginate($team, $filters);
+        $listings = $this->inquiries->listings($team);
 
         return Inertia::render('Bookings/Index', [
             'team' => [
@@ -71,13 +99,15 @@ class BookingInquiryController extends Controller
             'management' => $activeListing ? [
                 'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
                 'edit' => route('listings.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
-                'bookings' => route('bookings.index', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'bookings' => route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
                 'customers' => route('bookings.customers.index', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
                 'availability' => route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
                 'listings' => route('listings.index', ['current_team' => $team->slug]),
             ] : null,
             'urls' => [
-                'index' => route('bookings.index', ['current_team' => $team->slug]),
+                'index' => $activeListing
+                    ? route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
+                    : route('bookings.index', ['current_team' => $team->slug]),
                 'create' => route('bookings.create', ['current_team' => $team->slug]),
                 'customers' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'billing' => route('billing.index', ['current_team' => $team->slug]),
@@ -115,7 +145,10 @@ class BookingInquiryController extends Controller
             'canEdit' => Gate::allows('edit', $inquiry),
             'canManageDeposits' => Gate::allows('manageDeposits', $inquiry),
             'urls' => [
-                'index' => route('bookings.index', ['current_team' => $team->slug]),
+                'index' => route('bookings.listing', [
+                    'current_team' => $team->slug,
+                    'listing' => $inquiry->listing->slug,
+                ]),
                 'edit' => route('bookings.inquiries.edit', [
                     'current_team' => $team->slug,
                     'inquiry' => $inquiry->id,
@@ -319,5 +352,10 @@ class BookingInquiryController extends Controller
     private function ensureOwned(BookingInquiry $inquiry, int $teamId): void
     {
         abort_unless($inquiry->team_id === $teamId, 404);
+    }
+
+    private function ensureOwnedListing(Listing $listing, int $teamId): void
+    {
+        abort_unless($listing->team_id === $teamId, 404);
     }
 }

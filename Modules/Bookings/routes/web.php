@@ -23,6 +23,10 @@ Route::middleware('web')->group(function (): void {
         ->name('public.bookings.inquiries.store');
 });
 
+Route::get('{current_team}/listings/{listing}/bookings', [BookingInquiryController::class, 'listing'])
+    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+    ->name('bookings.listing');
+
 Route::prefix('{current_team}/bookings')
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('bookings.')

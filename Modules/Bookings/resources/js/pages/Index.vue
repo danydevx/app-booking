@@ -125,10 +125,16 @@ function statusVariant(
     <div class="flex flex-col gap-6 p-4">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold">Solicitudes</h1>
+                <h1 class="text-2xl font-semibold">
+                    {{
+                        activeListing
+                            ? `Solicitudes · ${activeListing.name}`
+                            : 'Solicitudes'
+                    }}
+                </h1>
                 <p class="text-sm text-muted-foreground">
                     Da seguimiento a las solicitudes de renta de
-                    {{ team.name }}.
+                    {{ activeListing?.name ?? team.name }}.
                 </p>
             </div>
             <div class="flex flex-wrap gap-2">
@@ -167,7 +173,7 @@ function statusVariant(
                     </option>
                 </select>
             </div>
-            <div class="grid gap-2">
+            <div v-if="!activeListing" class="grid gap-2">
                 <Label for="listing">Terraza</Label>
                 <select
                     id="listing"
