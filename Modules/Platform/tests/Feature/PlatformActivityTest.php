@@ -81,12 +81,47 @@ class PlatformActivityTest extends TestCase
             ->assertSessionHasErrors('from');
     }
 
-    public function test_normal_users_cannot_review_activity(): void
+    public function test_superadmin_can_export_filtered_audit_csv(): void
+    {
+        $admin = $this->superadmin();
+        $other = User::factory()->create([
+            'name' => 'Actor Export',
+            'email' => 'export-actor@example.test',
+        ]);
+
+        activity('moderation')
+            ->causedBy($other)
+            ->withProperties(['reason' => 'Exportar este motivo'])
+            ->log('user.exported');
+
+        activity('moderation')
+            ->causedBy($admin)
+            ->withProperties(['reason' => 'No debe exportarse'])
+            ->log('user.other');
+
+        $response = $this->actingAs($admin)->get(
+            route('platform.activity.export', ['actor' => 'export-actor@example.test']),
+        );
+
+        $response->assertOk()->assertDownload();
+
+        $content = $response->streamedContent();
+
+        $this->assertStringContainsString('user.exported', $content);
+        $this->assertStringContainsString('Exportar este motivo', $content);
+        $this->assertStringNotContainsString('user.other', $content);
+    }
+
+    public function test_normal_users_cannot_review_or_export_activity(): void
     {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->get(route('platform.activity.index'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->get(route('platform.activity.export'))
             ->assertForbidden();
     }
 

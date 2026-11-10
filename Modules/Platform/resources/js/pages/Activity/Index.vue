@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { computed, reactive } from 'vue';
 import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,7 @@ const props = defineProps<{
     };
     urls: {
         index: string;
+        export: string;
         dashboard: string;
     };
 }>();
@@ -50,6 +51,30 @@ const form = reactive({
     actor: props.filters.actor ?? '',
     from: props.filters.from ?? '',
     to: props.filters.to ?? '',
+});
+
+const exportUrl = computed(() => {
+    const params = new URLSearchParams();
+
+    if (form.q) {
+        params.set('q', form.q);
+    }
+
+    if (form.actor) {
+        params.set('actor', form.actor);
+    }
+
+    if (form.from) {
+        params.set('from', form.from);
+    }
+
+    if (form.to) {
+        params.set('to', form.to);
+    }
+
+    const query = params.toString();
+
+    return query === '' ? props.urls.export : `${props.urls.export}?${query}`;
 });
 
 function submit(): void {
@@ -133,10 +158,13 @@ function reasonOf(activity: ActivityRow): string | null {
                     aria-label="Hasta"
                     title="Hasta"
                 />
-                <div class="flex gap-2 sm:col-span-2 lg:col-span-6">
+                <div class="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-6">
                     <Button type="submit" variant="outline">Filtrar</Button>
                     <Button type="button" variant="ghost" @click="clearFilters">
                         Limpiar
+                    </Button>
+                    <Button variant="outline" as-child>
+                        <a :href="exportUrl">Exportar CSV</a>
                     </Button>
                 </div>
             </form>

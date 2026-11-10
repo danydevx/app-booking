@@ -84,6 +84,10 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
             ->middleware('can:'.PlatformPermission::SUBSCRIPTIONS_VIEW)
             ->name('subscriptions.index');
 
+        Route::get('activity/export', [PlatformActivityController::class, 'export'])
+            ->middleware('can:'.PlatformPermission::ACTIVITY_VIEW)
+            ->name('activity.export');
+
         Route::get('activity', PlatformActivityController::class)
             ->middleware('can:'.PlatformPermission::ACTIVITY_VIEW)
             ->name('activity.index');
