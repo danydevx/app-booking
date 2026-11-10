@@ -110,7 +110,7 @@ function statusVariant(
 <template>
     <Head :title="`Administrar ${listing.name}`" />
 
-    <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4">
+    <div class="flex w-full flex-col gap-6 p-4">
         <header class="overflow-hidden rounded-xl border bg-card">
             <div class="aspect-[3/1] bg-muted sm:aspect-[4/1]">
                 <img

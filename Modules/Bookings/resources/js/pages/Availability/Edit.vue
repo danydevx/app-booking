@@ -187,7 +187,7 @@ function unblock(date: string): void {
 <template>
     <Head :title="`Disponibilidad · ${listing.name}`" />
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4">
+    <div class="flex w-full flex-col gap-6 p-4">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
                 <div class="flex flex-wrap items-center gap-2">

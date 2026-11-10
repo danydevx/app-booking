@@ -337,7 +337,7 @@ function statusVariant(
 <template>
     <Head :title="customer.name" />
 
-    <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4">
+    <div class="flex w-full flex-col gap-6 p-4">
         <header class="rounded-xl border bg-card p-5 sm:p-6">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div class="space-y-2">

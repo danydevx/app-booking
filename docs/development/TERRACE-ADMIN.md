@@ -11,6 +11,8 @@ También se llega desde **Terrazas → Administrar**.
 
 El menú de gestión aparece como un submenú fijo debajo del breadcrumb y se mantiene visible al navegar entre resumen, reservaciones, clientes, disponibilidad y edición.
 
+Las vistas de administración usan todo el ancho disponible; la distribución se resuelve con columnas y paneles laterales en lugar de limitar el contenedor principal.
+
 ## Contenido
 
 - Cabecera con portada, estado, ubicación y medios.

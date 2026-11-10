@@ -95,7 +95,7 @@ function submit(): void {
 
         <form
             v-else
-            class="grid max-w-3xl gap-4 rounded-xl border bg-card p-5"
+            class="grid w-full gap-4 rounded-xl border bg-card p-5"
             @submit.prevent="submit"
         >
             <div class="grid gap-2">

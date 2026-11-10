@@ -117,7 +117,7 @@ function formatActivityDate(value: string | null): string {
 <template>
     <Head :title="`Solicitud de ${inquiry.name}`" />
 
-    <div class="mx-auto flex w-full max-w-5xl flex-col gap-6 p-4">
+    <div class="flex w-full flex-col gap-6 p-4">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div class="space-y-1">
                 <div class="flex flex-wrap items-center gap-2">

@@ -55,7 +55,7 @@ function submit(): void {
 <template>
     <Head :title="`Editar reserva · ${inquiry.name}`" />
 
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
+    <div class="flex w-full flex-col gap-6 p-4">
         <div>
             <Link
                 :href="urls.show"

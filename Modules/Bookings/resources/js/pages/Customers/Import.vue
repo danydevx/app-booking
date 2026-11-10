@@ -55,7 +55,7 @@ function submit(): void {
 <template>
     <Head title="Importar clientes" />
 
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4">
+    <div class="flex w-full flex-col gap-6 p-4">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold">Importar clientes</h1>
