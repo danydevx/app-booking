@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import NotificationBell from '@/components/NotificationBell.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import type { BreadcrumbItem, SubmenuItem } from '@/types';
 
-withDefaults(
+const props = withDefaults(
     defineProps<{
         breadcrumbs?: BreadcrumbItem[];
         submenu?: SubmenuItem[];
@@ -17,7 +18,19 @@ withDefaults(
     },
 );
 
+const page = usePage();
 const { isCurrentUrl } = useCurrentUrl();
+
+const effectiveSubmenu = computed<SubmenuItem[]>(() => {
+    const shared = (
+        page.props.listingAdmin as
+            | { submenu?: SubmenuItem[] }
+            | null
+            | undefined
+    )?.submenu;
+
+    return shared && shared.length > 0 ? shared : props.submenu;
+});
 </script>
 
 <template>
@@ -37,12 +50,12 @@ const { isCurrentUrl } = useCurrentUrl();
         </div>
 
         <nav
-            v-if="submenu.length > 0"
+            v-if="effectiveSubmenu.length > 0"
             class="flex flex-wrap items-center gap-1 border-t border-sidebar-border/50 px-6 py-1.5 md:px-4"
             aria-label="Secciones de administración"
         >
             <Link
-                v-for="item in submenu"
+                v-for="item in effectiveSubmenu"
                 :key="item.title"
                 :href="item.href"
                 class="rounded-md px-3 py-1.5 text-sm transition-colors"
