@@ -56,7 +56,8 @@ class ListingManagementTest extends TestCase
                 'listing' => $listing->slug,
             ]), $this->payload([
                 'name' => 'Terraza Norte Actualizada',
-                'city' => 'Monterrey',
+                'city' => 'Guadalajara',
+                'state' => 'Jalisco',
                 'capacity' => 80,
             ]))
             ->assertRedirect();
@@ -64,9 +65,36 @@ class ListingManagementTest extends TestCase
         $listing->refresh();
 
         $this->assertSame('Terraza Norte Actualizada', $listing->name);
-        $this->assertSame('Monterrey', $listing->city);
+        $this->assertSame('Guadalajara', $listing->city);
+        $this->assertSame('Jalisco', $listing->state);
         $this->assertSame(80, $listing->capacity);
         $this->assertSame($originalSlug, $listing->slug);
+    }
+
+    public function test_city_must_belong_to_the_selected_state(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)
+            ->post(route('listings.store', ['current_team' => $team->slug]), $this->payload([
+                'city' => 'Guadalajara',
+                'state' => 'CDMX',
+            ]))
+            ->assertSessionHasErrors('city');
+
+        $this->assertDatabaseCount('listings', 0);
+    }
+
+    public function test_only_supported_states_are_accepted(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)
+            ->post(route('listings.store', ['current_team' => $team->slug]), $this->payload([
+                'city' => 'Monterrey',
+                'state' => 'Nuevo León',
+            ]))
+            ->assertSessionHasErrors('state');
     }
 
     public function test_user_cannot_edit_a_listing_from_another_team_even_by_guessing_the_slug(): void
@@ -344,7 +372,7 @@ class ListingManagementTest extends TestCase
             'name' => 'Terraza de Prueba',
             'description' => 'Una terraza para eventos.',
             'address' => 'Av. Reforma 123',
-            'city' => 'Ciudad de México',
+            'city' => 'Cuauhtémoc',
             'state' => 'CDMX',
             'country' => 'México',
             'postal_code' => '06000',

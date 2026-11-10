@@ -2,8 +2,10 @@
 
 namespace Modules\Listings\Http\Requests;
 
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Modules\Listings\Support\MexicoLocationCatalog;
 use Modules\Listings\Support\TerraceDetailCatalog;
 use Modules\Listings\Support\TerraceServiceCatalog;
 
@@ -30,8 +32,30 @@ class SaveListingRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string', 'max:5000'],
             'address' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:120'],
-            'state' => ['nullable', 'string', 'max:120'],
+            'city' => [
+                'nullable',
+                'string',
+                'max:120',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! is_string($value) || $value === '') {
+                        return;
+                    }
+
+                    $state = (string) $this->input('state');
+
+                    if (
+                        $state === '' ||
+                        ! in_array($state, MexicoLocationCatalog::stateValues(), true)
+                    ) {
+                        return;
+                    }
+
+                    if (! in_array($value, MexicoLocationCatalog::municipalities($state), true)) {
+                        $fail('Selecciona un municipio o alcaldía válido para el estado.');
+                    }
+                },
+            ],
+            'state' => ['nullable', 'string', Rule::in(MexicoLocationCatalog::stateValues())],
             'country' => ['nullable', 'string', 'max:120'],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],

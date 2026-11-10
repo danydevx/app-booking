@@ -29,6 +29,14 @@ final class ListingFormData
     }
 
     /**
+     * @return array<string, array{label: string, municipalities: array<int, string>}>
+     */
+    public function locations(): array
+    {
+        return MexicoLocationCatalog::all();
+    }
+
+    /**
      * @return array<string, int>
      */
     public function mediaLimits(Team $team): array

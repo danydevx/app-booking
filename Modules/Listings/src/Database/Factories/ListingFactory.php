@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 use Modules\Listings\Enums\ListingStatus;
 use Modules\Listings\Models\Listing;
+use Modules\Listings\Support\MexicoLocationCatalog;
 
 /**
  * @extends Factory<Listing>
@@ -21,6 +22,8 @@ class ListingFactory extends Factory
     public function definition(): array
     {
         $name = fake()->unique()->sentence(3);
+        $state = fake()->randomElement(MexicoLocationCatalog::stateValues());
+        $city = fake()->randomElement(MexicoLocationCatalog::municipalities($state));
 
         return [
             'team_id' => Team::factory(),
@@ -29,8 +32,8 @@ class ListingFactory extends Factory
             'slug' => Str::slug($name).'-'.fake()->unique()->numberBetween(100000, 999999),
             'description' => fake()->paragraph(),
             'address' => fake()->streetAddress(),
-            'city' => fake()->city(),
-            'state' => fake()->randomElement(['CDMX', 'Jalisco', 'Nuevo León', 'Puebla']),
+            'city' => $city,
+            'state' => $state,
             'country' => 'México',
             'postal_code' => fake()->postcode(),
             'latitude' => fake()->latitude(19.0, 20.0),

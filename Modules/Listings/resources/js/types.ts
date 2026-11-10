@@ -24,6 +24,14 @@ export type ListingLimits = {
     max_video_kb: number;
 };
 
+export type ListingLocations = Record<
+    string,
+    {
+        label: string;
+        municipalities: string[];
+    }
+>;
+
 export type ListingMedia = {
     id: number;
     type: 'image' | 'video';

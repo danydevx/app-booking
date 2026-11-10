@@ -12,9 +12,11 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { computed, watch } from 'vue';
 import type {
     ListingDetailField,
     ListingFormData,
+    ListingLocations,
     ServiceOption,
 } from '../types';
 
@@ -23,6 +25,7 @@ const props = defineProps<{
     listing?: ListingFormData | null;
     services: ServiceOption[];
     detailFields: Record<string, ListingDetailField>;
+    locations: ListingLocations;
     urls: {
         store?: string;
         update?: string;
@@ -56,6 +59,54 @@ const form = useForm({
     contact_phone: props.listing?.contact_phone ?? '',
     whatsapp_phone: props.listing?.whatsapp_phone ?? '',
 });
+
+const stateOptions = computed(() => {
+    const options = Object.entries(props.locations).map(([value, state]) => ({
+        value,
+        label: state.label,
+    }));
+
+    if (form.state && !props.locations[form.state]) {
+        options.unshift({
+            value: form.state,
+            label: `${form.state} (valor actual)`,
+        });
+    }
+
+    return options;
+});
+
+const municipalityOptions = computed(() => {
+    const municipalities = props.locations[form.state]?.municipalities ?? [];
+    const options = municipalities.map((municipality) => ({
+        value: municipality,
+        label: municipality,
+    }));
+
+    if (form.city && !municipalities.includes(form.city)) {
+        options.unshift({
+            value: form.city,
+            label: `${form.city} (valor actual)`,
+        });
+    }
+
+    return options;
+});
+
+watch(
+    () => form.state,
+    (state, previousState) => {
+        if (state === previousState) {
+            return;
+        }
+
+        const municipalities = props.locations[state]?.municipalities ?? [];
+
+        if (form.city !== '' && !municipalities.includes(form.city)) {
+            form.city = '';
+        }
+    },
+);
 
 function toggleService(service: string): void {
     form.services = form.services.includes(service)
@@ -155,14 +206,49 @@ function submit(): void {
 
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="grid gap-2">
-                    <Label for="city">Ciudad</Label>
-                    <Input id="city" v-model="form.city" maxlength="120" />
-                    <InputError :message="form.errors.city" />
+                    <Label for="state">Estado</Label>
+                    <Select v-model="form.state">
+                        <SelectTrigger id="state" class="w-full">
+                            <SelectValue placeholder="Selecciona estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="state in stateOptions"
+                                :key="state.value"
+                                :value="state.value"
+                            >
+                                {{ state.label }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <InputError :message="form.errors.state" />
                 </div>
                 <div class="grid gap-2">
-                    <Label for="state">Estado</Label>
-                    <Input id="state" v-model="form.state" maxlength="120" />
-                    <InputError :message="form.errors.state" />
+                    <Label for="city">Municipio / alcaldía</Label>
+                    <Select
+                        v-model="form.city"
+                        :disabled="municipalityOptions.length === 0"
+                    >
+                        <SelectTrigger id="city" class="w-full">
+                            <SelectValue
+                                :placeholder="
+                                    form.state
+                                        ? 'Selecciona municipio'
+                                        : 'Selecciona estado primero'
+                                "
+                            />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="municipality in municipalityOptions"
+                                :key="municipality.value"
+                                :value="municipality.value"
+                            >
+                                {{ municipality.label }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <InputError :message="form.errors.city" />
                 </div>
                 <div class="grid gap-2">
                     <Label for="country">País</Label>

@@ -4,12 +4,14 @@ import ListingForm from '../components/ListingForm.vue';
 import type {
     ListingDetailField,
     ListingLimits,
+    ListingLocations,
     ServiceOption,
 } from '../types';
 
 defineProps<{
     services: ServiceOption[];
     detailFields: Record<string, ListingDetailField>;
+    locations: ListingLocations;
     limits: ListingLimits;
     urls: {
         index: string;
@@ -49,6 +51,7 @@ defineOptions({
                 mode="create"
                 :services="services"
                 :detail-fields="detailFields"
+                :locations="locations"
                 :urls="urls"
             />
         </div>

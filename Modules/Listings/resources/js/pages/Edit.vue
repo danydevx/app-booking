@@ -8,6 +8,7 @@ import type {
     ListingDetailField,
     ListingFormData,
     ListingLimits,
+    ListingLocations,
     ServiceOption,
 } from '../types';
 
@@ -15,6 +16,7 @@ const props = defineProps<{
     listing: ListingFormData;
     services: ServiceOption[];
     detailFields: Record<string, ListingDetailField>;
+    locations: ListingLocations;
     limits: ListingLimits;
     canPublish: boolean;
     canDelete: boolean;
@@ -99,6 +101,7 @@ function destroy(): void {
                         :listing="listing"
                         :services="services"
                         :detail-fields="detailFields"
+                        :locations="locations"
                         :urls="urls"
                     />
                 </div>
