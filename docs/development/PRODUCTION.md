@@ -130,7 +130,7 @@ php artisan queue:work --tries=3 --timeout=90
 * * * * * cd /ruta/al/app && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Verificar `/up` y `/platform/system`. El comando `app:schedule-heartbeat` corre
+Verificar `/up` y `/app/platform/system`. El comando `app:schedule-heartbeat` corre
 cada minuto y registra la última ejecución del scheduler; la página muestra
 también el tamaño de la cola y permite reintentar o descartar trabajos fallidos.
 El scheduler ejecuta `bookings:expire-inquiries`, `bookings:send-reminders` y

@@ -5,7 +5,7 @@ fechas por limpieza, mantenimiento o uso personal sin crear una solicitud.
 
 ## Acceso
 
-`/{current_team}/bookings/availability/{listing}`
+`/app/{current_team}/bookings/availability/{listing}`
 
 Desde **Bookings → Disponibilidad** o desde la tarjeta de cada terraza.
 

@@ -136,7 +136,7 @@ rutas, migraciones, páginas Vue y tests.
     ```bash
     php artisan platform:sync-permissions
     ```
-- Panel `/platform`: resumen, cuentas, usuarios registrados, terrazas,
+- Panel `/app/platform`: resumen, cuentas, usuarios registrados, terrazas,
   suscripciones, reportes y marca.
 - El superadmin puede suspender/restaurar cuentas, terrazas y usuarios, y
   otorgar/revocar el rol de superadmin desde la ficha del usuario; las acciones

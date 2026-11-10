@@ -402,9 +402,9 @@ $ php artisan route:list --except-vendor
 ### C. Rutas principales
 
 - Públicas: `/`, `/terrazas`, `/terrazas/{slug}`, `/terrazas/{slug}/disponibilidad`, `/terrazas/{slug}/solicitud`, `/terrazas/{slug}/reportar`.
-- Cuenta: `/{current_team}/dashboard`, `/listings`, `/bookings`, `/billing`.
-- Settings: `/settings/profile`, `/settings/security`, `/settings/teams`.
-- Plataforma: `/platform`, `/platform/accounts`, `/platform/listings`, `/platform/reports`, `/platform/subscriptions`, `/platform/branding`.
+- Cuenta: `/app/{current_team}/dashboard`, `/app/{current_team}/listings`, `/app/{current_team}/bookings`, `/app/{current_team}/billing`.
+- Settings: `/app/settings/profile`, `/app/settings/security`, `/app/settings/teams`.
+- Plataforma: `/app/platform`, `/app/platform/accounts`, `/app/platform/listings`, `/app/platform/reports`, `/app/platform/subscriptions`, `/app/platform/branding`.
 - Auth/Stripe: rutas de Fortify + `stripe/webhook`, `stripe/payment/{id}`.
 
 ### D. Métricas del repositorio

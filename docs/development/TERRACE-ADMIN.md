@@ -5,7 +5,7 @@ edición: agrupa el trabajo diario del dueño.
 
 ## Acceso
 
-`/{current_team}/listings/{listing}`
+`/app/{current_team}/listings/{listing}`
 
 También se llega desde **Terrazas → Administrar**.
 
@@ -33,10 +33,10 @@ Las vistas de administración usan todo el ancho disponible; la distribución se
 - Ficha de cliente con submenú: resumen, tareas, timeline, correo, cotizaciones, solicitudes, datos, etiquetas y ciclo de vida.
 - Próximas fechas no disponibles.
 - Enlaces a:
-    - Solicitudes/reservaciones de la terraza en `/{current_team}/listings/{listing}/bookings`.
-    - Nueva reserva dentro de la terraza en `/{current_team}/listings/{listing}/bookings/create`.
-    - Clientes de la terraza en `/{current_team}/listings/{listing}/customers`.
-    - Ficha de cliente dentro de la terraza en `/{current_team}/listings/{listing}/customers/{customer}`.
+    - Solicitudes/reservaciones de la terraza en `/app/{current_team}/listings/{listing}/bookings`.
+    - Nueva reserva dentro de la terraza en `/app/{current_team}/listings/{listing}/bookings/create`.
+    - Clientes de la terraza en `/app/{current_team}/listings/{listing}/customers`.
+    - Ficha de cliente dentro de la terraza en `/app/{current_team}/listings/{listing}/customers/{customer}`.
     - Importación CSV con `?listing={slug}`.
     - Disponibilidad.
     - Edición de datos y fotos.

@@ -146,8 +146,8 @@ Tabla `customer_activities`:
     - Cliente actualizado.
     - Cliente vinculado a una solicitud.
 - Rutas:
-    - `POST /{team}/bookings/customers/{customer}/activities`
-    - `DELETE /{team}/bookings/customers/{customer}/activities/{activity}` solo autor
+    - `POST /app/{team}/bookings/customers/{customer}/activities`
+    - `DELETE /app/{team}/bookings/customers/{customer}/activities/{activity}` solo autor
       o Admin.
 - Validación de `body`, `type` y `occurred_at`.
 - Política: miembros con acceso al CRM pueden crear notas; borrar queda limitado
@@ -431,7 +431,7 @@ comunicación sin que la aplicación envíe mensajes no autorizados.
 
 **Implementado:**
 
-- Tablero `/{team}/bookings/today` con tareas vencidas, de hoy y próximas 7 días.
+- Tablero `/app/{team}/bookings/today` con tareas vencidas, de hoy y próximas 7 días.
 - Filtro “solo mis tareas”.
 - Asignación de clientes a miembros de la cuenta y filtro por responsable.
 - Comando diario `bookings:send-task-reminders` con digest por responsable.
