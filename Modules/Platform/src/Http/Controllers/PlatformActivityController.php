@@ -3,17 +3,22 @@
 namespace Modules\Platform\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Platform\Http\Requests\PlatformActivityFilterRequest;
 use Modules\Platform\Support\ActivityPresenter;
 use Spatie\Activitylog\Models\Activity;
 
 class PlatformActivityController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(PlatformActivityFilterRequest $request): Response
     {
-        $search = trim($request->string('q')->toString());
+        $filters = $request->validated();
+        $search = trim((string) ($filters['q'] ?? ''));
+        $actor = trim((string) ($filters['actor'] ?? ''));
+        $from = $filters['from'] ?? null;
+        $to = $filters['to'] ?? null;
 
         $activities = Activity::query()
             ->with(['causer', 'subject'])
@@ -24,6 +29,17 @@ class PlatformActivityController extends Controller
                         ->orWhere('subject_type', 'like', '%'.$search.'%');
                 });
             })
+            ->when($actor !== '', function ($query) use ($actor): void {
+                $query->whereHasMorph(
+                    'causer',
+                    [User::class],
+                    fn ($causer) => $causer
+                        ->where('name', 'like', '%'.$actor.'%')
+                        ->orWhere('email', 'like', '%'.$actor.'%'),
+                );
+            })
+            ->when($from !== null, fn ($query) => $query->whereDate('created_at', '>=', $from))
+            ->when($to !== null, fn ($query) => $query->whereDate('created_at', '<=', $to))
             ->latest()
             ->paginate(30)
             ->withQueryString();
@@ -34,7 +50,12 @@ class PlatformActivityController extends Controller
 
         return Inertia::render('Platform/Activity/Index', [
             'activities' => $activities,
-            'filters' => ['q' => $search],
+            'filters' => [
+                'q' => $search,
+                'actor' => $actor,
+                'from' => $from,
+                'to' => $to,
+            ],
             'urls' => [
                 'index' => route('platform.activity.index'),
                 'dashboard' => route('platform.dashboard'),

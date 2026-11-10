@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { reactive } from 'vue';
 import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,21 +33,44 @@ type Paginated<T> = {
 
 const props = defineProps<{
     activities: Paginated<ActivityRow>;
-    filters: { q: string };
+    filters: {
+        q: string;
+        actor: string;
+        from: string | null;
+        to: string | null;
+    };
     urls: {
         index: string;
         dashboard: string;
     };
 }>();
 
-const search = ref(props.filters.q ?? '');
+const form = reactive({
+    q: props.filters.q ?? '',
+    actor: props.filters.actor ?? '',
+    from: props.filters.from ?? '',
+    to: props.filters.to ?? '',
+});
 
 function submit(): void {
     router.get(
         props.urls.index,
-        { q: search.value || undefined },
+        {
+            q: form.q || undefined,
+            actor: form.actor || undefined,
+            from: form.from || undefined,
+            to: form.to || undefined,
+        },
         { preserveState: true, replace: true },
     );
+}
+
+function clearFilters(): void {
+    form.q = '';
+    form.actor = '';
+    form.from = '';
+    form.to = '';
+    router.get(props.urls.index, {}, { preserveState: true, replace: true });
 }
 
 function formatDate(value: string | null): string {
@@ -72,7 +95,7 @@ function reasonOf(activity: ActivityRow): string | null {
     <Head title="Auditoría · Plataforma" />
 
     <div class="flex flex-col gap-6">
-        <div class="flex flex-wrap items-end justify-between gap-3">
+        <div class="space-y-3">
             <div>
                 <h1 class="text-2xl font-semibold">Auditoría de moderación</h1>
                 <p class="text-sm text-muted-foreground">
@@ -81,16 +104,41 @@ function reasonOf(activity: ActivityRow): string | null {
             </div>
 
             <form
-                class="flex w-full max-w-md items-center gap-2"
+                class="grid gap-2 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-6"
                 @submit.prevent="submit"
             >
                 <Input
-                    v-model="search"
+                    v-model="form.q"
                     type="search"
-                    placeholder="Buscar evento o tipo…"
-                    aria-label="Buscar auditoría"
+                    placeholder="Evento o tipo…"
+                    aria-label="Buscar evento"
+                    class="lg:col-span-2"
                 />
-                <Button type="submit" variant="outline">Buscar</Button>
+                <Input
+                    v-model="form.actor"
+                    type="search"
+                    placeholder="Actor: nombre o correo"
+                    aria-label="Filtrar por actor"
+                    class="lg:col-span-2"
+                />
+                <Input
+                    v-model="form.from"
+                    type="date"
+                    aria-label="Desde"
+                    title="Desde"
+                />
+                <Input
+                    v-model="form.to"
+                    type="date"
+                    aria-label="Hasta"
+                    title="Hasta"
+                />
+                <div class="flex gap-2 sm:col-span-2 lg:col-span-6">
+                    <Button type="submit" variant="outline">Filtrar</Button>
+                    <Button type="button" variant="ghost" @click="clearFilters">
+                        Limpiar
+                    </Button>
+                </div>
             </form>
         </div>
 
