@@ -13,6 +13,7 @@ import {
     Users,
 } from '@lucide/vue';
 import { computed } from 'vue';
+import ThemeToggle from '@/components/ThemeToggle.vue';
 import { dashboard } from '@/routes';
 
 const page = usePage();
@@ -73,10 +74,11 @@ function isActive(href: string): boolean {
                         </span>
                     </Link>
 
-                    <div class="flex items-center gap-3 text-sm">
+                    <div class="flex items-center gap-2 text-sm">
                         <span class="hidden text-muted-foreground sm:inline">
                             {{ page.props.auth.user?.name }}
                         </span>
+                        <ThemeToggle />
                         <Link
                             :href="appUrl"
                             class="rounded-md border px-3 py-1.5 font-medium hover:bg-accent"
