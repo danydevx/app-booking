@@ -28,6 +28,7 @@ const props = defineProps<{
         }
     >;
     canManageTags: boolean;
+    pipelineStages: StatusOption[];
     metrics: {
         total_inquiries: number;
         accepted_inquiries: number;
@@ -48,6 +49,7 @@ const props = defineProps<{
         tasks_store: string;
         tags_store: string;
         tags_sync: string;
+        pipeline_update: string;
     };
 }>();
 
@@ -101,6 +103,10 @@ const tagCreateForm = useForm({
     color: '#64748b',
 });
 
+const pipelineForm = useForm({
+    stage: props.customer.pipeline_stage,
+});
+
 function submit(): void {
     form.patch(props.urls.update, { preserveScroll: true });
 }
@@ -140,6 +146,10 @@ function resetTaskForm(): void {
 
 function saveTags(): void {
     tagForm.patch(props.urls.tags_sync, { preserveScroll: true });
+}
+
+function savePipeline(): void {
+    pipelineForm.patch(props.urls.pipeline_update, { preserveScroll: true });
 }
 
 function toggleTag(tagId: number): void {
@@ -256,6 +266,9 @@ function statusVariant(
                         <h1 class="text-2xl font-semibold">
                             {{ customer.name }}
                         </h1>
+                        <Badge variant="outline">
+                            {{ customer.pipeline_stage_label }}
+                        </Badge>
                         <Badge
                             v-if="customer.tags.length > 0"
                             variant="secondary"
@@ -762,6 +775,42 @@ function statusVariant(
             </div>
 
             <aside class="order-first space-y-6 xl:order-last">
+                <section class="rounded-xl border bg-card p-5">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold">Pipeline</h2>
+                        <p class="text-sm text-muted-foreground">
+                            Etapa comercial actual del cliente.
+                        </p>
+                    </div>
+                    <form class="grid gap-3" @submit.prevent="savePipeline">
+                        <select
+                            v-model="pipelineForm.stage"
+                            class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        >
+                            <option
+                                v-for="stage in pipelineStages"
+                                :key="stage.value"
+                                :value="stage.value"
+                            >
+                                {{ stage.label }}
+                            </option>
+                        </select>
+                        <p
+                            v-if="pipelineForm.errors.stage"
+                            class="text-sm text-destructive"
+                        >
+                            {{ pipelineForm.errors.stage }}
+                        </p>
+                        <Button
+                            type="submit"
+                            variant="outline"
+                            :disabled="pipelineForm.processing"
+                        >
+                            Guardar etapa
+                        </Button>
+                    </form>
+                </section>
+
                 <form
                     class="rounded-xl border bg-card p-5"
                     @submit.prevent="submit"

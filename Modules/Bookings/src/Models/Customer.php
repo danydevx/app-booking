@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Modules\Bookings\Database\Factories\CustomerFactory;
+use Modules\Bookings\Enums\CustomerPipelineStage;
 
 /**
  * @property int $id
@@ -21,6 +22,7 @@ use Modules\Bookings\Database\Factories\CustomerFactory;
  * @property string|null $phone
  * @property string|null $whatsapp_phone
  * @property string|null $notes
+ * @property CustomerPipelineStage $pipeline_stage
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Team $team
@@ -31,6 +33,13 @@ class Customer extends Model
 {
     /** @use HasFactory<CustomerFactory> */
     use HasFactory;
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'pipeline_stage' => 'lead',
+    ];
 
     /**
      * @return BelongsTo<Team, $this>
@@ -71,6 +80,16 @@ class Customer extends Model
     {
         return $this->belongsToMany(CustomerTag::class, 'customer_tag_assignments', 'customer_id', 'customer_tag_id')
             ->withTimestamps();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'pipeline_stage' => CustomerPipelineStage::class,
+        ];
     }
 
     protected static function newFactory(): CustomerFactory

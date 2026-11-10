@@ -15,6 +15,7 @@ use Modules\Billing\Support\Entitlements;
 use Modules\Bookings\Actions\CreateCustomer;
 use Modules\Bookings\Actions\RecordCustomerActivity;
 use Modules\Bookings\Enums\CustomerActivityType;
+use Modules\Bookings\Enums\CustomerPipelineStage;
 use Modules\Bookings\Enums\CustomerTaskPriority;
 use Modules\Bookings\Http\Requests\StoreCustomerRequest;
 use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
@@ -52,10 +53,12 @@ class CustomerController extends Controller
 
         $search = $request->string('search')->toString();
         $tag = $request->string('tag')->toString();
+        $stage = $request->string('stage')->toString();
 
         $customers = Customer::query()
             ->where('team_id', $team->id)
             ->with('tags')
+            ->when($stage !== '', fn ($query) => $query->where('pipeline_stage', $stage))
             ->when($tag !== '', fn ($query) => $query->whereHas(
                 'tags',
                 fn ($tagQuery) => $tagQuery->where('slug', $tag),
@@ -100,7 +103,8 @@ class CustomerController extends Controller
             ],
             'customers' => $customers,
             'tags' => $tags,
-            'filters' => ['search' => $search, 'tag' => $tag],
+            'pipelineStages' => CustomerPipelineStage::options(),
+            'filters' => ['search' => $search, 'tag' => $tag, 'stage' => $stage],
             'urls' => [
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
@@ -253,6 +257,7 @@ class CustomerController extends Controller
             'teamMembers' => $teamMembers,
             'tags' => $tags,
             'canManageTags' => $canManageTags,
+            'pipelineStages' => CustomerPipelineStage::options(),
             'urls' => [
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'update' => route('bookings.customers.update', [
@@ -269,6 +274,10 @@ class CustomerController extends Controller
                 ]),
                 'tags_store' => route('bookings.customers.tags.store', ['current_team' => $team->slug]),
                 'tags_sync' => route('bookings.customers.tags.sync', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'pipeline_update' => route('bookings.customers.pipeline.update', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,
                 ]),

@@ -6,6 +6,7 @@ use Modules\Bookings\Http\Controllers\AvailabilityController;
 use Modules\Bookings\Http\Controllers\BookingInquiryController;
 use Modules\Bookings\Http\Controllers\CustomerActivityController;
 use Modules\Bookings\Http\Controllers\CustomerController;
+use Modules\Bookings\Http\Controllers\CustomerPipelineController;
 use Modules\Bookings\Http\Controllers\CustomerTagController;
 use Modules\Bookings\Http\Controllers\CustomerTaskController;
 use Modules\Bookings\Http\Controllers\ManualBookingController;
@@ -39,6 +40,8 @@ Route::prefix('{current_team}/bookings')
         Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
         Route::patch('/customers/{customer}/tags', [CustomerTagController::class, 'sync'])
             ->name('customers.tags.sync');
+        Route::patch('/customers/{customer}/pipeline', [CustomerPipelineController::class, 'update'])
+            ->name('customers.pipeline.update');
         Route::post('/customers/{customer}/activities', [CustomerActivityController::class, 'store'])
             ->name('customers.activities.store');
         Route::delete('/customers/{customer}/activities/{activity}', [CustomerActivityController::class, 'destroy'])

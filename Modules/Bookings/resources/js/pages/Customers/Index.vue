@@ -3,6 +3,7 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import InputError from '@/components/InputError.vue';
 import PaginationLinks from '@/components/PaginationLinks.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -16,13 +17,19 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { CustomerCard, CustomerTag, Paginated } from '../../types';
+import type {
+    CustomerCard,
+    CustomerTag,
+    Paginated,
+    StatusOption,
+} from '../../types';
 
 const props = defineProps<{
     team: { name: string; slug: string };
     customers: Paginated<CustomerCard>;
     tags: CustomerTag[];
-    filters: { search?: string; tag?: string };
+    pipelineStages: StatusOption[];
+    filters: { search?: string; tag?: string; stage?: string };
     urls: {
         bookings: string;
         index: string;
@@ -48,6 +55,7 @@ defineOptions({
 const form = reactive({
     search: props.filters.search ?? '',
     tag: props.filters.tag ?? '',
+    stage: props.filters.stage ?? '',
 });
 
 function search(): void {
@@ -235,6 +243,23 @@ function createCustomer(): void {
                     </option>
                 </select>
             </div>
+            <div class="grid min-w-44 gap-2">
+                <Label for="stage-filter">Etapa</Label>
+                <select
+                    id="stage-filter"
+                    v-model="form.stage"
+                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                    <option value="">Todas</option>
+                    <option
+                        v-for="stage in pipelineStages"
+                        :key="stage.value"
+                        :value="stage.value"
+                    >
+                        {{ stage.label }}
+                    </option>
+                </select>
+            </div>
             <Button type="submit">Buscar</Button>
         </form>
 
@@ -254,11 +279,16 @@ function createCustomer(): void {
                 :key="customer.id"
                 class="rounded-xl border bg-card p-4"
             >
-                <h2 class="font-semibold">
-                    <Link :href="customer.show_url" class="hover:underline">
-                        {{ customer.name }}
-                    </Link>
-                </h2>
+                <div class="flex flex-wrap items-start justify-between gap-2">
+                    <h2 class="font-semibold">
+                        <Link :href="customer.show_url" class="hover:underline">
+                            {{ customer.name }}
+                        </Link>
+                    </h2>
+                    <Badge variant="outline">
+                        {{ customer.pipeline_stage_label }}
+                    </Badge>
+                </div>
                 <p class="text-sm text-muted-foreground">
                     {{ customer.email }}
                 </p>
