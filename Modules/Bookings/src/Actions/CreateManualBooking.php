@@ -5,10 +5,12 @@ namespace Modules\Bookings\Actions;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
 use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
+use Modules\Bookings\Notifications\ManualBookingConfirmation;
 use Modules\Bookings\Support\AvailabilityService;
 use Modules\Listings\Models\Listing;
 
@@ -22,10 +24,14 @@ final class CreateManualBooking
     /**
      * @param  array<string, mixed>  $data
      */
-    public function handle(Listing $listing, User $user, array $data): BookingInquiry
-    {
+    public function handle(
+        Listing $listing,
+        User $user,
+        array $data,
+        bool $notifyCustomer = true,
+    ): BookingInquiry {
         try {
-            return DB::transaction(function () use ($listing, $user, $data): BookingInquiry {
+            $booking = DB::transaction(function () use ($listing, $user, $data): BookingInquiry {
                 $lockedListing = Listing::query()
                     ->whereKey($listing->id)
                     ->lockForUpdate()
@@ -87,6 +93,15 @@ final class CreateManualBooking
 
                 return $inquiry->refresh();
             });
+
+            $booking->loadMissing('listing');
+
+            if ($notifyCustomer) {
+                Notification::route('mail', $booking->email)
+                    ->notify(new ManualBookingConfirmation($booking));
+            }
+
+            return $booking;
         } catch (QueryException $exception) {
             if ($exception->getCode() === '23000' || str_contains($exception->getMessage(), 'UNIQUE')) {
                 throw ValidationException::withMessages([

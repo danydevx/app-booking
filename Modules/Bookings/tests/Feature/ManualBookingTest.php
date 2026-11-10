@@ -6,12 +6,15 @@ use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Bookings\Enums\AvailabilityStatus;
 use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Models\ListingUnavailability;
+use Modules\Bookings\Notifications\ManualBookingConfirmation;
 use Modules\Listings\Models\Listing;
 use Tests\TestCase;
 
@@ -53,6 +56,51 @@ class ManualBookingTest extends TestCase
             ->where('booking_inquiry_id', $inquiry->id)
             ->where('status', AvailabilityStatus::Booked)
             ->count());
+    }
+
+    public function test_manual_booking_sends_confirmation_to_customer(): void
+    {
+        Notification::fake();
+
+        [$owner, $team, $listing] = $this->ownerListing();
+
+        $this->actingAs($owner)
+            ->post(route('bookings.create.store', ['current_team' => $team->slug]), [
+                'listing_id' => $listing->id,
+                'name' => 'Cliente Manual',
+                'email' => 'confirmacion@example.test',
+                'phone' => '5555555555',
+                'start_date' => now($listing->timezone)->addDays(3)->toDateString(),
+                'end_date' => now($listing->timezone)->addDays(3)->toDateString(),
+                'notify_customer' => true,
+            ])
+            ->assertSessionHasNoErrors();
+
+        Notification::assertSentOnDemand(
+            ManualBookingConfirmation::class,
+            fn (ManualBookingConfirmation $notification, array $channels, AnonymousNotifiable $notifiable): bool => ($notifiable->routes['mail'] ?? null) === 'confirmacion@example.test',
+        );
+    }
+
+    public function test_manual_booking_can_skip_customer_confirmation(): void
+    {
+        Notification::fake();
+
+        [$owner, $team, $listing] = $this->ownerListing();
+
+        $this->actingAs($owner)
+            ->post(route('bookings.create.store', ['current_team' => $team->slug]), [
+                'listing_id' => $listing->id,
+                'name' => 'Cliente Manual',
+                'email' => 'sin-correo@example.test',
+                'phone' => '5555555555',
+                'start_date' => now($listing->timezone)->addDays(3)->toDateString(),
+                'end_date' => now($listing->timezone)->addDays(3)->toDateString(),
+                'notify_customer' => false,
+            ])
+            ->assertSessionHasNoErrors();
+
+        Notification::assertNothingSent();
     }
 
     public function test_manual_booking_reuses_an_existing_customer(): void

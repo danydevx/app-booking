@@ -31,6 +31,7 @@ class StoreManualBookingRequest extends FormRequest
             'event_type' => ['nullable', 'string', 'max:80'],
             'guests' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'message' => ['nullable', 'string', 'max:2000'],
+            'notify_customer' => ['sometimes', 'boolean'],
         ];
     }
 

@@ -65,7 +65,12 @@ class ManualBookingController extends Controller
             ->whereNull('suspended_at')
             ->findOrFail($request->integer('listing_id'));
 
-        $inquiry = $createBooking->handle($listing, $request->user(), $request->validated());
+        $inquiry = $createBooking->handle(
+            $listing,
+            $request->user(),
+            $request->validated(),
+            $request->boolean('notify_customer', true),
+        );
 
         Inertia::flash('toast', [
             'type' => 'success',

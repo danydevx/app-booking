@@ -50,6 +50,7 @@ const form = useForm({
     event_type: '',
     guests: '',
     message: '',
+    notify_customer: true,
     dates: '',
 });
 
@@ -205,6 +206,21 @@ function submit(): void {
                 />
                 <InputError :message="form.errors.message" />
             </div>
+
+            <label class="flex items-start gap-2 text-sm">
+                <input
+                    v-model="form.notify_customer"
+                    type="checkbox"
+                    class="mt-1 size-4 rounded border-input"
+                />
+                <span>
+                    Enviar confirmación por correo al cliente
+                    <span class="block text-xs text-muted-foreground">
+                        Se enviará a {{ form.email || 'el correo indicado' }}.
+                    </span>
+                </span>
+            </label>
+            <InputError :message="form.errors.notify_customer" />
 
             <div class="flex flex-wrap justify-end gap-2">
                 <Button variant="secondary" as-child>
