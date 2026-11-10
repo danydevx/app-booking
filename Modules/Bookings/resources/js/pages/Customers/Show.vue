@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -210,6 +210,18 @@ function formatMoney(cents: number): string {
     }).format(cents / 100);
 }
 
+const whatsappUrl = computed<string | null>(() => {
+    const phone = props.customer.whatsapp_phone ?? props.customer.phone;
+
+    if (!phone) {
+        return null;
+    }
+
+    const digits = phone.replace(/\D/g, '');
+
+    return digits === '' ? null : `https://wa.me/${digits}`;
+});
+
 function statusVariant(
     status: InquiryStatus,
 ): 'default' | 'secondary' | 'destructive' | 'outline' {
@@ -236,21 +248,86 @@ function statusVariant(
 <template>
     <Head :title="customer.name" />
 
-    <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 p-4">
-        <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-                <h1 class="text-2xl font-semibold">{{ customer.name }}</h1>
-                <p class="text-sm text-muted-foreground">
-                    {{ customer.email }} ·
-                    {{ customer.phone ?? 'Sin teléfono' }}
-                </p>
-            </div>
-            <Button variant="outline" as-child>
-                <Link :href="urls.index">Volver</Link>
-            </Button>
-        </div>
+    <div class="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4">
+        <header class="rounded-xl border bg-card p-5 sm:p-6">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div class="space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-2xl font-semibold">
+                            {{ customer.name }}
+                        </h1>
+                        <Badge
+                            v-if="customer.tags.length > 0"
+                            variant="secondary"
+                        >
+                            {{ customer.tags.length }}
+                            {{
+                                customer.tags.length === 1
+                                    ? 'etiqueta'
+                                    : 'etiquetas'
+                            }}
+                        </Badge>
+                    </div>
 
-        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div
+                        class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground"
+                    >
+                        <a
+                            class="underline underline-offset-4 hover:text-foreground"
+                            :href="`mailto:${customer.email}`"
+                        >
+                            {{ customer.email }}
+                        </a>
+                        <a
+                            v-if="customer.phone"
+                            class="underline underline-offset-4 hover:text-foreground"
+                            :href="`tel:${customer.phone}`"
+                        >
+                            {{ customer.phone }}
+                        </a>
+                        <span v-else>Sin teléfono</span>
+                        <span v-if="metrics.last_activity_at">
+                            Última actividad:
+                            {{ formatActivityDate(metrics.last_activity_at) }}
+                        </span>
+                    </div>
+
+                    <div
+                        v-if="customer.tags.length > 0"
+                        class="flex flex-wrap gap-1.5"
+                    >
+                        <span
+                            v-for="tag in customer.tags"
+                            :key="tag.id"
+                            class="rounded-full px-2.5 py-1 text-xs font-medium text-white"
+                            :style="{ backgroundColor: tag.color }"
+                        >
+                            {{ tag.name }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" as-child>
+                        <a :href="`mailto:${customer.email}`">Enviar correo</a>
+                    </Button>
+                    <Button v-if="whatsappUrl" variant="outline" as-child>
+                        <a
+                            :href="whatsappUrl"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            WhatsApp
+                        </a>
+                    </Button>
+                    <Button variant="outline" as-child>
+                        <Link :href="urls.index">Volver</Link>
+                    </Button>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-xl border bg-card p-4">
                 <p class="text-xs text-muted-foreground">Solicitudes</p>
                 <p class="mt-1 text-2xl font-semibold">
@@ -289,523 +366,578 @@ function statusVariant(
             </div>
         </div>
 
-        <section class="rounded-xl border bg-card p-5">
-            <div class="mb-4">
-                <h2 class="text-lg font-semibold">Etiquetas</h2>
-                <p class="text-sm text-muted-foreground">
-                    Segmenta al cliente para encontrarlo y filtrarlo después.
-                </p>
+        <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+            <div class="space-y-6">
+                <section class="rounded-xl border bg-card p-5">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold">Tareas</h2>
+                        <p class="text-sm text-muted-foreground">
+                            Define el siguiente paso con este cliente.
+                        </p>
+                    </div>
+
+                    <form
+                        class="grid gap-3 rounded-lg border bg-muted/20 p-4 sm:grid-cols-2"
+                        @submit.prevent="submitTask"
+                    >
+                        <div class="grid gap-2 sm:col-span-2">
+                            <Label for="task-title">Título</Label>
+                            <Input
+                                id="task-title"
+                                v-model="taskForm.title"
+                                maxlength="160"
+                                required
+                                placeholder="Ej. Confirmar número de invitados"
+                            />
+                            <p
+                                v-if="taskForm.errors.title"
+                                class="text-sm text-destructive"
+                            >
+                                {{ taskForm.errors.title }}
+                            </p>
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="task-due">Vencimiento</Label>
+                            <Input
+                                id="task-due"
+                                v-model="taskForm.due_at"
+                                type="datetime-local"
+                            />
+                            <p
+                                v-if="taskForm.errors.due_at"
+                                class="text-sm text-destructive"
+                            >
+                                {{ taskForm.errors.due_at }}
+                            </p>
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="task-priority">Prioridad</Label>
+                            <select
+                                id="task-priority"
+                                v-model="taskForm.priority"
+                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            >
+                                <option
+                                    v-for="priority in taskPriorities"
+                                    :key="priority.value"
+                                    :value="priority.value"
+                                >
+                                    {{ priority.label }}
+                                </option>
+                            </select>
+                            <p
+                                v-if="taskForm.errors.priority"
+                                class="text-sm text-destructive"
+                            >
+                                {{ taskForm.errors.priority }}
+                            </p>
+                        </div>
+
+                        <div class="grid gap-2 sm:col-span-2">
+                            <Label for="task-assignee">Responsable</Label>
+                            <select
+                                id="task-assignee"
+                                v-model="taskForm.assigned_to"
+                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            >
+                                <option value="">
+                                    Sin asignar (yo al crear)
+                                </option>
+                                <option
+                                    v-for="member in teamMembers"
+                                    :key="member.id"
+                                    :value="String(member.id)"
+                                >
+                                    {{ member.name }}
+                                </option>
+                            </select>
+                            <p
+                                v-if="taskForm.errors.assigned_to"
+                                class="text-sm text-destructive"
+                            >
+                                {{ taskForm.errors.assigned_to }}
+                            </p>
+                        </div>
+
+                        <div class="grid gap-2 sm:col-span-2">
+                            <Label for="task-notes">Notas</Label>
+                            <textarea
+                                id="task-notes"
+                                v-model="taskForm.notes"
+                                rows="3"
+                                maxlength="2000"
+                                class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                placeholder="Detalle opcional de la tarea."
+                            />
+                            <p
+                                v-if="taskForm.errors.notes"
+                                class="text-sm text-destructive"
+                            >
+                                {{ taskForm.errors.notes }}
+                            </p>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2 sm:col-span-2">
+                            <Button
+                                type="submit"
+                                :disabled="taskForm.processing"
+                            >
+                                {{
+                                    editingTask
+                                        ? 'Guardar cambios'
+                                        : 'Crear tarea'
+                                }}
+                            </Button>
+                            <Button
+                                v-if="editingTask"
+                                type="button"
+                                variant="secondary"
+                                @click="resetTaskForm"
+                            >
+                                Cancelar edición
+                            </Button>
+                        </div>
+                    </form>
+
+                    <div v-if="tasks.length > 0" class="mt-5 space-y-3">
+                        <article
+                            v-for="task in tasks"
+                            :key="task.id"
+                            class="rounded-lg border p-3"
+                            :class="{
+                                'border-destructive/40 bg-destructive/5':
+                                    task.is_overdue,
+                            }"
+                        >
+                            <div
+                                class="flex flex-wrap items-start justify-between gap-3"
+                            >
+                                <div>
+                                    <div
+                                        class="flex flex-wrap items-center gap-2"
+                                    >
+                                        <p class="font-medium">
+                                            {{ task.title }}
+                                        </p>
+                                        <Badge
+                                            :variant="
+                                                task.status === 'done'
+                                                    ? 'secondary'
+                                                    : task.status ===
+                                                        'cancelled'
+                                                      ? 'outline'
+                                                      : task.priority === 'high'
+                                                        ? 'destructive'
+                                                        : 'default'
+                                            "
+                                        >
+                                            {{ task.status_label }}
+                                        </Badge>
+                                        <Badge
+                                            v-if="task.is_overdue"
+                                            variant="destructive"
+                                        >
+                                            Vencida
+                                        </Badge>
+                                    </div>
+                                    <p
+                                        v-if="task.notes"
+                                        class="mt-1 text-sm whitespace-pre-line text-muted-foreground"
+                                    >
+                                        {{ task.notes }}
+                                    </p>
+                                    <p
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        {{
+                                            task.due_at
+                                                ? formatActivityDate(
+                                                      task.due_at,
+                                                  )
+                                                : 'Sin fecha'
+                                        }}
+                                        <span v-if="task.assignee">
+                                            · {{ task.assignee }}
+                                        </span>
+                                    </p>
+                                </div>
+
+                                <div
+                                    v-if="
+                                        task.can_manage &&
+                                        task.status === 'open'
+                                    "
+                                    class="flex flex-wrap gap-2"
+                                >
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        @click="editTask(task)"
+                                    >
+                                        Editar
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        @click="completeTask(task)"
+                                    >
+                                        Completar
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        @click="cancelTask(task)"
+                                    >
+                                        Cancelar
+                                    </Button>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                    <p v-else class="mt-4 text-sm text-muted-foreground">
+                        No hay tareas registradas.
+                    </p>
+                </section>
+
+                <section class="rounded-xl border bg-card p-5">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold">Timeline</h2>
+                        <p class="text-sm text-muted-foreground">
+                            Registra llamadas, correos, reuniones y notas de
+                            seguimiento.
+                        </p>
+                    </div>
+
+                    <form
+                        class="grid gap-3 rounded-lg border bg-muted/20 p-4 sm:grid-cols-[10rem_1fr]"
+                        @submit.prevent="recordActivity"
+                    >
+                        <div class="grid gap-2">
+                            <Label for="activity-type">Tipo</Label>
+                            <select
+                                id="activity-type"
+                                v-model="activityForm.type"
+                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            >
+                                <option
+                                    v-for="type in activityTypes"
+                                    :key="type.value"
+                                    :value="type.value"
+                                >
+                                    {{ type.label }}
+                                </option>
+                            </select>
+                            <p
+                                v-if="activityForm.errors.type"
+                                class="text-sm text-destructive"
+                            >
+                                {{ activityForm.errors.type }}
+                            </p>
+                        </div>
+
+                        <div class="grid gap-2">
+                            <Label for="activity-date">
+                                Fecha y hora opcional
+                            </Label>
+                            <Input
+                                id="activity-date"
+                                v-model="activityForm.occurred_at"
+                                type="datetime-local"
+                            />
+                            <p
+                                v-if="activityForm.errors.occurred_at"
+                                class="text-sm text-destructive"
+                            >
+                                {{ activityForm.errors.occurred_at }}
+                            </p>
+                        </div>
+
+                        <div class="grid gap-2 sm:col-span-2">
+                            <Label for="activity-body">Detalle</Label>
+                            <textarea
+                                id="activity-body"
+                                v-model="activityForm.body"
+                                rows="3"
+                                maxlength="5000"
+                                required
+                                class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                placeholder="Ej. Llamé al cliente para confirmar el número de invitados."
+                            />
+                            <p
+                                v-if="activityForm.errors.body"
+                                class="text-sm text-destructive"
+                            >
+                                {{ activityForm.errors.body }}
+                            </p>
+                        </div>
+
+                        <div class="sm:col-span-2">
+                            <Button
+                                type="submit"
+                                :disabled="activityForm.processing"
+                            >
+                                Registrar actividad
+                            </Button>
+                        </div>
+                    </form>
+
+                    <div v-if="activities.length > 0" class="mt-5 space-y-3">
+                        <article
+                            v-for="activity in activities"
+                            :key="activity.id"
+                            class="rounded-lg border p-3"
+                        >
+                            <div
+                                class="flex flex-wrap items-center justify-between gap-2"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <Badge variant="secondary">
+                                        {{ activity.type_label }}
+                                    </Badge>
+                                    <span class="text-xs text-muted-foreground">
+                                        {{
+                                            formatActivityDate(
+                                                activity.occurred_at,
+                                            )
+                                        }}
+                                    </span>
+                                </div>
+                                <Button
+                                    v-if="activity.can_delete"
+                                    size="sm"
+                                    variant="ghost"
+                                    @click="deleteActivity(activity)"
+                                >
+                                    Eliminar
+                                </Button>
+                            </div>
+                            <p class="mt-2 text-sm whitespace-pre-line">
+                                {{ activity.body }}
+                            </p>
+                            <p
+                                v-if="activity.author"
+                                class="mt-2 text-xs text-muted-foreground"
+                            >
+                                {{ activity.author }}
+                            </p>
+                        </article>
+                    </div>
+                    <p v-else class="mt-4 text-sm text-muted-foreground">
+                        Todavía no hay actividades registradas.
+                    </p>
+                </section>
+
+                <section class="rounded-xl border bg-card p-5">
+                    <h2 class="mb-4 text-lg font-semibold">Solicitudes</h2>
+                    <div v-if="customer.inquiries.length > 0" class="space-y-3">
+                        <article
+                            v-for="inquiry in customer.inquiries"
+                            :key="inquiry.id"
+                            class="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                        >
+                            <div>
+                                <p class="font-medium">
+                                    {{ inquiry.listing.name }}
+                                </p>
+                                <p class="text-sm text-muted-foreground">
+                                    {{ inquiry.start_date_label }} al
+                                    {{ inquiry.end_date_label }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <Badge :variant="statusVariant(inquiry.status)">
+                                    {{ inquiry.status_label }}
+                                </Badge>
+                                <Button size="sm" variant="outline" as-child>
+                                    <Link :href="inquiry.show_url">Ver</Link>
+                                </Button>
+                            </div>
+                        </article>
+                    </div>
+                    <p v-else class="text-sm text-muted-foreground">
+                        Este cliente no tiene solicitudes.
+                    </p>
+                </section>
             </div>
 
-            <form @submit.prevent="saveTags">
-                <div class="flex flex-wrap gap-3">
-                    <label
-                        v-for="tag in tags"
-                        :key="tag.id"
-                        class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm"
-                    >
-                        <input
-                            type="checkbox"
-                            class="size-4 rounded border-input"
-                            :checked="tagForm.tag_ids.includes(tag.id)"
-                            @change="toggleTag(tag.id)"
-                        />
-                        <span
-                            class="size-2.5 rounded-full"
-                            :style="{ backgroundColor: tag.color }"
-                        />
-                        {{ tag.name }}
-                        <span class="text-xs text-muted-foreground">
-                            ({{ tag.customers_count }})
-                        </span>
-                    </label>
-                    <p
-                        v-if="tags.length === 0"
-                        class="text-sm text-muted-foreground"
-                    >
-                        No hay etiquetas creadas.
-                    </p>
-                </div>
-                <p
-                    v-if="tagForm.errors.tag_ids"
-                    class="mt-2 text-sm text-destructive"
-                >
-                    {{ tagForm.errors.tag_ids }}
-                </p>
-                <Button
-                    v-if="tags.length > 0"
-                    class="mt-4"
-                    type="submit"
-                    :disabled="tagForm.processing"
-                >
-                    Guardar etiquetas
-                </Button>
-            </form>
-
-            <div v-if="canManageTags" class="mt-5 border-t pt-5">
-                <h3 class="text-sm font-medium">Nueva etiqueta</h3>
+            <aside class="order-first space-y-6 xl:order-last">
                 <form
-                    class="mt-3 flex flex-wrap items-end gap-3"
-                    @submit.prevent="createTag"
+                    class="rounded-xl border bg-card p-5"
+                    @submit.prevent="submit"
                 >
-                    <div class="grid min-w-56 flex-1 gap-2">
-                        <Label for="new-tag-name">Nombre</Label>
-                        <Input
-                            id="new-tag-name"
-                            v-model="tagCreateForm.name"
-                            maxlength="60"
-                            required
-                            placeholder="Ej. Corporativo"
-                        />
-                        <p
-                            v-if="tagCreateForm.errors.name"
-                            class="text-sm text-destructive"
-                        >
-                            {{ tagCreateForm.errors.name }}
-                        </p>
-                    </div>
-                    <div class="grid gap-2">
-                        <Label for="new-tag-color">Color</Label>
-                        <input
-                            id="new-tag-color"
-                            v-model="tagCreateForm.color"
-                            type="color"
-                            class="h-9 w-14 rounded-md border border-input bg-transparent p-1"
-                        />
-                        <p
-                            v-if="tagCreateForm.errors.color"
-                            class="text-sm text-destructive"
-                        >
-                            {{ tagCreateForm.errors.color }}
-                        </p>
+                    <h2 class="mb-4 text-lg font-semibold">
+                        Datos del cliente
+                    </h2>
+                    <div class="grid gap-4">
+                        <div class="grid gap-2">
+                            <Label for="name">Nombre</Label>
+                            <Input id="name" v-model="form.name" required />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="email">Correo</Label>
+                            <Input
+                                id="email"
+                                v-model="form.email"
+                                type="email"
+                                required
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="phone">Teléfono</Label>
+                            <Input id="phone" v-model="form.phone" />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="whatsapp">WhatsApp</Label>
+                            <Input
+                                id="whatsapp"
+                                v-model="form.whatsapp_phone"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="notes">Notas internas</Label>
+                            <textarea
+                                id="notes"
+                                v-model="form.notes"
+                                rows="4"
+                                class="min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            />
+                        </div>
                     </div>
                     <Button
+                        class="mt-4 w-full"
                         type="submit"
-                        variant="outline"
-                        :disabled="tagCreateForm.processing"
+                        :disabled="form.processing"
                     >
-                        Crear etiqueta
+                        Guardar cliente
                     </Button>
                 </form>
 
-                <div v-if="tags.length > 0" class="mt-4 space-y-2">
-                    <p class="text-xs text-muted-foreground">
-                        Administrar etiquetas de la cuenta
-                    </p>
-                    <div
-                        v-for="tag in tags"
-                        :key="`manage-${tag.id}`"
-                        class="flex items-center justify-between gap-3 text-sm"
-                    >
-                        <span>{{ tag.name }}</span>
-                        <Button
-                            v-if="tag.delete_url"
-                            type="button"
-                            size="sm"
-                            variant="ghost"
-                            @click="deleteTag(tag)"
-                        >
-                            Eliminar
-                        </Button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <form class="rounded-xl border bg-card p-5" @submit.prevent="submit">
-            <h2 class="mb-4 text-lg font-semibold">Datos del cliente</h2>
-            <div class="grid gap-4 sm:grid-cols-2">
-                <div class="grid gap-2">
-                    <Label for="name">Nombre</Label>
-                    <Input id="name" v-model="form.name" required />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="email">Correo</Label>
-                    <Input
-                        id="email"
-                        v-model="form.email"
-                        type="email"
-                        required
-                    />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="phone">Teléfono</Label>
-                    <Input id="phone" v-model="form.phone" />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="whatsapp">WhatsApp</Label>
-                    <Input id="whatsapp" v-model="form.whatsapp_phone" />
-                </div>
-                <div class="grid gap-2 sm:col-span-2">
-                    <Label for="notes">Notas internas</Label>
-                    <textarea
-                        id="notes"
-                        v-model="form.notes"
-                        rows="4"
-                        class="min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    />
-                </div>
-            </div>
-            <Button class="mt-4" type="submit" :disabled="form.processing">
-                Guardar cliente
-            </Button>
-        </form>
-
-        <section class="rounded-xl border bg-card p-5">
-            <div class="mb-4">
-                <h2 class="text-lg font-semibold">Tareas</h2>
-                <p class="text-sm text-muted-foreground">
-                    Define el siguiente paso con este cliente.
-                </p>
-            </div>
-
-            <form
-                class="grid gap-3 rounded-lg border bg-muted/20 p-4 sm:grid-cols-2"
-                @submit.prevent="submitTask"
-            >
-                <div class="grid gap-2 sm:col-span-2">
-                    <Label for="task-title">Título</Label>
-                    <Input
-                        id="task-title"
-                        v-model="taskForm.title"
-                        maxlength="160"
-                        required
-                        placeholder="Ej. Confirmar número de invitados"
-                    />
-                    <p
-                        v-if="taskForm.errors.title"
-                        class="text-sm text-destructive"
-                    >
-                        {{ taskForm.errors.title }}
-                    </p>
-                </div>
-
-                <div class="grid gap-2">
-                    <Label for="task-due">Vencimiento</Label>
-                    <Input
-                        id="task-due"
-                        v-model="taskForm.due_at"
-                        type="datetime-local"
-                    />
-                    <p
-                        v-if="taskForm.errors.due_at"
-                        class="text-sm text-destructive"
-                    >
-                        {{ taskForm.errors.due_at }}
-                    </p>
-                </div>
-
-                <div class="grid gap-2">
-                    <Label for="task-priority">Prioridad</Label>
-                    <select
-                        id="task-priority"
-                        v-model="taskForm.priority"
-                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    >
-                        <option
-                            v-for="priority in taskPriorities"
-                            :key="priority.value"
-                            :value="priority.value"
-                        >
-                            {{ priority.label }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="taskForm.errors.priority"
-                        class="text-sm text-destructive"
-                    >
-                        {{ taskForm.errors.priority }}
-                    </p>
-                </div>
-
-                <div class="grid gap-2 sm:col-span-2">
-                    <Label for="task-assignee">Responsable</Label>
-                    <select
-                        id="task-assignee"
-                        v-model="taskForm.assigned_to"
-                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    >
-                        <option value="">Sin asignar (yo al crear)</option>
-                        <option
-                            v-for="member in teamMembers"
-                            :key="member.id"
-                            :value="String(member.id)"
-                        >
-                            {{ member.name }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="taskForm.errors.assigned_to"
-                        class="text-sm text-destructive"
-                    >
-                        {{ taskForm.errors.assigned_to }}
-                    </p>
-                </div>
-
-                <div class="grid gap-2 sm:col-span-2">
-                    <Label for="task-notes">Notas</Label>
-                    <textarea
-                        id="task-notes"
-                        v-model="taskForm.notes"
-                        rows="3"
-                        maxlength="2000"
-                        class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        placeholder="Detalle opcional de la tarea."
-                    />
-                    <p
-                        v-if="taskForm.errors.notes"
-                        class="text-sm text-destructive"
-                    >
-                        {{ taskForm.errors.notes }}
-                    </p>
-                </div>
-
-                <div class="flex flex-wrap gap-2 sm:col-span-2">
-                    <Button type="submit" :disabled="taskForm.processing">
-                        {{ editingTask ? 'Guardar cambios' : 'Crear tarea' }}
-                    </Button>
-                    <Button
-                        v-if="editingTask"
-                        type="button"
-                        variant="secondary"
-                        @click="resetTaskForm"
-                    >
-                        Cancelar edición
-                    </Button>
-                </div>
-            </form>
-
-            <div v-if="tasks.length > 0" class="mt-5 space-y-3">
-                <article
-                    v-for="task in tasks"
-                    :key="task.id"
-                    class="rounded-lg border p-3"
-                    :class="{
-                        'border-destructive/40 bg-destructive/5':
-                            task.is_overdue,
-                    }"
-                >
-                    <div
-                        class="flex flex-wrap items-start justify-between gap-3"
-                    >
-                        <div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <p class="font-medium">{{ task.title }}</p>
-                                <Badge
-                                    :variant="
-                                        task.status === 'done'
-                                            ? 'secondary'
-                                            : task.status === 'cancelled'
-                                              ? 'outline'
-                                              : task.priority === 'high'
-                                                ? 'destructive'
-                                                : 'default'
-                                    "
-                                >
-                                    {{ task.status_label }}
-                                </Badge>
-                                <Badge
-                                    v-if="task.is_overdue"
-                                    variant="destructive"
-                                >
-                                    Vencida
-                                </Badge>
-                            </div>
-                            <p
-                                v-if="task.notes"
-                                class="mt-1 text-sm whitespace-pre-line text-muted-foreground"
-                            >
-                                {{ task.notes }}
-                            </p>
-                            <p class="mt-1 text-xs text-muted-foreground">
-                                {{
-                                    task.due_at
-                                        ? formatActivityDate(task.due_at)
-                                        : 'Sin fecha'
-                                }}
-                                <span v-if="task.assignee">
-                                    · {{ task.assignee }}
-                                </span>
-                            </p>
-                        </div>
-
-                        <div
-                            v-if="task.can_manage && task.status === 'open'"
-                            class="flex flex-wrap gap-2"
-                        >
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                @click="editTask(task)"
-                            >
-                                Editar
-                            </Button>
-                            <Button size="sm" @click="completeTask(task)">
-                                Completar
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                @click="cancelTask(task)"
-                            >
-                                Cancelar
-                            </Button>
-                        </div>
-                    </div>
-                </article>
-            </div>
-            <p v-else class="mt-4 text-sm text-muted-foreground">
-                No hay tareas registradas.
-            </p>
-        </section>
-
-        <section class="rounded-xl border bg-card p-5">
-            <div class="mb-4">
-                <h2 class="text-lg font-semibold">Timeline</h2>
-                <p class="text-sm text-muted-foreground">
-                    Registra llamadas, correos, reuniones y notas de
-                    seguimiento.
-                </p>
-            </div>
-
-            <form
-                class="grid gap-3 rounded-lg border bg-muted/20 p-4 sm:grid-cols-[10rem_1fr]"
-                @submit.prevent="recordActivity"
-            >
-                <div class="grid gap-2">
-                    <Label for="activity-type">Tipo</Label>
-                    <select
-                        id="activity-type"
-                        v-model="activityForm.type"
-                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    >
-                        <option
-                            v-for="type in activityTypes"
-                            :key="type.value"
-                            :value="type.value"
-                        >
-                            {{ type.label }}
-                        </option>
-                    </select>
-                    <p
-                        v-if="activityForm.errors.type"
-                        class="text-sm text-destructive"
-                    >
-                        {{ activityForm.errors.type }}
-                    </p>
-                </div>
-
-                <div class="grid gap-2">
-                    <Label for="activity-date">Fecha y hora opcional</Label>
-                    <Input
-                        id="activity-date"
-                        v-model="activityForm.occurred_at"
-                        type="datetime-local"
-                    />
-                    <p
-                        v-if="activityForm.errors.occurred_at"
-                        class="text-sm text-destructive"
-                    >
-                        {{ activityForm.errors.occurred_at }}
-                    </p>
-                </div>
-
-                <div class="grid gap-2 sm:col-span-2">
-                    <Label for="activity-body">Detalle</Label>
-                    <textarea
-                        id="activity-body"
-                        v-model="activityForm.body"
-                        rows="3"
-                        maxlength="5000"
-                        required
-                        class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        placeholder="Ej. Llamé al cliente para confirmar el número de invitados."
-                    />
-                    <p
-                        v-if="activityForm.errors.body"
-                        class="text-sm text-destructive"
-                    >
-                        {{ activityForm.errors.body }}
-                    </p>
-                </div>
-
-                <div class="sm:col-span-2">
-                    <Button type="submit" :disabled="activityForm.processing">
-                        Registrar actividad
-                    </Button>
-                </div>
-            </form>
-
-            <div v-if="activities.length > 0" class="mt-5 space-y-3">
-                <article
-                    v-for="activity in activities"
-                    :key="activity.id"
-                    class="rounded-lg border p-3"
-                >
-                    <div
-                        class="flex flex-wrap items-center justify-between gap-2"
-                    >
-                        <div class="flex items-center gap-2">
-                            <Badge variant="secondary">
-                                {{ activity.type_label }}
-                            </Badge>
-                            <span class="text-xs text-muted-foreground">
-                                {{ formatActivityDate(activity.occurred_at) }}
-                            </span>
-                        </div>
-                        <Button
-                            v-if="activity.can_delete"
-                            size="sm"
-                            variant="ghost"
-                            @click="deleteActivity(activity)"
-                        >
-                            Eliminar
-                        </Button>
-                    </div>
-                    <p class="mt-2 text-sm whitespace-pre-line">
-                        {{ activity.body }}
-                    </p>
-                    <p
-                        v-if="activity.author"
-                        class="mt-2 text-xs text-muted-foreground"
-                    >
-                        {{ activity.author }}
-                    </p>
-                </article>
-            </div>
-            <p v-else class="mt-4 text-sm text-muted-foreground">
-                Todavía no hay actividades registradas.
-            </p>
-        </section>
-
-        <section class="rounded-xl border bg-card p-5">
-            <h2 class="mb-4 text-lg font-semibold">Solicitudes</h2>
-            <div v-if="customer.inquiries.length > 0" class="space-y-3">
-                <article
-                    v-for="inquiry in customer.inquiries"
-                    :key="inquiry.id"
-                    class="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
-                >
-                    <div>
-                        <p class="font-medium">{{ inquiry.listing.name }}</p>
+                <section class="rounded-xl border bg-card p-5">
+                    <div class="mb-4">
+                        <h2 class="text-lg font-semibold">Etiquetas</h2>
                         <p class="text-sm text-muted-foreground">
-                            {{ inquiry.start_date_label }} al
-                            {{ inquiry.end_date_label }}
+                            Segmenta al cliente para filtrarlo después.
                         </p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <Badge :variant="statusVariant(inquiry.status)">
-                            {{ inquiry.status_label }}
-                        </Badge>
-                        <Button size="sm" variant="outline" as-child>
-                            <Link :href="inquiry.show_url">Ver</Link>
+
+                    <form @submit.prevent="saveTags">
+                        <div class="flex flex-wrap gap-2">
+                            <label
+                                v-for="tag in tags"
+                                :key="tag.id"
+                                class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm"
+                            >
+                                <input
+                                    type="checkbox"
+                                    class="size-4 rounded border-input"
+                                    :checked="tagForm.tag_ids.includes(tag.id)"
+                                    @change="toggleTag(tag.id)"
+                                />
+                                <span
+                                    class="size-2.5 rounded-full"
+                                    :style="{ backgroundColor: tag.color }"
+                                />
+                                {{ tag.name }}
+                                <span class="text-xs text-muted-foreground">
+                                    ({{ tag.customers_count }})
+                                </span>
+                            </label>
+                            <p
+                                v-if="tags.length === 0"
+                                class="text-sm text-muted-foreground"
+                            >
+                                No hay etiquetas creadas.
+                            </p>
+                        </div>
+                        <p
+                            v-if="tagForm.errors.tag_ids"
+                            class="mt-2 text-sm text-destructive"
+                        >
+                            {{ tagForm.errors.tag_ids }}
+                        </p>
+                        <Button
+                            v-if="tags.length > 0"
+                            class="mt-4"
+                            type="submit"
+                            :disabled="tagForm.processing"
+                        >
+                            Guardar etiquetas
                         </Button>
+                    </form>
+
+                    <div v-if="canManageTags" class="mt-5 border-t pt-5">
+                        <h3 class="text-sm font-medium">Nueva etiqueta</h3>
+                        <form
+                            class="mt-3 grid gap-3"
+                            @submit.prevent="createTag"
+                        >
+                            <div class="grid gap-2">
+                                <Label for="new-tag-name">Nombre</Label>
+                                <Input
+                                    id="new-tag-name"
+                                    v-model="tagCreateForm.name"
+                                    maxlength="60"
+                                    required
+                                    placeholder="Ej. Corporativo"
+                                />
+                                <p
+                                    v-if="tagCreateForm.errors.name"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ tagCreateForm.errors.name }}
+                                </p>
+                            </div>
+                            <div class="flex items-end gap-3">
+                                <div class="grid flex-1 gap-2">
+                                    <Label for="new-tag-color">Color</Label>
+                                    <input
+                                        id="new-tag-color"
+                                        v-model="tagCreateForm.color"
+                                        type="color"
+                                        class="h-9 w-full rounded-md border border-input bg-transparent p-1"
+                                    />
+                                </div>
+                                <Button
+                                    type="submit"
+                                    variant="outline"
+                                    :disabled="tagCreateForm.processing"
+                                >
+                                    Crear
+                                </Button>
+                            </div>
+                            <p
+                                v-if="tagCreateForm.errors.color"
+                                class="text-sm text-destructive"
+                            >
+                                {{ tagCreateForm.errors.color }}
+                            </p>
+                        </form>
+
+                        <div v-if="tags.length > 0" class="mt-4 space-y-2">
+                            <p class="text-xs text-muted-foreground">
+                                Administrar etiquetas
+                            </p>
+                            <div
+                                v-for="tag in tags"
+                                :key="`manage-${tag.id}`"
+                                class="flex items-center justify-between gap-3 text-sm"
+                            >
+                                <span>{{ tag.name }}</span>
+                                <Button
+                                    v-if="tag.delete_url"
+                                    type="button"
+                                    size="sm"
+                                    variant="ghost"
+                                    @click="deleteTag(tag)"
+                                >
+                                    Eliminar
+                                </Button>
+                            </div>
+                        </div>
                     </div>
-                </article>
-            </div>
-            <p v-else class="text-sm text-muted-foreground">
-                Este cliente no tiene solicitudes.
-            </p>
-        </section>
+                </section>
+            </aside>
+        </div>
     </div>
 </template>
