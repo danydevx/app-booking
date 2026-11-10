@@ -11,7 +11,7 @@
 | ----------------------------------- | ------------------------ |
 | 0. CRUD base                        | Completado               |
 | 1. Timeline y notas                 | Completado el 2026-11-10 |
-| 2. Tareas                           | Pendiente                |
+| 2. Tareas                           | Completado el 2026-11-10 |
 | 3. Etiquetas                        | Pendiente                |
 | 4. Métricas                         | Pendiente                |
 | 5. Pipeline                         | Pendiente                |
