@@ -144,6 +144,307 @@ const whatsappUrl = computed(
                     </section>
 
                     <section
+                        v-if="listing.pricing.has_pricing"
+                        class="space-y-4 rounded-xl border bg-card p-5"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">Precios</h2>
+                            <p class="text-sm text-muted-foreground">
+                                Información orientativa; confirma los detalles
+                                con el anfitrión.
+                            </p>
+                        </div>
+                        <div class="grid gap-3 sm:grid-cols-3">
+                            <div
+                                v-if="listing.pricing.price_from_formatted"
+                                class="rounded-lg border p-3"
+                            >
+                                <p class="text-xs text-muted-foreground">
+                                    Desde
+                                </p>
+                                <p class="text-xl font-semibold">
+                                    {{ listing.pricing.price_from_formatted }}
+                                </p>
+                            </div>
+                            <div
+                                v-if="listing.pricing.price_weekday_formatted"
+                                class="rounded-lg border p-3"
+                            >
+                                <p class="text-xs text-muted-foreground">
+                                    Lunes a jueves
+                                </p>
+                                <p class="text-xl font-semibold">
+                                    {{
+                                        listing.pricing.price_weekday_formatted
+                                    }}
+                                </p>
+                            </div>
+                            <div
+                                v-if="listing.pricing.price_weekend_formatted"
+                                class="rounded-lg border p-3"
+                            >
+                                <p class="text-xs text-muted-foreground">
+                                    Viernes a domingo
+                                </p>
+                                <p class="text-xl font-semibold">
+                                    {{
+                                        listing.pricing.price_weekend_formatted
+                                    }}
+                                </p>
+                            </div>
+                        </div>
+                        <p
+                            v-if="
+                                listing.pricing.included_hours ||
+                                listing.pricing.included_people
+                            "
+                            class="text-sm text-muted-foreground"
+                        >
+                            Incluye
+                            <span v-if="listing.pricing.included_hours">
+                                {{ listing.pricing.included_hours }} horas
+                            </span>
+                            <span
+                                v-if="
+                                    listing.pricing.included_hours &&
+                                    listing.pricing.included_people
+                                "
+                            >
+                                para
+                            </span>
+                            <span v-if="listing.pricing.included_people">
+                                {{ listing.pricing.included_people }} personas
+                            </span>
+                            .
+                        </p>
+                        <div
+                            v-if="
+                                listing.pricing.extra_hour_formatted ||
+                                listing.pricing.extra_person_formatted ||
+                                listing.pricing.deposit_required_formatted
+                            "
+                            class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground"
+                        >
+                            <span v-if="listing.pricing.extra_hour_formatted">
+                                Hora adicional:
+                                {{ listing.pricing.extra_hour_formatted }}
+                            </span>
+                            <span v-if="listing.pricing.extra_person_formatted">
+                                Persona adicional:
+                                {{ listing.pricing.extra_person_formatted }}
+                            </span>
+                            <span
+                                v-if="
+                                    listing.pricing.deposit_required_formatted
+                                "
+                            >
+                                Anticipo requerido:
+                                {{ listing.pricing.deposit_required_formatted }}
+                            </span>
+                        </div>
+                        <p
+                            v-if="listing.pricing.price_notes"
+                            class="text-sm whitespace-pre-line text-muted-foreground"
+                        >
+                            {{ listing.pricing.price_notes }}
+                        </p>
+                    </section>
+
+                    <section
+                        v-if="listing.promotions.length > 0"
+                        class="space-y-4"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">Promociones</h2>
+                            <p class="text-sm text-muted-foreground">
+                                Promociones vigentes por tiempo limitado.
+                            </p>
+                        </div>
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <article
+                                v-for="promotion in listing.promotions"
+                                :key="promotion.id"
+                                class="rounded-xl border border-amber-300 bg-amber-50/60 p-4 dark:border-amber-900 dark:bg-amber-950/20"
+                            >
+                                <h3 class="font-semibold">
+                                    {{ promotion.title }}
+                                </h3>
+                                <div
+                                    class="mt-2 flex flex-wrap items-baseline gap-2"
+                                >
+                                    <span
+                                        v-if="
+                                            promotion.promotional_price_formatted
+                                        "
+                                        class="text-xl font-semibold"
+                                    >
+                                        {{
+                                            promotion.promotional_price_formatted
+                                        }}
+                                    </span>
+                                    <span
+                                        v-if="
+                                            promotion.previous_price_formatted
+                                        "
+                                        class="text-sm text-muted-foreground line-through"
+                                    >
+                                        {{ promotion.previous_price_formatted }}
+                                    </span>
+                                </div>
+                                <p class="mt-2 text-xs text-muted-foreground">
+                                    {{ promotion.starts_at_label }} al
+                                    {{ promotion.ends_at_label }}
+                                </p>
+                                <p
+                                    v-if="promotion.applies_on.length > 0"
+                                    class="mt-1 text-xs text-muted-foreground"
+                                >
+                                    Días: {{ promotion.applies_on.join(', ') }}
+                                </p>
+                                <p
+                                    v-if="promotion.description"
+                                    class="mt-2 text-sm whitespace-pre-line text-muted-foreground"
+                                >
+                                    {{ promotion.description }}
+                                </p>
+                                <p
+                                    v-if="promotion.conditions"
+                                    class="mt-2 text-xs text-muted-foreground"
+                                >
+                                    {{ promotion.conditions }}
+                                </p>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section
+                        v-if="listing.packages.length > 0"
+                        class="space-y-4"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">Paquetes</h2>
+                            <p class="text-sm text-muted-foreground">
+                                Opciones de renta con duración y capacidad
+                                incluidas.
+                            </p>
+                        </div>
+                        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                            <article
+                                v-for="packageItem in listing.packages"
+                                :key="packageItem.id"
+                                class="flex flex-col rounded-xl border bg-card p-4"
+                            >
+                                <h3 class="font-semibold">
+                                    {{ packageItem.name }}
+                                </h3>
+                                <p class="mt-1 text-xl font-semibold">
+                                    {{ packageItem.price_formatted }}
+                                </p>
+                                <p class="mt-1 text-sm text-muted-foreground">
+                                    {{ packageItem.duration_hours }} horas ·
+                                    {{ packageItem.included_people }} personas
+                                </p>
+                                <p
+                                    v-if="packageItem.description"
+                                    class="mt-2 text-sm whitespace-pre-line text-muted-foreground"
+                                >
+                                    {{ packageItem.description }}
+                                </p>
+                                <div
+                                    v-if="packageItem.amenities.length > 0"
+                                    class="mt-3 flex flex-wrap gap-1"
+                                >
+                                    <Badge
+                                        v-for="amenity in packageItem.amenities"
+                                        :key="amenity.key"
+                                        variant="secondary"
+                                    >
+                                        {{ amenity.label }}
+                                    </Badge>
+                                </div>
+                                <div
+                                    v-if="packageItem.services.length > 0"
+                                    class="mt-2 flex flex-wrap gap-1"
+                                >
+                                    <Badge
+                                        v-for="service in packageItem.services"
+                                        :key="service.key"
+                                        variant="outline"
+                                    >
+                                        {{ service.label }}
+                                    </Badge>
+                                </div>
+                                <p
+                                    v-if="packageItem.conditions"
+                                    class="mt-3 text-xs text-muted-foreground"
+                                >
+                                    {{ packageItem.conditions }}
+                                </p>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section
+                        v-if="listing.commercialServices.length > 0"
+                        class="space-y-4"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">
+                                Servicios adicionales
+                            </h2>
+                            <p class="text-sm text-muted-foreground">
+                                Servicios incluidos o disponibles con costo
+                                extra.
+                            </p>
+                        </div>
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <article
+                                v-for="service in listing.commercialServices"
+                                :key="service.id"
+                                class="rounded-xl border bg-card p-4"
+                            >
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="font-semibold">
+                                        {{ service.label }}
+                                    </h3>
+                                    <Badge
+                                        :variant="
+                                            service.is_included
+                                                ? 'default'
+                                                : 'secondary'
+                                        "
+                                    >
+                                        {{
+                                            service.is_included
+                                                ? 'Incluido'
+                                                : 'Costo adicional'
+                                        }}
+                                    </Badge>
+                                </div>
+                                <p
+                                    v-if="service.has_price"
+                                    class="mt-2 text-sm font-medium"
+                                >
+                                    {{ service.price_formatted }} ·
+                                    {{ service.price_unit_label }}
+                                </p>
+                                <p
+                                    v-else
+                                    class="mt-2 text-sm text-muted-foreground"
+                                >
+                                    Precio no especificado
+                                </p>
+                                <p
+                                    v-if="service.description"
+                                    class="mt-2 text-sm whitespace-pre-line text-muted-foreground"
+                                >
+                                    {{ service.description }}
+                                </p>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section
                         v-if="listing.serviceGroups.length > 0"
                         class="space-y-4"
                     >

@@ -32,6 +32,16 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property string|null $latitude
  * @property string|null $longitude
  * @property int|null $capacity
+ * @property int|null $price_from_cents
+ * @property int|null $price_weekday_cents
+ * @property int|null $price_weekend_cents
+ * @property int|null $included_hours
+ * @property int|null $included_people
+ * @property int|null $extra_hour_cents
+ * @property int|null $extra_person_cents
+ * @property int|null $deposit_required_cents
+ * @property string|null $price_notes
+ * @property string $currency
  * @property array<int, string>|null $services
  * @property array<string, mixed>|null $details
  * @property string|null $rules
@@ -48,6 +58,9 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, ListingMedia> $media
+ * @property-read Collection<int, ListingPackage> $packages
+ * @property-read Collection<int, ListingService> $commercialServices
+ * @property-read Collection<int, ListingPromotion> $promotions
  * @property-read int $images_count
  * @property-read int $videos_count
  */
@@ -62,6 +75,16 @@ use Modules\Listings\Support\TerraceServiceCatalog;
     'latitude',
     'longitude',
     'capacity',
+    'price_from_cents',
+    'price_weekday_cents',
+    'price_weekend_cents',
+    'included_hours',
+    'included_people',
+    'extra_hour_cents',
+    'extra_person_cents',
+    'deposit_required_cents',
+    'price_notes',
+    'currency',
     'services',
     'details',
     'rules',
@@ -89,6 +112,30 @@ class Listing extends Model
     public function media(): HasMany
     {
         return $this->hasMany(ListingMedia::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<ListingPackage, $this>
+     */
+    public function packages(): HasMany
+    {
+        return $this->hasMany(ListingPackage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<ListingService, $this>
+     */
+    public function commercialServices(): HasMany
+    {
+        return $this->hasMany(ListingService::class)->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<ListingPromotion, $this>
+     */
+    public function promotions(): HasMany
+    {
+        return $this->hasMany(ListingPromotion::class)->orderByDesc('starts_at')->orderByDesc('id');
     }
 
     /**
@@ -206,6 +253,14 @@ class Listing extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'capacity' => 'integer',
+            'price_from_cents' => 'integer',
+            'price_weekday_cents' => 'integer',
+            'price_weekend_cents' => 'integer',
+            'included_hours' => 'integer',
+            'included_people' => 'integer',
+            'extra_hour_cents' => 'integer',
+            'extra_person_cents' => 'integer',
+            'deposit_required_cents' => 'integer',
             'services' => 'array',
             'details' => 'array',
             'status' => ListingStatus::class,

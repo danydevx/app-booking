@@ -42,7 +42,7 @@ class PublicListingController extends Controller
     {
         abort_unless($listing->isPubliclyVisible(), 404);
 
-        $listing->load('media');
+        $listing->load(['media', 'packages', 'commercialServices', 'promotions']);
 
         LeadAttribution::capture($request, $listing);
 

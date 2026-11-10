@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { CalendarDays, Pencil, Users } from '@lucide/vue';
+import {
+    BadgeDollarSign,
+    CalendarDays,
+    Package,
+    Pencil,
+    Sparkles,
+    Tag,
+    Users,
+} from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { ListingOwnerCard } from '../types';
@@ -50,10 +58,20 @@ const props = defineProps<{
     recentInquiries: InquiryCard[];
     customers: AdminCustomer[];
     blockedDates: BlockedDate[];
+    commercial: {
+        has_pricing: boolean;
+        packages: number;
+        services: number;
+        promotions: number;
+    };
     urls: {
         index: string;
         manage: string;
         edit: string;
+        pricing: string;
+        packages: string;
+        services: string;
+        promotions: string;
         bookings: string;
         customers: string;
         availability: string;
@@ -68,6 +86,10 @@ defineOptions({
             index: string;
             manage: string;
             edit: string;
+            pricing: string;
+            packages: string;
+            services: string;
+            promotions: string;
             bookings: string;
             customers: string;
             availability: string;
@@ -82,6 +104,10 @@ defineOptions({
             { title: 'Resumen', href: props.urls.manage },
             { title: 'Reservaciones', href: props.urls.bookings },
             { title: 'Clientes', href: props.urls.customers },
+            { title: 'Precios', href: props.urls.pricing },
+            { title: 'Paquetes', href: props.urls.packages },
+            { title: 'Servicios', href: props.urls.services },
+            { title: 'Promociones', href: props.urls.promotions },
             { title: 'Disponibilidad', href: props.urls.availability },
             { title: 'Fotos y datos', href: props.urls.edit },
         ],
@@ -203,6 +229,75 @@ function statusVariant(
                 </p>
             </div>
         </div>
+
+        <section class="rounded-xl border bg-card p-5">
+            <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-semibold">
+                        Presentación comercial
+                    </h2>
+                    <p class="text-sm text-muted-foreground">
+                        Precios, paquetes, servicios y promociones que verán los
+                        visitantes.
+                    </p>
+                </div>
+            </div>
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                <Link
+                    :href="urls.pricing"
+                    class="rounded-lg border p-4 transition-colors hover:bg-accent/40"
+                >
+                    <BadgeDollarSign class="mb-2 size-5 text-primary" />
+                    <p class="font-medium">Precios</p>
+                    <p class="text-xs text-muted-foreground">
+                        {{
+                            commercial.has_pricing
+                                ? 'Configurados'
+                                : 'Sin configurar'
+                        }}
+                    </p>
+                </Link>
+                <Link
+                    :href="urls.packages"
+                    class="rounded-lg border p-4 transition-colors hover:bg-accent/40"
+                >
+                    <Package class="mb-2 size-5 text-primary" />
+                    <p class="font-medium">Paquetes</p>
+                    <p class="text-xs text-muted-foreground">
+                        {{ commercial.packages }}
+                        {{ commercial.packages === 1 ? 'paquete' : 'paquetes' }}
+                    </p>
+                </Link>
+                <Link
+                    :href="urls.services"
+                    class="rounded-lg border p-4 transition-colors hover:bg-accent/40"
+                >
+                    <Sparkles class="mb-2 size-5 text-primary" />
+                    <p class="font-medium">Servicios</p>
+                    <p class="text-xs text-muted-foreground">
+                        {{ commercial.services }}
+                        {{
+                            commercial.services === 1 ? 'servicio' : 'servicios'
+                        }}
+                    </p>
+                </Link>
+                <Link
+                    :href="urls.promotions"
+                    class="rounded-lg border p-4 transition-colors hover:bg-accent/40"
+                >
+                    <Tag class="mb-2 size-5 text-primary" />
+                    <p class="font-medium">Promociones</p>
+                    <p class="text-xs text-muted-foreground">
+                        {{ commercial.promotions }}
+                        {{
+                            commercial.promotions === 1
+                                ? 'promoción'
+                                : 'promociones'
+                        }}
+                    </p>
+                </Link>
+            </div>
+        </section>
 
         <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <div class="space-y-6">

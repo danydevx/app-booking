@@ -78,6 +78,44 @@ final class TerraceServiceCatalog
     }
 
     /**
+     * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
+     */
+    public static function amenityGroups(): array
+    {
+        return array_values(array_filter(
+            self::groups(),
+            fn (array $group): bool => ! in_array($group['key'], ['lodging', 'extras'], true),
+        ));
+    }
+
+    /**
+     * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
+     */
+    public static function commercialServiceGroups(): array
+    {
+        return array_values(array_filter(
+            self::groups(),
+            fn (array $group): bool => in_array($group['key'], ['lodging', 'extras'], true),
+        ));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function amenityKeys(): array
+    {
+        return self::keysFromGroups(self::amenityGroups());
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function commercialServiceKeys(): array
+    {
+        return self::keysFromGroups(self::commercialServiceGroups());
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function all(): array
@@ -200,6 +238,23 @@ final class TerraceServiceCatalog
     public static function label(string $key): string
     {
         return self::all()[$key] ?? $key;
+    }
+
+    /**
+     * @param  array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>  $groups
+     * @return array<int, string>
+     */
+    private static function keysFromGroups(array $groups): array
+    {
+        $keys = [];
+
+        foreach ($groups as $group) {
+            foreach ($group['services'] as $service) {
+                $keys[] = $service['value'];
+            }
+        }
+
+        return $keys;
     }
 
     /**

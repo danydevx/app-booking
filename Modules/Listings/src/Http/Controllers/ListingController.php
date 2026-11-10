@@ -21,6 +21,7 @@ use Modules\Listings\Actions\UpdateListing;
 use Modules\Listings\Http\Requests\SaveListingRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Queries\OwnerListingQuery;
+use Modules\Listings\Support\ListingCommercialPresenter;
 use Modules\Listings\Support\ListingFormData;
 use Modules\Listings\Support\ListingPresenter;
 
@@ -135,7 +136,7 @@ class ListingController extends Controller
 
         Gate::authorize('view', $listing);
 
-        $listing->load(['media', 'coverImage']);
+        $listing->load(['media', 'coverImage', 'packages', 'commercialServices', 'promotions']);
 
         return Inertia::render('Listings/Manage', [
             'listing' => [
@@ -143,6 +144,12 @@ class ListingController extends Controller
                 'description' => $listing->description,
             ],
             ...$this->adminSummary->for($listing, $team->slug),
+            'commercial' => [
+                'has_pricing' => ListingCommercialPresenter::pricing($listing)['has_pricing'],
+                'packages' => $listing->packages->count(),
+                'services' => $listing->commercialServices->count(),
+                'promotions' => $listing->promotions->count(),
+            ],
             'urls' => [
                 'index' => route('listings.index', ['current_team' => $team->slug]),
                 'manage' => route('listings.manage', [
@@ -150,6 +157,22 @@ class ListingController extends Controller
                     'listing' => $listing->slug,
                 ]),
                 'edit' => route('listings.edit', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'pricing' => route('listings.pricing.edit', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'packages' => route('listings.packages.index', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'services' => route('listings.services.index', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'promotions' => route('listings.promotions.index', [
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                 ]),

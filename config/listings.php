@@ -5,6 +5,8 @@ return [
 
     'default_timezone' => 'America/Mexico_City',
 
+    'currency' => 'MXN',
+
     'geocoder' => 'null',
 
     'media' => [

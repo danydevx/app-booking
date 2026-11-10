@@ -24,6 +24,10 @@ const props = defineProps<{
         index: string;
         manage: string;
         edit: string;
+        pricing: string;
+        packages: string;
+        services: string;
+        promotions: string;
         bookings: string;
         customers: string;
         availability: string;
@@ -43,6 +47,10 @@ defineOptions({
             index: string;
             manage: string;
             edit: string;
+            pricing: string;
+            packages: string;
+            services: string;
+            promotions: string;
             bookings: string;
             customers: string;
             availability: string;
@@ -58,6 +66,10 @@ defineOptions({
             { title: 'Resumen', href: props.urls.manage },
             { title: 'Reservaciones', href: props.urls.bookings },
             { title: 'Clientes', href: props.urls.customers },
+            { title: 'Precios', href: props.urls.pricing },
+            { title: 'Paquetes', href: props.urls.packages },
+            { title: 'Servicios', href: props.urls.services },
+            { title: 'Promociones', href: props.urls.promotions },
             { title: 'Disponibilidad', href: props.urls.availability },
             { title: 'Fotos y datos', href: props.urls.edit },
         ],

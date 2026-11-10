@@ -23,6 +23,64 @@ export type ListingService = {
     label: string;
 };
 
+export type ListingPricing = {
+    has_pricing: boolean;
+    currency: string;
+    price_from_cents: number | null;
+    price_weekday_cents: number | null;
+    price_weekend_cents: number | null;
+    price_from_formatted: string | null;
+    price_weekday_formatted: string | null;
+    price_weekend_formatted: string | null;
+    included_hours: number | null;
+    included_people: number | null;
+    extra_hour_formatted: string | null;
+    extra_person_formatted: string | null;
+    deposit_required_formatted: string | null;
+    price_notes: string | null;
+};
+
+export type ListingPackagePublic = {
+    id: number;
+    name: string;
+    description: string | null;
+    price_formatted: string;
+    currency: string;
+    duration_hours: number;
+    included_people: number;
+    amenities: Array<{ key: string; label: string }>;
+    services: Array<{ key: string; label: string }>;
+    conditions: string | null;
+};
+
+export type ListingCommercialService = {
+    id: number;
+    service_key: string;
+    label: string;
+    description: string | null;
+    is_included: boolean;
+    price_formatted: string | null;
+    has_price: boolean;
+    price_unit: string;
+    price_unit_label: string;
+    currency: string;
+};
+
+export type ListingPromotionPublic = {
+    id: number;
+    title: string;
+    description: string | null;
+    promotional_price_formatted: string | null;
+    previous_price_formatted: string | null;
+    currency: string;
+    starts_at: string;
+    ends_at: string;
+    starts_at_label: string;
+    ends_at_label: string;
+    applies_on: string[];
+    conditions: string | null;
+};
+
 export type ListingLimits = {
     max_images: number;
     max_videos: number;
@@ -127,6 +185,10 @@ export type ListingPublicDetail = {
         label: string;
         services: ServiceOption[];
     }>;
+    pricing: ListingPricing;
+    packages: ListingPackagePublic[];
+    commercialServices: ListingCommercialService[];
+    promotions: ListingPromotionPublic[];
     details: Array<{ key: string; label: string; value: string }>;
     rules: string | null;
     contact_name: string | null;

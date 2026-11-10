@@ -5,6 +5,9 @@ namespace Modules\Listings\Support;
 use App\Support\WhatsApp;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingMedia;
+use Modules\Listings\Models\ListingPackage;
+use Modules\Listings\Models\ListingPromotion;
+use Modules\Listings\Models\ListingService;
 
 final class ListingPresenter
 {
@@ -119,6 +122,22 @@ final class ListingPresenter
                 ->values()
                 ->all(),
             'serviceGroups' => TerraceServiceCatalog::groupsFor($listing->services ?? []),
+            'pricing' => ListingCommercialPresenter::pricing($listing),
+            'packages' => $listing->packages
+                ->where('active', true)
+                ->map(fn (ListingPackage $package): array => ListingCommercialPresenter::publicPackage($package))
+                ->values()
+                ->all(),
+            'commercialServices' => $listing->commercialServices
+                ->where('active', true)
+                ->map(fn (ListingService $service): array => ListingCommercialPresenter::publicService($service))
+                ->values()
+                ->all(),
+            'promotions' => $listing->promotions
+                ->filter(fn (ListingPromotion $promotion): bool => $promotion->isCurrentlyActive())
+                ->map(fn (ListingPromotion $promotion): array => ListingCommercialPresenter::publicPromotion($promotion))
+                ->values()
+                ->all(),
             'details' => collect(TerraceDetailCatalog::keys())
                 ->filter(fn (string $key): bool => filled(($listing->details ?? [])[$key] ?? null))
                 ->map(fn (string $key): array => [

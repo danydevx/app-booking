@@ -82,6 +82,29 @@ final class ListingFormData
                 'current_team' => $team->slug,
                 'listing' => $listing->slug,
             ]),
+            'pricing' => route('listings.pricing.edit', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'pricing_update' => route('listings.pricing.update', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'packages' => route('listings.packages.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'services' => route('listings.services.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'promotions' => route('listings.promotions.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'public' => $listing->isPublished()
+                ? route('public.listings.show', ['listing' => $listing->slug])
+                : null,
             'update' => route('listings.update', [
                 'current_team' => $team->slug,
                 'listing' => $listing->slug,
