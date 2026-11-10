@@ -85,6 +85,15 @@ export type CustomerDetail = CustomerCard & {
     inquiries: InquiryCard[];
 };
 
+export type BookingActivity = {
+    id: number;
+    event: string;
+    label: string;
+    summary: string | null;
+    causer: string | null;
+    created_at: string | null;
+};
+
 export type BlockedDate = {
     date: string;
     status: 'blocked' | 'held' | 'booked';

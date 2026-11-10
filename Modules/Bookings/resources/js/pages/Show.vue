@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import DepositForm from '../components/DepositForm.vue';
 import type {
+    BookingActivity,
     BookingDeposit,
     InquiryDetail,
     InquiryStatus,
@@ -12,6 +13,7 @@ import type {
 
 const props = defineProps<{
     inquiry: InquiryDetail;
+    activities: BookingActivity[];
     statuses: StatusOption[];
     depositStatuses: StatusOption[];
     depositMethods: StatusOption[];
@@ -98,6 +100,17 @@ function updateDepositStatus(deposit: BookingDeposit, event: Event): void {
     const status = (event.target as HTMLSelectElement).value;
 
     router.patch(deposit.update_url, { status }, { preserveScroll: true });
+}
+
+function formatActivityDate(value: string | null): string {
+    if (!value) {
+        return '—';
+    }
+
+    return new Date(value).toLocaleString('es-MX', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    });
 }
 </script>
 
@@ -277,6 +290,34 @@ function updateDepositStatus(deposit: BookingDeposit, event: Event): void {
                             :methods="depositMethods"
                         />
                     </div>
+                </section>
+
+                <section class="rounded-xl border bg-card p-5">
+                    <h2 class="mb-4 text-lg font-semibold">Historial</h2>
+                    <div v-if="activities.length > 0" class="divide-y">
+                        <div
+                            v-for="activity in activities"
+                            :key="activity.id"
+                            class="py-3 text-sm"
+                        >
+                            <p class="font-medium">{{ activity.label }}</p>
+                            <p
+                                v-if="activity.summary"
+                                class="text-muted-foreground"
+                            >
+                                {{ activity.summary }}
+                            </p>
+                            <p class="mt-1 text-xs text-muted-foreground">
+                                {{ formatActivityDate(activity.created_at) }}
+                                <span v-if="activity.causer">
+                                    · {{ activity.causer }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <p v-else class="text-sm text-muted-foreground">
+                        Todavía no hay cambios registrados.
+                    </p>
                 </section>
             </div>
 

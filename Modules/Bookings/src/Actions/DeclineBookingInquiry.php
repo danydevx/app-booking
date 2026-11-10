@@ -2,6 +2,7 @@
 
 namespace Modules\Bookings\Actions;
 
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Modules\Bookings\Enums\InquiryStatus;
@@ -12,9 +13,10 @@ final class DeclineBookingInquiry
 {
     public function __construct(
         private readonly ReleaseInquiryDates $releaseDates,
+        private readonly RecordBookingActivity $activity,
     ) {}
 
-    public function handle(BookingInquiry $inquiry): BookingInquiry
+    public function handle(BookingInquiry $inquiry, ?User $actor = null): BookingInquiry
     {
         $declinedNow = false;
 
@@ -42,6 +44,11 @@ final class DeclineBookingInquiry
 
         if ($declinedNow) {
             $declined->loadMissing('listing');
+
+            $this->activity->handle($declined, 'booking.declined', $actor, [
+                'start_date' => $declined->start_date->toDateString(),
+                'end_date' => $declined->end_date->toDateString(),
+            ]);
 
             Notification::route('mail', $declined->email)
                 ->notify(new InquiryDeclinedVisitorNotification($declined));

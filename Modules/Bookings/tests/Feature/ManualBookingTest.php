@@ -56,6 +56,12 @@ class ManualBookingTest extends TestCase
             ->where('booking_inquiry_id', $inquiry->id)
             ->where('status', AvailabilityStatus::Booked)
             ->count());
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'bookings',
+            'description' => 'booking.created_manual',
+            'subject_type' => BookingInquiry::class,
+            'subject_id' => $inquiry->id,
+        ]);
     }
 
     public function test_manual_booking_sends_confirmation_to_customer(): void

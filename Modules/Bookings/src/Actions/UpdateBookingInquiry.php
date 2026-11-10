@@ -18,6 +18,7 @@ final class UpdateBookingInquiry
         private readonly AvailabilityService $availability,
         private readonly ReleaseInquiryDates $releaseDates,
         private readonly ReserveListingDates $reserveDates,
+        private readonly RecordBookingActivity $activity,
     ) {}
 
     /**
@@ -30,6 +31,8 @@ final class UpdateBookingInquiry
         bool $notifyCustomer = true,
     ): BookingInquiry {
         $datesChanged = false;
+        $oldStartDate = $inquiry->start_date->toDateString();
+        $oldEndDate = $inquiry->end_date->toDateString();
 
         try {
             $booking = DB::transaction(function () use ($inquiry, $user, $data, &$datesChanged): BookingInquiry {
@@ -86,6 +89,19 @@ final class UpdateBookingInquiry
             });
 
             $booking->loadMissing('listing');
+
+            $this->activity->handle(
+                $booking,
+                $datesChanged ? 'booking.rescheduled' : 'booking.updated',
+                $user,
+                [
+                    'old_start_date' => $oldStartDate,
+                    'old_end_date' => $oldEndDate,
+                    'start_date' => $booking->start_date->toDateString(),
+                    'end_date' => $booking->end_date->toDateString(),
+                    'dates_changed' => $datesChanged,
+                ],
+            );
 
             if ($notifyCustomer && $datesChanged && $booking->status === InquiryStatus::Accepted) {
                 Notification::route('mail', $booking->email)

@@ -24,8 +24,10 @@ use Modules\Bookings\Http\Requests\UpdateBookingInquiryRequest;
 use Modules\Bookings\Models\BookingDeposit;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Queries\BookingInquiryQuery;
+use Modules\Bookings\Support\BookingActivityPresenter;
 use Modules\Bookings\Support\BookingOptionCatalog;
 use Modules\Bookings\Support\BookingPresenter;
+use Spatie\Activitylog\Models\Activity;
 
 class BookingInquiryController extends Controller
 {
@@ -76,8 +78,20 @@ class BookingInquiryController extends Controller
 
         $inquiry->load(['listing', 'customer', 'deposits']);
 
+        $activities = Activity::query()
+            ->with('causer')
+            ->where('log_name', 'bookings')
+            ->where('subject_type', BookingInquiry::class)
+            ->where('subject_id', $inquiry->id)
+            ->latest()
+            ->limit(25)
+            ->get()
+            ->map(fn (Activity $activity): array => BookingActivityPresenter::present($activity))
+            ->all();
+
         return Inertia::render('Bookings/Show', [
             'inquiry' => BookingPresenter::inquiryDetail($inquiry, $team->slug),
+            'activities' => $activities,
             'statuses' => BookingOptionCatalog::inquiryStatuses(),
             'depositStatuses' => BookingOptionCatalog::depositStatuses(),
             'depositMethods' => BookingOptionCatalog::depositMethods(),
@@ -186,7 +200,7 @@ class BookingInquiryController extends Controller
 
         Gate::authorize('update', $inquiry);
 
-        $markContacted->handle($inquiry);
+        $markContacted->handle($inquiry, $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud marcada como contactada.']);
 
@@ -222,7 +236,7 @@ class BookingInquiryController extends Controller
 
         Gate::authorize('decline', $inquiry);
 
-        $declineInquiry->handle($inquiry);
+        $declineInquiry->handle($inquiry, $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud rechazada.']);
 
@@ -240,7 +254,7 @@ class BookingInquiryController extends Controller
 
         Gate::authorize('cancel', $inquiry);
 
-        $cancelInquiry->handle($inquiry);
+        $cancelInquiry->handle($inquiry, $request->user());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud cancelada y fechas liberadas.']);
 

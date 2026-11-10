@@ -17,6 +17,7 @@ final class AcceptBookingInquiry
     public function __construct(
         private readonly AvailabilityService $availability,
         private readonly ReserveListingDates $reserveDates,
+        private readonly RecordBookingActivity $activity,
     ) {}
 
     public function handle(BookingInquiry $inquiry, User $user): BookingInquiry
@@ -75,6 +76,11 @@ final class AcceptBookingInquiry
 
         if ($acceptedNow) {
             $accepted->loadMissing('listing');
+
+            $this->activity->handle($accepted, 'booking.accepted', $user, [
+                'start_date' => $accepted->start_date->toDateString(),
+                'end_date' => $accepted->end_date->toDateString(),
+            ]);
 
             Notification::route('mail', $accepted->email)
                 ->notify(new InquiryAcceptedVisitorNotification($accepted));

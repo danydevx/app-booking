@@ -14,6 +14,10 @@ use Modules\Listings\Models\Listing;
 
 final class CreateBookingInquiry
 {
+    public function __construct(
+        private readonly RecordBookingActivity $activity,
+    ) {}
+
     /**
      * @param  array<string, mixed>  $data
      */
@@ -54,6 +58,12 @@ final class CreateBookingInquiry
         });
 
         $inquiry->loadMissing(['listing.team', 'listing.media']);
+
+        $this->activity->handle($inquiry, 'booking.created', null, [
+            'source' => 'public_web',
+            'start_date' => $inquiry->start_date->toDateString(),
+            'end_date' => $inquiry->end_date->toDateString(),
+        ]);
 
         Notification::route('mail', $inquiry->email)
             ->notify(new InquiryReceivedVisitorNotification($inquiry));

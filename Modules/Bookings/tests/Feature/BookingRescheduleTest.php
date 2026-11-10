@@ -89,6 +89,23 @@ class BookingRescheduleTest extends TestCase
             BookingRescheduledConfirmation::class,
             fn (BookingRescheduledConfirmation $notification, array $channels, AnonymousNotifiable $notifiable): bool => ($notifiable->routes['mail'] ?? null) === 'cliente@example.test',
         );
+
+        $this->assertDatabaseHas('activity_log', [
+            'log_name' => 'bookings',
+            'description' => 'booking.rescheduled',
+            'subject_type' => BookingInquiry::class,
+            'subject_id' => $inquiry->id,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('bookings.show', [
+                'current_team' => $team->slug,
+                'inquiry' => $inquiry->id,
+            ]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('activities', 1)
+                ->where('activities.0.label', 'Reserva reprogramada')
+                ->where('activities.0.causer', $owner->name));
     }
 
     public function test_reschedule_rejects_conflicting_dates_and_keeps_old_ones(): void

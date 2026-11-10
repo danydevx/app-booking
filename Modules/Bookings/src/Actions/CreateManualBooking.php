@@ -19,6 +19,7 @@ final class CreateManualBooking
     public function __construct(
         private readonly AvailabilityService $availability,
         private readonly ReserveListingDates $reserveDates,
+        private readonly RecordBookingActivity $activity,
     ) {}
 
     /**
@@ -95,6 +96,12 @@ final class CreateManualBooking
             });
 
             $booking->loadMissing('listing');
+
+            $this->activity->handle($booking, 'booking.created_manual', $user, [
+                'source' => 'manual',
+                'start_date' => $booking->start_date->toDateString(),
+                'end_date' => $booking->end_date->toDateString(),
+            ]);
 
             if ($notifyCustomer) {
                 Notification::route('mail', $booking->email)
