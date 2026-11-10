@@ -84,6 +84,44 @@ class PublicListingTest extends TestCase
                 ->where('unavailableDates.0.status', AvailabilityStatus::Blocked->value));
     }
 
+    public function test_public_catalog_filters_by_state_and_municipality(): void
+    {
+        $team = Team::factory()->create();
+        $match = Listing::factory()->forTeam($team)->published()->create([
+            'name' => 'Terraza Cuauhtémoc',
+            'state' => 'CDMX',
+            'city' => 'Cuauhtémoc',
+        ]);
+        Listing::factory()->forTeam($team)->published()->create([
+            'name' => 'Terraza Coyoacán',
+            'state' => 'CDMX',
+            'city' => 'Coyoacán',
+        ]);
+        Listing::factory()->forTeam($team)->published()->create([
+            'name' => 'Terraza Guadalajara',
+            'state' => 'Jalisco',
+            'city' => 'Guadalajara',
+        ]);
+
+        $this->get(route('public.listings.index', [
+            'state' => 'CDMX',
+            'city' => 'Cuauhtémoc',
+        ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('listings.data', 1)
+                ->where('listings.data.0.name', $match->name));
+    }
+
+    public function test_public_catalog_rejects_a_municipality_from_another_state(): void
+    {
+        $this->get(route('public.listings.index', [
+            'state' => 'CDMX',
+            'city' => 'Guadalajara',
+        ]))
+            ->assertSessionHasErrors('city');
+    }
+
     public function test_public_catalog_filters_by_service(): void
     {
         $team = Team::factory()->create();

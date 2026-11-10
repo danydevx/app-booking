@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Search } from '@lucide/vue';
-import { reactive } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import PaginationLinks from '@/components/PaginationLinks.vue';
 import PublicShell from '@/components/PublicShell.vue';
 import ListingMap from '../../components/ListingMap.vue';
 import type {
+    ListingLocations,
     ListingPublicCard,
     Paginated,
     PublicFilters,
@@ -17,6 +25,7 @@ import type {
 } from '../../types';
 
 type PublicSearchForm = {
+    state: string;
     city: string;
     capacity: string | number;
     service: string;
@@ -31,12 +40,14 @@ const props = defineProps<{
     radius: number | null;
     filters: PublicFilters;
     services: ServiceOption[];
+    locations: ListingLocations;
     urls: {
         index: string;
     };
 }>();
 
 const form = reactive<PublicSearchForm>({
+    state: props.filters.state ?? '',
     city: props.filters.city ?? '',
     capacity: props.filters.capacity ?? '',
     service: props.filters.service ?? '',
@@ -44,6 +55,45 @@ const form = reactive<PublicSearchForm>({
     lng: props.filters.lng ?? '',
     radius: props.filters.radius ?? 25,
 });
+
+const stateOptions = computed(() =>
+    Object.entries(props.locations).map(([value, state]) => ({
+        value,
+        label: state.label,
+    })),
+);
+
+const municipalityOptions = computed(() => {
+    const municipalities = props.locations[form.state]?.municipalities ?? [];
+    const options = municipalities.map((municipality) => ({
+        value: municipality,
+        label: municipality,
+    }));
+
+    if (form.city && !municipalities.includes(form.city)) {
+        options.unshift({
+            value: form.city,
+            label: `${form.city} (valor actual)`,
+        });
+    }
+
+    return options;
+});
+
+watch(
+    () => form.state,
+    (state, previousState) => {
+        if (state === previousState) {
+            return;
+        }
+
+        const municipalities = props.locations[state]?.municipalities ?? [];
+
+        if (form.city !== '' && !municipalities.includes(form.city)) {
+            form.city = '';
+        }
+    },
+);
 
 function search(): void {
     router.get(props.urls.index, { ...form }, { preserveScroll: true });
@@ -60,22 +110,57 @@ function search(): void {
                     Encuentra una terraza para tu próximo evento
                 </h1>
                 <p class="text-muted-foreground">
-                    Busca por ciudad o por radio de distancia. Los resultados se
-                    actualizan en el mapa.
+                    Busca por estado, municipio o radio de distancia. Los
+                    resultados se actualizan en el mapa.
                 </p>
             </div>
 
             <form
-                class="grid gap-4 rounded-xl border bg-card p-4 sm:p-5 lg:grid-cols-6"
+                class="grid gap-4 rounded-xl border bg-card p-4 sm:p-5 lg:grid-cols-8"
                 @submit.prevent="search"
             >
+                <div class="grid gap-2">
+                    <Label for="state">Estado</Label>
+                    <Select v-model="form.state">
+                        <SelectTrigger id="state" class="w-full">
+                            <SelectValue placeholder="Estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="state in stateOptions"
+                                :key="state.value"
+                                :value="state.value"
+                            >
+                                {{ state.label }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div class="grid gap-2 lg:col-span-2">
-                    <Label for="city">Ciudad</Label>
-                    <Input
-                        id="city"
+                    <Label for="city">Municipio / alcaldía</Label>
+                    <Select
                         v-model="form.city"
-                        placeholder="Ciudad de México"
-                    />
+                        :disabled="municipalityOptions.length === 0"
+                    >
+                        <SelectTrigger id="city" class="w-full">
+                            <SelectValue
+                                :placeholder="
+                                    form.state
+                                        ? 'Selecciona municipio'
+                                        : 'Selecciona estado'
+                                "
+                            />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="municipality in municipalityOptions"
+                                :key="municipality.value"
+                                :value="municipality.value"
+                            >
+                                {{ municipality.label }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div class="grid gap-2">
                     <Label for="capacity">Capacidad mínima</Label>
@@ -104,14 +189,14 @@ function search(): void {
                         </option>
                     </select>
                 </div>
-                <div class="flex items-end">
+                <div class="flex items-end lg:col-span-2">
                     <Button type="submit" class="w-full">
                         <Search />
                         Buscar
                     </Button>
                 </div>
 
-                <div class="grid gap-2 sm:grid-cols-3 lg:col-span-6">
+                <div class="grid gap-2 sm:grid-cols-3 lg:col-span-8">
                     <div class="grid gap-2">
                         <Label for="lat">Latitud</Label>
                         <Input

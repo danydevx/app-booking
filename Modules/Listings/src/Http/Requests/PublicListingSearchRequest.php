@@ -2,9 +2,11 @@
 
 namespace Modules\Listings\Http\Requests;
 
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
+use Modules\Listings\Support\MexicoLocationCatalog;
 use Modules\Listings\Support\TerraceServiceCatalog;
 
 class PublicListingSearchRequest extends FormRequest
@@ -23,7 +25,30 @@ class PublicListingSearchRequest extends FormRequest
         $maxRadius = (int) config('listings.search.max_radius_km', 100);
 
         return [
-            'city' => ['nullable', 'string', 'max:120'],
+            'state' => ['nullable', 'string', Rule::in(MexicoLocationCatalog::stateValues())],
+            'city' => [
+                'nullable',
+                'string',
+                'max:120',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    if (! is_string($value) || $value === '') {
+                        return;
+                    }
+
+                    $state = (string) $this->input('state');
+
+                    if (
+                        $state === '' ||
+                        ! in_array($state, MexicoLocationCatalog::stateValues(), true)
+                    ) {
+                        return;
+                    }
+
+                    if (! in_array($value, MexicoLocationCatalog::municipalities($state), true)) {
+                        $fail('Selecciona un municipio o alcaldía válido para el estado.');
+                    }
+                },
+            ],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'service' => ['nullable', 'string', Rule::in($services)],
             'lat' => ['nullable', 'numeric', 'between:-90,90'],

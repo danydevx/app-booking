@@ -26,8 +26,12 @@ final class PublicListingSearch
             ->publiclyVisible()
             ->with('coverImage');
 
+        if (! empty($filters['state'])) {
+            $query->where('state', $filters['state']);
+        }
+
         if (! empty($filters['city'])) {
-            $query->where('city', 'like', '%'.$filters['city'].'%');
+            $query->where('city', $filters['city']);
         }
 
         if (! empty($filters['capacity'])) {

@@ -11,6 +11,7 @@ use Modules\Listings\Http\Requests\PublicListingSearchRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Queries\PublicListingSearch;
 use Modules\Listings\Support\ListingPresenter;
+use Modules\Listings\Support\MexicoLocationCatalog;
 use Modules\Listings\Support\TerraceServiceCatalog;
 
 class PublicListingController extends Controller
@@ -27,6 +28,7 @@ class PublicListingController extends Controller
             'radius' => $result['radius'],
             'filters' => $request->validated(),
             'services' => TerraceServiceCatalog::options(),
+            'locations' => MexicoLocationCatalog::all(),
             'urls' => [
                 'index' => route('public.listings.index'),
             ],

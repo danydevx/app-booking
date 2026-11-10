@@ -151,6 +151,7 @@ export type Paginated<T> = {
 };
 
 export type PublicFilters = {
+    state?: string | null;
     city?: string | null;
     capacity?: string | number | null;
     service?: string | null;
