@@ -77,6 +77,8 @@ class CustomerController extends Controller
             ? $request->string('listing')->toString()
             : $activeListing->slug;
         $archived = $request->boolean('archived');
+        $assigned = $request->string('assigned')->toString();
+        $currentUserId = (int) $request->user()->id;
 
         if ($activeListing === null && $listingFilter !== '') {
             $activeListing = Listing::query()
@@ -92,13 +94,28 @@ class CustomerController extends Controller
 
         $customers = Customer::query()
             ->where('team_id', $team->id)
-            ->with('tags')
+            ->with(['tags', 'assignee'])
             ->when(
                 $archived,
                 fn ($query) => $query->whereNotNull('archived_at'),
                 fn ($query) => $query->whereNull('archived_at'),
             )
             ->when($stage !== '', fn ($query) => $query->where('pipeline_stage', $stage))
+            ->when($assigned !== '', function ($query) use ($assigned, $currentUserId): void {
+                if ($assigned === 'me') {
+                    $query->where('assigned_to', $currentUserId);
+
+                    return;
+                }
+
+                if ($assigned === 'none') {
+                    $query->whereNull('assigned_to');
+
+                    return;
+                }
+
+                $query->where('assigned_to', (int) $assigned);
+            })
             ->when($listingFilter !== '', fn ($query) => $query->where(
                 fn ($scoped) => $scoped
                     ->where('listing_id', $activeListing === null ? 0 : $activeListing->id)
@@ -162,6 +179,15 @@ class CustomerController extends Controller
             ])
             ->all();
 
+        $teamMembers = $team->members()
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $member): array => [
+                'id' => $member->id,
+                'name' => $member->name,
+            ])
+            ->all();
+
         $management = $activeListing ? [
             'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
             'edit' => route('listings.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
@@ -179,6 +205,7 @@ class CustomerController extends Controller
             'customers' => $customers,
             'tags' => $tags,
             'listings' => $listingOptions,
+            'teamMembers' => $teamMembers,
             'activeListing' => $activeListing,
             'management' => $management,
             'pipelineStages' => CustomerPipelineStage::options(),
@@ -188,6 +215,7 @@ class CustomerController extends Controller
                 'tag' => $tag,
                 'stage' => $stage,
                 'listing' => $listingFilter,
+                'assigned' => $assigned,
             ],
             'urls' => [
                 'bookings' => $activeListing
@@ -244,7 +272,10 @@ class CustomerController extends Controller
             return $this->upgradeRedirect($team);
         }
 
-        $customer = $createCustomer->handle($team, $request->validated(), $activeListing);
+        $data = $request->validated();
+        $data['assigned_to'] ??= $request->user()->id;
+
+        $customer = $createCustomer->handle($team, $data, $activeListing);
 
         $this->activityLogger->handle(
             $customer,
@@ -339,6 +370,7 @@ class CustomerController extends Controller
         }
 
         $customer->load([
+            'assignee',
             'tags',
             'inquiries' => function ($query) use ($activeListing): void {
                 $query->with(['listing', 'deposits'])
@@ -402,6 +434,45 @@ class CustomerController extends Controller
             ])
             ->all();
 
+        $phones = array_values(array_filter([
+            $customer->phone,
+            $customer->whatsapp_phone,
+        ]));
+
+        $duplicateCandidates = $phones === []
+            ? []
+            : Customer::query()
+                ->where('team_id', $team->id)
+                ->whereKeyNot($customer->id)
+                ->whereNull('archived_at')
+                ->whereNull('merged_into_id')
+                ->where(function ($query) use ($phones): void {
+                    foreach ($phones as $phone) {
+                        $query->orWhere('phone', $phone)
+                            ->orWhere('whatsapp_phone', $phone);
+                    }
+                })
+                ->orderBy('name')
+                ->limit(5)
+                ->get(['id', 'name', 'email', 'phone'])
+                ->map(fn (Customer $candidate): array => [
+                    'id' => $candidate->id,
+                    'name' => $candidate->name,
+                    'email' => $candidate->email,
+                    'phone' => $candidate->phone,
+                    'show_url' => $activeListing
+                        ? route('bookings.listing.customers.show', [
+                            'current_team' => $team->slug,
+                            'listing' => $activeListing->slug,
+                            'customer' => $candidate->id,
+                        ])
+                        : route('bookings.customers.show', [
+                            'current_team' => $team->slug,
+                            'customer' => $candidate->id,
+                        ]),
+                ])
+                ->all();
+
         $activities = $customer->activities()
             ->with(['user', 'team'])
             ->latest('occurred_at')
@@ -459,6 +530,7 @@ class CustomerController extends Controller
             'canMerge' => Gate::allows('merge', $customer),
             'canAnonymize' => Gate::allows('anonymize', $customer),
             'mergeCandidates' => $mergeCandidates,
+            'duplicateCandidates' => $duplicateCandidates,
             'urls' => [
                 'index' => $activeListing
                     ? route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $activeListing->slug])

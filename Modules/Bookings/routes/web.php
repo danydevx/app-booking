@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Bookings\Http\Controllers\AvailabilityBlockSeriesController;
 use Modules\Bookings\Http\Controllers\AvailabilityController;
 use Modules\Bookings\Http\Controllers\BookingInquiryController;
+use Modules\Bookings\Http\Controllers\CrmTodayController;
 use Modules\Bookings\Http\Controllers\CustomerActivityController;
 use Modules\Bookings\Http\Controllers\CustomerController;
 use Modules\Bookings\Http\Controllers\CustomerImportController;
@@ -50,6 +51,7 @@ Route::prefix('{current_team}/bookings')
     ->name('bookings.')
     ->group(function (): void {
         Route::get('/', [BookingInquiryController::class, 'index'])->name('index');
+        Route::get('/today', CrmTodayController::class)->name('today');
 
         Route::get('/create', [ManualBookingController::class, 'create'])->name('create');
         Route::post('/create', [ManualBookingController::class, 'store'])->name('create.store');

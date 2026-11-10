@@ -44,6 +44,13 @@ const props = defineProps<{
     canMerge: boolean;
     canAnonymize: boolean;
     mergeCandidates: Array<{ id: number; name: string; email: string }>;
+    duplicateCandidates: Array<{
+        id: number;
+        name: string;
+        email: string;
+        phone: string | null;
+        show_url: string;
+    }>;
     metrics: {
         total_inquiries: number;
         accepted_inquiries: number;
@@ -125,6 +132,10 @@ const form = useForm({
     phone: props.customer.phone ?? '',
     whatsapp_phone: props.customer.whatsapp_phone ?? '',
     notes: props.customer.notes ?? '',
+    assigned_to:
+        props.customer.assigned_to !== null
+            ? String(props.customer.assigned_to)
+            : '',
 });
 
 const activityForm = useForm({
@@ -423,6 +434,10 @@ function statusVariant(
                             {{ customer.phone }}
                         </a>
                         <span v-else>Sin teléfono</span>
+                        <span>
+                            Responsable:
+                            {{ customer.assignee ?? 'Sin asignar' }}
+                        </span>
                         <span v-if="metrics.last_activity_at">
                             Última actividad:
                             {{ formatActivityDate(metrics.last_activity_at) }}
@@ -954,6 +969,35 @@ function statusVariant(
                 </section>
 
                 <section
+                    v-if="duplicateCandidates.length > 0"
+                    class="rounded-xl border border-amber-300 bg-amber-50/50 p-5 dark:border-amber-900 dark:bg-amber-950/20"
+                >
+                    <h2 class="text-lg font-semibold">Posibles duplicados</h2>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Coinciden en teléfono o WhatsApp. Revisa antes de
+                        fusionar.
+                    </p>
+                    <div class="mt-3 space-y-2">
+                        <Link
+                            v-for="candidate in duplicateCandidates"
+                            :key="candidate.id"
+                            :href="candidate.show_url"
+                            class="block rounded-lg border bg-card px-3 py-2 text-sm hover:underline"
+                        >
+                            <span class="font-medium">
+                                {{ candidate.name }}
+                            </span>
+                            <span class="text-muted-foreground">
+                                · {{ candidate.email }}
+                                <span v-if="candidate.phone">
+                                    · {{ candidate.phone }}
+                                </span>
+                            </span>
+                        </Link>
+                    </div>
+                </section>
+
+                <section
                     v-if="canManageLifecycle"
                     class="rounded-xl border bg-card p-5"
                 >
@@ -1103,6 +1147,29 @@ function statusVariant(
                                 id="whatsapp"
                                 v-model="form.whatsapp_phone"
                             />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="assigned-to">Responsable</Label>
+                            <select
+                                id="assigned-to"
+                                v-model="form.assigned_to"
+                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            >
+                                <option value="">Sin asignar</option>
+                                <option
+                                    v-for="member in teamMembers"
+                                    :key="member.id"
+                                    :value="String(member.id)"
+                                >
+                                    {{ member.name }}
+                                </option>
+                            </select>
+                            <p
+                                v-if="form.errors.assigned_to"
+                                class="text-sm text-destructive"
+                            >
+                                {{ form.errors.assigned_to }}
+                            </p>
                         </div>
                         <div class="grid gap-2">
                             <Label for="notes">Notas internas</Label>

@@ -3,6 +3,7 @@
 namespace Modules\Bookings\Models;
 
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,7 @@ use Modules\Listings\Models\Listing;
  * @property int $id
  * @property int $team_id
  * @property int|null $listing_id
+ * @property int|null $assigned_to
  * @property string $name
  * @property string $email
  * @property string|null $phone
@@ -33,9 +35,10 @@ use Modules\Listings\Models\Listing;
  * @property Carbon|null $updated_at
  * @property-read Team $team
  * @property-read Listing|null $listing
+ * @property-read User|null $assignee
  * @property-read Collection<int, BookingInquiry> $inquiries
  */
-#[Fillable(['name', 'email', 'phone', 'whatsapp_phone', 'notes', 'listing_id'])]
+#[Fillable(['name', 'email', 'phone', 'whatsapp_phone', 'notes', 'listing_id', 'assigned_to'])]
 class Customer extends Model
 {
     /** @use HasFactory<CustomerFactory> */
@@ -62,6 +65,14 @@ class Customer extends Model
     public function listing(): BelongsTo
     {
         return $this->belongsTo(Listing::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     /**

@@ -29,6 +29,7 @@ const props = defineProps<{
     customers: Paginated<CustomerCard>;
     tags: CustomerTag[];
     listings: Array<{ id: number; name: string; slug: string }>;
+    teamMembers: Array<{ id: number; name: string }>;
     pipelineStages: StatusOption[];
     archived: boolean;
     filters: {
@@ -36,6 +37,7 @@ const props = defineProps<{
         tag?: string;
         stage?: string;
         listing?: string;
+        assigned?: string;
     };
     activeListing: { id: number; name: string; slug: string } | null;
     management: {
@@ -102,6 +104,7 @@ const form = reactive({
     tag: props.filters.tag ?? '',
     stage: props.filters.stage ?? '',
     listing: props.filters.listing ?? '',
+    assigned: props.filters.assigned ?? '',
 });
 
 function search(): void {
@@ -350,6 +353,25 @@ function createCustomer(): void {
                     </option>
                 </select>
             </div>
+            <div class="grid min-w-44 gap-2">
+                <Label for="assigned-filter">Responsable</Label>
+                <select
+                    id="assigned-filter"
+                    v-model="form.assigned"
+                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                    <option value="">Todos</option>
+                    <option value="me">Mis clientes</option>
+                    <option value="none">Sin asignar</option>
+                    <option
+                        v-for="member in teamMembers"
+                        :key="member.id"
+                        :value="String(member.id)"
+                    >
+                        {{ member.name }}
+                    </option>
+                </select>
+            </div>
             <Button type="submit">Buscar</Button>
         </form>
 
@@ -389,6 +411,9 @@ function createCustomer(): void {
                 </p>
                 <p class="text-sm text-muted-foreground">
                     {{ customer.phone }}
+                </p>
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Responsable: {{ customer.assignee ?? 'Sin asignar' }}
                 </p>
                 <div
                     v-if="customer.tags.length > 0"

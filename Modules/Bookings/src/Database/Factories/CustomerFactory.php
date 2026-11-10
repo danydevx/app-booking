@@ -21,6 +21,7 @@ class CustomerFactory extends Factory
     {
         return [
             'team_id' => Team::factory(),
+            'assigned_to' => null,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->phoneNumber(),

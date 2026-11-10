@@ -40,6 +40,7 @@ const props = defineProps<{
         index: string;
         create: string;
         customers: string;
+        today: string;
         billing: string;
     };
 }>();
@@ -138,6 +139,11 @@ function statusVariant(
                 </p>
             </div>
             <div class="flex flex-wrap gap-2">
+                <Button variant="outline" as-child>
+                    <Link :href="canUseCustomers ? urls.today : urls.billing">
+                        Hoy
+                    </Link>
+                </Button>
                 <Button v-if="canCreateBooking" as-child>
                     <Link :href="urls.create">Nueva reserva</Link>
                 </Button>

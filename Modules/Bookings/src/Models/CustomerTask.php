@@ -26,6 +26,7 @@ use Modules\Bookings\Enums\CustomerTaskStatus;
  * @property CustomerTaskPriority $priority
  * @property CustomerTaskStatus $status
  * @property Carbon|null $completed_at
+ * @property Carbon|null $last_reminded_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Team $team
@@ -90,6 +91,7 @@ class CustomerTask extends Model
             'status' => CustomerTaskStatus::class,
             'due_at' => 'datetime',
             'completed_at' => 'datetime',
+            'last_reminded_at' => 'datetime',
         ];
     }
 

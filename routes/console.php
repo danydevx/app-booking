@@ -21,3 +21,7 @@ Schedule::command('bookings:expire-inquiries')
 Schedule::command('bookings:send-reminders')
     ->daily()
     ->description('Send reminders for accepted bookings starting soon');
+
+Schedule::command('bookings:send-task-reminders')
+    ->dailyAt('08:00')
+    ->description('Send daily digests for customer tasks due today or overdue');

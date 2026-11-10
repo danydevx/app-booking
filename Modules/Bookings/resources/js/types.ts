@@ -67,6 +67,8 @@ export type CustomerCard = {
     phone: string | null;
     whatsapp_phone: string | null;
     notes: string | null;
+    assigned_to: number | null;
+    assignee: string | null;
     pipeline_stage: string;
     pipeline_stage_label: string;
     is_archived: boolean;

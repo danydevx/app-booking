@@ -88,6 +88,10 @@ final class BookingPresenter
             'phone' => $customer->phone,
             'whatsapp_phone' => $customer->whatsapp_phone,
             'notes' => $customer->notes,
+            'assigned_to' => $customer->assigned_to,
+            'assignee' => $customer->relationLoaded('assignee')
+                ? $customer->assignee?->name
+                : null,
             'pipeline_stage' => $customer->pipeline_stage->value,
             'pipeline_stage_label' => $customer->pipeline_stage->label(),
             'is_archived' => $customer->archived_at !== null,

@@ -7,6 +7,7 @@ import {
     FolderGit2,
     Inbox,
     LayoutGrid,
+    ListChecks,
     Shield,
 } from '@lucide/vue';
 import { computed } from 'vue';
@@ -52,6 +53,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Solicitudes',
             href: `/${page.props.currentTeam.slug}/bookings`,
             icon: Inbox,
+        });
+        items.push({
+            title: 'Hoy',
+            href: `/${page.props.currentTeam.slug}/bookings/today`,
+            icon: ListChecks,
         });
 
         if (page.props.currentTeam.role === 'owner') {
