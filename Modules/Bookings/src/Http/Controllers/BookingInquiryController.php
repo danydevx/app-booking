@@ -108,7 +108,9 @@ class BookingInquiryController extends Controller
                 'index' => $activeListing
                     ? route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
                     : route('bookings.index', ['current_team' => $team->slug]),
-                'create' => route('bookings.create', ['current_team' => $team->slug]),
+                'create' => $activeListing
+                    ? route('bookings.listing.create', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
+                    : route('bookings.create', ['current_team' => $team->slug]),
                 'customers' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'billing' => route('billing.index', ['current_team' => $team->slug]),
             ],

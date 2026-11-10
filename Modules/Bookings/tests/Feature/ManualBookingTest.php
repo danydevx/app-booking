@@ -211,7 +211,48 @@ class ManualBookingTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Bookings/Create')
                 ->has('listings', 1)
-                ->where('listings.0.id', $listing->id));
+                ->where('listings.0.id', $listing->id)
+                ->where('activeListing', null));
+    }
+
+    public function test_owner_can_create_a_manual_booking_from_the_listing_admin(): void
+    {
+        [$owner, $team, $listing] = $this->ownerListing();
+        $start = now($listing->timezone)->addDays(3);
+
+        $this->actingAs($owner)
+            ->get(route('bookings.listing.create', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Bookings/Create')
+                ->where('activeListing.id', $listing->id)
+                ->where('management.bookings', route('bookings.listing', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ])));
+
+        $this->actingAs($owner)
+            ->post(route('bookings.listing.create.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'name' => 'Cliente Desde Terraza',
+                'email' => 'terraza@example.test',
+                'phone' => '5555555555',
+                'start_date' => $start->toDateString(),
+                'end_date' => $start->copy()->addDay()->toDateString(),
+                'notify_customer' => false,
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('booking_inquiries', [
+            'listing_id' => $listing->id,
+            'name' => 'Cliente Desde Terraza',
+        ]);
     }
 
     /**

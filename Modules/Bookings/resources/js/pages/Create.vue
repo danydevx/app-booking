@@ -17,6 +17,15 @@ type ListingOption = {
 const props = defineProps<{
     team: { name: string; slug: string };
     listings: ListingOption[];
+    activeListing: { id: number; name: string; slug: string } | null;
+    management: {
+        manage: string;
+        edit: string;
+        bookings: string;
+        customers: string;
+        availability: string;
+        listings: string;
+    } | null;
     urls: {
         index: string;
         store: string;
@@ -24,17 +33,52 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Solicitudes',
-                href: '/',
-            },
-            {
-                title: 'Nueva reserva',
-            },
-        ],
-    },
+    layout: (props: {
+        activeListing: { name: string } | null;
+        management: {
+            manage: string;
+            edit: string;
+            bookings: string;
+            customers: string;
+            availability: string;
+            listings: string;
+        } | null;
+    }) => ({
+        breadcrumbs:
+            props.activeListing && props.management
+                ? [
+                      { title: 'Terrazas', href: props.management.listings },
+                      {
+                          title: props.activeListing.name,
+                          href: props.management.manage,
+                      },
+                      {
+                          title: 'Reservaciones',
+                          href: props.management.bookings,
+                      },
+                      { title: 'Nueva reserva' },
+                  ]
+                : [
+                      { title: 'Solicitudes', href: '/' },
+                      { title: 'Nueva reserva' },
+                  ],
+        submenu:
+            props.activeListing && props.management
+                ? [
+                      { title: 'Resumen', href: props.management.manage },
+                      {
+                          title: 'Reservaciones',
+                          href: props.management.bookings,
+                      },
+                      { title: 'Clientes', href: props.management.customers },
+                      {
+                          title: 'Disponibilidad',
+                          href: props.management.availability,
+                      },
+                      { title: 'Fotos y datos', href: props.management.edit },
+                  ]
+                : [],
+    }),
 });
 
 const today = new Date().toISOString().slice(0, 10);
@@ -98,7 +142,11 @@ function submit(): void {
             class="grid w-full gap-4 rounded-xl border bg-card p-5"
             @submit.prevent="submit"
         >
-            <div class="grid gap-2">
+            <div v-if="activeListing" class="grid gap-2">
+                <Label>Terraza</Label>
+                <p class="text-sm font-medium">{{ activeListing.name }}</p>
+            </div>
+            <div v-else class="grid gap-2">
                 <Label for="listing">Terraza</Label>
                 <select
                     id="listing"

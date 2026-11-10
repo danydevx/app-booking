@@ -27,6 +27,14 @@ Route::get('{current_team}/listings/{listing}/bookings', [BookingInquiryControll
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('bookings.listing');
 
+Route::get('{current_team}/listings/{listing}/bookings/create', [ManualBookingController::class, 'createForListing'])
+    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+    ->name('bookings.listing.create');
+
+Route::post('{current_team}/listings/{listing}/bookings/create', [ManualBookingController::class, 'storeForListing'])
+    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+    ->name('bookings.listing.create.store');
+
 Route::prefix('{current_team}/bookings')
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('bookings.')

@@ -15,6 +15,15 @@ class StoreManualBookingRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $listing = $this->route('listing');
+
+        if ($listing instanceof Listing) {
+            $this->merge(['listing_id' => $listing->id]);
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */
