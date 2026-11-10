@@ -43,10 +43,10 @@ La landing pública y la administración están separadas por URL y layout:
 
 ## 3. Planes y facturación
 
-| Plan | Límites y capacidades |
-|---|---|
+| Plan | Límites y capacidades                             |
+| ---- | ------------------------------------------------- |
 | Free | 1 terraza, 5 fotos, 0 videos, sin CRM de clientes |
-| Pro | 5 terrazas, 20 fotos, 3 videos, CRM de clientes |
+| Pro  | 5 terrazas, 20 fotos, 3 videos, CRM de clientes   |
 
 - Stripe Checkout, Customer Portal y webhooks como fuente de verdad de la suscripción.
 - `Entitlements` valida límites y funciones en el backend; ocultar botones no es autorización.
@@ -60,11 +60,13 @@ La landing pública y la administración están separadas por URL y layout:
 ## 4. Sitio público
 
 ### 4.1 Landing
+
 - Página principal con propuesta de valor, búsqueda y acceso a publicación.
 - Header y footer propios (`PublicShell`), separados del layout administrativo.
 - Enlaces a login/registro y al panel del equipo si el usuario ya tiene sesión.
 
 ### 4.2 Catálogo de terrazas
+
 - `/terrazas`: listado de terrazas publicadas y activas.
 - Búsqueda por estado, municipio, capacidad mínima y características.
 - Búsqueda por radio usando latitud/longitud y mapa Leaflet + OpenStreetMap.
@@ -72,6 +74,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Tarjetas con foto, ubicación, capacidad, características y distancia.
 
 ### 4.3 Ficha pública
+
 - Galería de fotos y videos.
 - Descripción, servicios/características agrupadas por categoría, capacidad y reglas.
 - Ubicación y mapa.
@@ -80,6 +83,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Enlace para reportar una publicación.
 
 ### 4.4 Solicitud pública
+
 - Formulario sin necesidad de crear cuenta.
 - Datos: nombre, correo, teléfono, WhatsApp, fechas, tipo de evento, invitados y mensaje.
 - Consentimiento obligatorio y honeypot anti-spam.
@@ -89,6 +93,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Se envían notificaciones al visitante y al propietario.
 
 ### 4.5 Portal del cliente
+
 - `/reserva/{token}`: enlace seguro por reserva.
 - Consulta de fechas, terraza, invitados, evento y estado.
 - Confirmación o actualización de datos de contacto e invitados.
@@ -102,6 +107,7 @@ La landing pública y la administración están separadas por URL y layout:
 ## 5. Administración de cuenta (`/app/{team}`)
 
 ### 5.1 Dashboard
+
 - Terrazas publicadas, solicitudes nuevas, reservas próximas y clientes.
 - Tareas abiertas/vencidas.
 - Ocupación de los próximos 30 días.
@@ -110,14 +116,20 @@ La landing pública y la administración están separadas por URL y layout:
 - Accesos rápidos a terrazas, solicitudes y clientes.
 
 ### 5.2 Terrazas
+
 - Alta, edición, publicación y despublicación.
 - Datos: nombre, descripción, ubicación, coordenadas, capacidad, reglas y contacto.
 - Detalles de espacio: tipo, acceso, estacionamiento y vista.
 - Características/amenidades agrupadas por categoría.
+- Precios informativos: desde, lunes a jueves, viernes a domingo, horas/personas incluidas, cargos adicionales y anticipo requerido.
+- Paquetes de renta con precio, duración, capacidad, amenidades, servicios y condiciones.
+- Servicios comerciales reutilizando el catálogo de características: incluidos o con costo adicional, precio opcional y unidad de cobro.
+- Promociones informativas con vigencia, días aplicables y condiciones.
 - Fotos y videos con límites por plan.
 - Vista pública y administración por terraza.
 
 ### 5.3 Centro de administración de terraza
+
 - `/app/{team}/listings/{listing}`.
 - Métricas de la terraza.
 - Reservas y solicitudes scoped.
@@ -127,6 +139,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Nueva reserva dentro de la terraza.
 
 ### 5.4 Disponibilidad
+
 - Calendario interactivo por terraza.
 - Bloqueos manuales por fecha y rango.
 - Series recurrentes semanales, quincenales y mensuales.
@@ -134,6 +147,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Las reservas aceptadas bloquean las fechas.
 
 ### 5.5 Solicitudes y reservas
+
 - Bandeja global y bandeja scoped por terraza.
 - Estados: nueva, contactada, aceptada, rechazada, cancelada y expirada.
 - Expiración automática de solicitudes nuevas/contactadas cuando pasan las fechas.
@@ -145,17 +159,18 @@ La landing pública y la administración están separadas por URL y layout:
 - Búsqueda y filtros por estado, terraza y texto.
 
 ### 5.6 CRM de clientes
+
 - Alta manual, importación CSV y exportación CSV con protección contra fórmulas.
 - Ficha de cliente con secciones y submenú:
-  - Resumen
-  - Tareas
-  - Timeline
-  - Correo
-  - Cotizaciones
-  - Solicitudes
-  - Datos
-  - Etiquetas
-  - Ciclo de vida
+    - Resumen
+    - Tareas
+    - Timeline
+    - Correo
+    - Cotizaciones
+    - Solicitudes
+    - Datos
+    - Etiquetas
+    - Ciclo de vida
 - Timeline de llamadas, correos, WhatsApp, reuniones, notas y eventos del sistema.
 - Tareas con responsable, vencimiento, prioridad y estado.
 - Etiquetas por cuenta.
@@ -169,6 +184,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Registro de correos y comunicaciones en el timeline.
 
 ### 5.7 Cotizaciones
+
 - `/app/{team}/bookings/quotes`.
 - Cotización con terraza, fechas, invitados, total, anticipo, notas y términos.
 - Estados: borrador, enviada, aceptada, rechazada y vencida.
@@ -178,6 +194,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Sección de cotizaciones dentro de la ficha del cliente.
 
 ### 5.8 Contratos
+
 - Un contrato por reserva.
 - Título y términos editables.
 - Estados: borrador, publicado y aceptado.
@@ -188,12 +205,13 @@ La landing pública y la administración están separadas por URL y layout:
 - Notificación y registro en el timeline al aceptar.
 
 ### 5.9 Correo y plantillas
+
 - Plantillas por cuenta con variables:
-  - `{{nombre}}`
-  - `{{correo}}`
-  - `{{terraza}}`
-  - `{{fechas}}`
-  - `{{empresa}}`
+    - `{{nombre}}`
+    - `{{correo}}`
+    - `{{terraza}}`
+    - `{{fechas}}`
+    - `{{empresa}}`
 - Composer de correo desde la ficha del cliente.
 - Envío en cola y registro automático en el timeline.
 - Baja con enlace firmado y bloqueo de envíos posteriores.
@@ -201,6 +219,7 @@ La landing pública y la administración están separadas por URL y layout:
 - WhatsApp sigue siendo un enlace manual `wa.me`, sin envío automatizado.
 
 ### 5.10 Reportes
+
 - `/app/{team}/bookings/reports`.
 - Embudo actual por etapa del pipeline.
 - Solicitudes, aceptadas, rechazadas, vencidas y conversión.
@@ -213,20 +232,22 @@ La landing pública y la administración están separadas por URL y layout:
 - Filtro por rango de fechas.
 
 ### 5.11 Notificaciones internas
+
 - Campana en el header con contador de no leídas.
 - Lista de últimas notificaciones.
 - Marcado individual o masivo como leídas.
 - Notificaciones de base de datos para:
-  - Nuevas solicitudes.
-  - Tareas pendientes.
-  - Cotizaciones aceptadas.
-  - Reservas próximas.
-  - Confirmación del cliente.
-  - Contrato aceptado.
-  - Opinión recibida.
+    - Nuevas solicitudes.
+    - Tareas pendientes.
+    - Cotizaciones aceptadas.
+    - Reservas próximas.
+    - Confirmación del cliente.
+    - Contrato aceptado.
+    - Opinión recibida.
 - Preferencia de correo para avisos al propietario.
 
 ### 5.12 Facturación y ajustes
+
 - Plan actual, uso y límites.
 - Checkout y Customer Portal de Stripe.
 - Facturas disponibles.
@@ -239,16 +260,16 @@ La landing pública y la administración están separadas por URL y layout:
 
 Catálogo actual: **50 características en 8 categorías**.
 
-| Categoría | Ejemplos |
-|---|---|
-| Instalaciones y espacios | Wi-Fi, baños, estacionamiento, accesible, terraza techada, áreas verdes, jardín, barra, comedor, sala de estar, rooftop, pérgola |
-| Albercas y descanso | Alberca, alberca climatizada, chapoteadero, jacuzzi, camastros, regaderas |
-| Cocina y alimentos | Cocina, cocina equipada, asador, refrigerador, estufa, plancha, hielera |
-| Mobiliario y equipamiento | Mesas y sillas, mobiliario infantil, mantelería, sonido, iluminación, Smart TV, calefacción, aire acondicionado |
-| Entretenimiento | Brincolín, futbolito, cancha de fútbol, piñatero, juegos infantiles, cajón ranita, fogatero |
-| Hospedaje | Hospedaje, habitaciones |
-| Servicios adicionales | Banquetes, taquizas, decoración, candy bar, DJ, meseros, hielo y refrescos |
-| Seguridad | Cámaras de seguridad |
+| Categoría                 | Ejemplos                                                                                                                         |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Instalaciones y espacios  | Wi-Fi, baños, estacionamiento, accesible, terraza techada, áreas verdes, jardín, barra, comedor, sala de estar, rooftop, pérgola |
+| Albercas y descanso       | Alberca, alberca climatizada, chapoteadero, jacuzzi, camastros, regaderas                                                        |
+| Cocina y alimentos        | Cocina, cocina equipada, asador, refrigerador, estufa, plancha, hielera                                                          |
+| Mobiliario y equipamiento | Mesas y sillas, mobiliario infantil, mantelería, sonido, iluminación, Smart TV, calefacción, aire acondicionado                  |
+| Entretenimiento           | Brincolín, futbolito, cancha de fútbol, piñatero, juegos infantiles, cajón ranita, fogatero                                      |
+| Hospedaje                 | Hospedaje, habitaciones                                                                                                          |
+| Servicios adicionales     | Banquetes, taquizas, decoración, candy bar, DJ, meseros, hielo y refrescos                                                       |
+| Seguridad                 | Cámaras de seguridad                                                                                                             |
 
 - Administración con checkboxes agrupados por categoría.
 - Se conservan las selecciones existentes.
@@ -303,6 +324,7 @@ Catálogo actual: **50 características en 8 categorías**.
 ## 10. Rutas principales
 
 ### Público
+
 - `/`
 - `/terrazas`
 - `/terrazas/{slug}`
@@ -314,9 +336,14 @@ Catálogo actual: **50 características en 8 categorías**.
 - `/baja/{customer}`
 
 ### Administración
+
 - `/app/{team}/dashboard`
 - `/app/{team}/listings`
 - `/app/{team}/listings/{listing}`
+- `/app/{team}/listings/{listing}/pricing`
+- `/app/{team}/listings/{listing}/packages`
+- `/app/{team}/listings/{listing}/services`
+- `/app/{team}/listings/{listing}/promotions`
 - `/app/{team}/bookings`
 - `/app/{team}/bookings/today`
 - `/app/{team}/bookings/quotes`
@@ -332,18 +359,18 @@ Catálogo actual: **50 características en 8 categorías**.
 
 ## 11. Verificación y calidad
 
-- **382 tests / 2,510 aserciones** en SQLite y MySQL 8.4.
+- **391 tests / 2,694 aserciones** en SQLite y MySQL 8.4.
 - Smoke test de flujo completo:
   landing → solicitud → CRM → cotización → contrato → portal → reserva → opinión → reportes.
 - Pint, PHPStan, formato/lint frontend (`npm run check`), `vue-tsc`, build y `composer ci:check` en verde.
 - Seeders de demo idempotentes.
 - Base local: MySQL 8.4.
 - Documentación de referencia:
-  - `docs/development/PHASE-STATUS.md`
-  - `docs/development/CRM-PLAN.md`
-  - `docs/development/TERRACE-ADMIN.md`
-  - `docs/development/PRODUCTION.md`
-  - `docs/decisions/0001-mvp.md`
+    - `docs/development/PHASE-STATUS.md`
+    - `docs/development/CRM-PLAN.md`
+    - `docs/development/TERRACE-ADMIN.md`
+    - `docs/development/PRODUCTION.md`
+    - `docs/decisions/0001-mvp.md`
 
 ---
 
