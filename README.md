@@ -54,6 +54,24 @@ compila assets cliente + SSR. `composer dev` levanta servidor, queue, logs y Vit
 
 Las credenciales de `.env.example` son solo para desarrollo local.
 
+## Datos de demo
+
+```bash
+php artisan db:seed
+# o solo los propietarios de ejemplo:
+php artisan db:seed --class=DemoUsersWithListingsSeeder
+```
+
+Crea cinco propietarios verificados, cada uno con su cuenta y una terraza
+publicada. Las imágenes se descargan desde `placehold.co` y se guardan en el
+disco público. La contraseña de todos los usuarios de demo es `password`.
+
+- `ana.torres@terrazas.test`
+- `bruno.salinas@terrazas.test`
+- `carla.mendez@terrazas.test`
+- `diego.ramirez@terrazas.test`
+- `elena.vargas@terrazas.test`
+
 ## Comandos
 
 ```bash
