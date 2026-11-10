@@ -20,13 +20,14 @@ use Modules\Listings\Models\Listing;
  * @property AvailabilityStatus $status
  * @property string|null $reason
  * @property int|null $booking_inquiry_id
+ * @property int|null $availability_block_series_id
  * @property int|null $created_by
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $updated_at
  * @property-read Listing $listing
  * @property-read BookingInquiry|null $inquiry
  */
-#[Fillable(['date', 'status', 'reason', 'booking_inquiry_id', 'created_by'])]
+#[Fillable(['date', 'status', 'reason', 'booking_inquiry_id', 'availability_block_series_id', 'created_by'])]
 class ListingUnavailability extends Model
 {
     /** @use HasFactory<ListingUnavailabilityFactory> */
@@ -59,6 +60,14 @@ class ListingUnavailability extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * @return BelongsTo<AvailabilityBlockSeries, $this>
+     */
+    public function blockSeries(): BelongsTo
+    {
+        return $this->belongsTo(AvailabilityBlockSeries::class, 'availability_block_series_id');
     }
 
     /**

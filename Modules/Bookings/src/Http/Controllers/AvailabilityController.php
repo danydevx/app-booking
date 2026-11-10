@@ -14,9 +14,11 @@ use Modules\Bookings\Actions\BlockListingDate;
 use Modules\Bookings\Actions\BlockListingDateRange;
 use Modules\Bookings\Actions\UnblockListingDate;
 use Modules\Bookings\Actions\UnblockListingDateRange;
+use Modules\Bookings\Enums\AvailabilityRecurrence;
 use Modules\Bookings\Http\Requests\BlockListingDateRangeRequest;
 use Modules\Bookings\Http\Requests\BlockListingDateRequest;
 use Modules\Bookings\Http\Requests\UnblockListingDateRangeRequest;
+use Modules\Bookings\Models\AvailabilityBlockSeries;
 use Modules\Bookings\Support\AvailabilityService;
 use Modules\Listings\Models\Listing;
 
@@ -38,6 +40,29 @@ class AvailabilityController extends Controller
         $today = CarbonImmutable::now($listing->timezone)->toDateString();
         $end = CarbonImmutable::now($listing->timezone)->addDays(365)->toDateString();
 
+        $series = AvailabilityBlockSeries::query()
+            ->where('team_id', $team->id)
+            ->where('listing_id', $listing->id)
+            ->withCount('unavailabilities')
+            ->orderBy('starts_on')
+            ->get()
+            ->map(fn (AvailabilityBlockSeries $item): array => [
+                'id' => $item->id,
+                'reason' => $item->reason,
+                'recurrence' => $item->recurrence->value,
+                'recurrence_label' => $item->recurrence->label(),
+                'weekdays' => $item->weekdays ?? [],
+                'starts_on' => $item->starts_on->toDateString(),
+                'ends_on' => $item->ends_on->toDateString(),
+                'unavailabilities_count' => (int) $item->unavailabilities_count,
+                'destroy_url' => route('bookings.availability.series.destroy', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                    'series' => $item->id,
+                ]),
+            ])
+            ->all();
+
         return Inertia::render('Bookings/Availability/Edit', [
             'listing' => [
                 'id' => $listing->id,
@@ -48,6 +73,9 @@ class AvailabilityController extends Controller
                 'timezone' => $listing->timezone,
             ],
             'blocked_dates' => $availability->blockedDates($listing, $today, $end),
+            'series' => $series,
+            'recurrences' => AvailabilityRecurrence::options(),
+            'horizon_days' => (int) config('bookings.availability_recurrence_horizon_days', 366),
             'urls' => [
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'block_range' => route('bookings.availability.block-range', [
@@ -60,6 +88,10 @@ class AvailabilityController extends Controller
                     'date' => '__DATE__',
                 ]),
                 'unblock_range' => route('bookings.availability.unblock-range', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'series_store' => route('bookings.availability.series.store', [
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                 ]),

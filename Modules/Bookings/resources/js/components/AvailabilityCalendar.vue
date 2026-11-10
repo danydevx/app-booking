@@ -6,11 +6,21 @@ const props = withDefaults(
     defineProps<{
         blockedDates: BlockedDate[];
         months?: number;
+        selectable?: boolean;
+        selectedStart?: string | null;
+        selectedEnd?: string | null;
     }>(),
     {
         months: 2,
+        selectable: false,
+        selectedStart: null,
+        selectedEnd: null,
     },
 );
+
+const emit = defineEmits<{
+    select: [date: string];
+}>();
 
 const weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
 
@@ -58,7 +68,21 @@ const monthData = computed(() => {
     return result;
 });
 
+function isSelected(date: string): boolean {
+    if (props.selectedStart === null) {
+        return false;
+    }
+
+    const end = props.selectedEnd ?? props.selectedStart;
+
+    return date >= props.selectedStart && date <= end;
+}
+
 function dateClass(date: string): string {
+    if (props.selectable && isSelected(date)) {
+        return 'border-primary bg-primary text-primary-foreground';
+    }
+
     const blocked = blockedMap.value.get(date);
 
     if (!blocked) {
@@ -111,6 +135,16 @@ function dateTitle(date: string): string {
                         :key="`${month.key}-${index}`"
                     >
                         <span v-if="date === null" class="aspect-square" />
+                        <button
+                            v-else-if="selectable"
+                            type="button"
+                            class="flex aspect-square items-center justify-center rounded-md border border-transparent text-sm transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/50"
+                            :class="dateClass(date)"
+                            :title="dateTitle(date)"
+                            @click="emit('select', date)"
+                        >
+                            {{ Number(date.slice(-2)) }}
+                        </button>
                         <span
                             v-else
                             class="flex aspect-square items-center justify-center rounded-md border border-transparent text-sm"

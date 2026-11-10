@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
+use Modules\Bookings\Http\Controllers\AvailabilityBlockSeriesController;
 use Modules\Bookings\Http\Controllers\AvailabilityController;
 use Modules\Bookings\Http\Controllers\BookingInquiryController;
 use Modules\Bookings\Http\Controllers\CustomerActivityController;
@@ -76,6 +77,10 @@ Route::prefix('{current_team}/bookings')
         Route::delete('/availability/{listing}/block/{date}', [AvailabilityController::class, 'unblock'])
             ->where('date', '\d{4}-\d{2}-\d{2}')
             ->name('availability.unblock');
+        Route::post('/availability/{listing}/series', [AvailabilityBlockSeriesController::class, 'store'])
+            ->name('availability.series.store');
+        Route::delete('/availability/{listing}/series/{series}', [AvailabilityBlockSeriesController::class, 'destroy'])
+            ->name('availability.series.destroy');
 
         Route::get('/inquiries/{inquiry}', [BookingInquiryController::class, 'show'])->name('show');
         Route::get('/inquiries/{inquiry}/edit', [BookingInquiryController::class, 'edit'])->name('inquiries.edit');

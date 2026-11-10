@@ -5,6 +5,7 @@ namespace Modules\Bookings\Actions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Modules\Bookings\Enums\AvailabilityStatus;
+use Modules\Bookings\Models\AvailabilityBlockSeriesException;
 use Modules\Bookings\Models\ListingUnavailability;
 use Modules\Listings\Models\Listing;
 
@@ -31,10 +32,27 @@ final class UnblockListingDateRange
                 ]);
             }
 
-            return ListingUnavailability::query()
+            $blocked = ListingUnavailability::query()
                 ->where('listing_id', $listing->id)
                 ->whereBetween('date', [$startDate, $endDate])
                 ->where('status', AvailabilityStatus::Blocked->value)
+                ->get();
+
+            if ($blocked->isEmpty()) {
+                return 0;
+            }
+
+            foreach ($blocked as $date) {
+                if ($date->availability_block_series_id !== null) {
+                    AvailabilityBlockSeriesException::query()->firstOrCreate([
+                        'availability_block_series_id' => $date->availability_block_series_id,
+                        'date' => $date->date->toDateString(),
+                    ]);
+                }
+            }
+
+            return ListingUnavailability::query()
+                ->whereKey($blocked->modelKeys())
                 ->delete();
         });
     }

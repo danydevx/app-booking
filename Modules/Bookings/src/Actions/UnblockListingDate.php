@@ -4,6 +4,7 @@ namespace Modules\Bookings\Actions;
 
 use Illuminate\Validation\ValidationException;
 use Modules\Bookings\Enums\AvailabilityStatus;
+use Modules\Bookings\Models\AvailabilityBlockSeriesException;
 use Modules\Bookings\Models\ListingUnavailability;
 use Modules\Listings\Models\Listing;
 
@@ -23,6 +24,13 @@ final class UnblockListingDate
         if ($unavailability->status !== AvailabilityStatus::Blocked) {
             throw ValidationException::withMessages([
                 'date' => 'Solo puedes desbloquear fechas bloqueadas manualmente.',
+            ]);
+        }
+
+        if ($unavailability->availability_block_series_id !== null) {
+            AvailabilityBlockSeriesException::query()->firstOrCreate([
+                'availability_block_series_id' => $unavailability->availability_block_series_id,
+                'date' => $date,
             ]);
         }
 
