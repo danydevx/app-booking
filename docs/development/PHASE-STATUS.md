@@ -16,7 +16,7 @@ Last updated: 2026-11-07
 | 6 — Platform admin              | PASS        | `Modules/Platform`; activitylog 4.12; moderation, reports, audit; 181 tests/959 assertions; build 3,678 modules             | phase-6 commit |
 | 7 — Branding and communications | PASS        | `Modules/Platform` branding + account branding, queued mail, WhatsApp; 197 tests/1,041 assertions; build 3,683 modules      | phase-7 commit |
 | 8 — Production launch           | PARTIAL     | `docs/development/PRODUCTION.md` + `app:production-check`; deployment pending target/approval                               | —              |
-| 9 — Post-MVP                    | NOT STARTED | —                                                                                                                           | —              |
+| 9 — Post-MVP                    | NOT STARTED | Plan CRM: `docs/development/CRM-PLAN.md`; sin implementación                                                                | —              |
 
 ## Current blockers
 

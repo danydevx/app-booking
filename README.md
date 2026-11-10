@@ -116,6 +116,7 @@ rutas, migraciones, páginas Vue y tests.
 - Decisiones de arquitectura y producto: `docs/decisions/README.md`
 - Estado de fases: `docs/development/PHASE-STATUS.md`
 - Producción: `docs/development/PRODUCTION.md`
+- Plan CRM: `docs/development/CRM-PLAN.md`
 - Seguridad: `SECURITY.md`
 - Guía para agentes: `.opencode/skills/app-booking-development/SKILL.md`
 

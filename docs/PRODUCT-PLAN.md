@@ -102,7 +102,8 @@ Cerrar únicamente las decisiones que bloquean el modelo: si una solicitud retie
 
 - Producción con backups, observabilidad, política de soporte y rollback.
 - WhatsApp automático solo si se define proveedor/API, consentimiento, plantillas y costos; para V1 considerar enlace click-to-chat.
-- IA para posts, más video y CRM avanzado después de validar uso y disposición de pago.
+- IA para posts, más video y CRM avanzado después de validar uso y disposición
+  de pago. Plan detallado del CRM: `docs/development/CRM-PLAN.md`.
 - Probar una segunda vertical. Reutilizar lo común y añadir su ficha propia sin alterar el producto de terrazas.
 
 ## Decisiones todavía abiertas
