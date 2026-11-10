@@ -71,7 +71,7 @@ El trabajo siguió un esquema de **fases 0–7 con documentación de cierre**:
 
 Esto se ve reflejado en los 8 reportes de fase existentes (`00` a `07`) y en las
 métricas de `PHASE-STATUS.md` (197 tests en fase 7, más los tests añadidos
-después: localización, singleton, clientes manuales, reservas manuales con confirmación, reprogramación, historial de reservas y anticipos, filtros y exportación de auditoría, métricas de ocupación y conversión, seeder de demo, selects de estado/municipio en edición y buscador, timeline, notas, tareas, etiquetas, métricas, pipeline e importación/fusión/ciclo de vida del CRM, expiración, rangos, usuarios/roles, detalles de terraza, recordatorios, CSV, auditoría, dashboard, soporte de acceso, CSV endurecido y estado del sistema; 302 tests / 1,746 aserciones actuales).
+después: localización, singleton, clientes manuales, reservas manuales con confirmación, reprogramación, historial de reservas y anticipos, filtros y exportación de auditoría, métricas de ocupación y conversión, seeder de demo, selects de estado/municipio en edición y buscador, timeline, notas, tareas, etiquetas, métricas, pipeline, importación/fusión/ciclo de vida y comunicaciones manuales del CRM, expiración, rangos, usuarios/roles, detalles de terraza, recordatorios, CSV, auditoría, dashboard, soporte de acceso, CSV endurecido y estado del sistema; 302 tests / 1,746 aserciones actuales).
 
 ### 2.3 Fortalezas del proceso
 
