@@ -680,6 +680,9 @@ class CustomerController extends Controller
                 'index' => $activeListing
                     ? route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
                     : route('bookings.customers.index', ['current_team' => $team->slug]),
+                'bookings' => $activeListing
+                    ? route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
+                    : route('bookings.index', ['current_team' => $team->slug]),
                 'update' => route('bookings.customers.update', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,

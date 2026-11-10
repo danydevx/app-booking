@@ -164,6 +164,7 @@ class CustomerQuoteController extends Controller
             'statuses' => QuoteStatus::options(),
             'urls' => [
                 'index' => route('bookings.quotes.index', ['current_team' => $team->slug]),
+                'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'customer' => route('bookings.customers.show', [
                     'current_team' => $team->slug,
                     'customer' => $quote->customer_id,

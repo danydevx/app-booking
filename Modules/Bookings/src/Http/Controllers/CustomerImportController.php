@@ -44,6 +44,7 @@ class CustomerImportController extends Controller
                 'index' => $activeListing
                     ? route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
                     : route('bookings.customers.index', ['current_team' => $team->slug]),
+                'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'store' => route('bookings.customers.import.store', [
                     'current_team' => $team->slug,
                     ...($activeListing ? ['listing' => $activeListing->slug] : []),

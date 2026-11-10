@@ -210,6 +210,7 @@ class BookingInquiryController extends Controller
                     'current_team' => $team->slug,
                     'inquiry' => $inquiry->id,
                 ]),
+                'index' => route('bookings.index', ['current_team' => $team->slug]),
                 'update' => route('bookings.inquiries.update', [
                     'current_team' => $team->slug,
                     'inquiry' => $inquiry->id,

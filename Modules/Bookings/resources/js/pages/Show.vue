@@ -35,17 +35,17 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: { urls: { index: string } }) => ({
         breadcrumbs: [
             {
                 title: 'Solicitudes',
-                href: '/',
+                href: props.urls.index,
             },
             {
                 title: 'Detalle',
             },
         ],
-    },
+    }),
 });
 
 const contractForm = useForm({

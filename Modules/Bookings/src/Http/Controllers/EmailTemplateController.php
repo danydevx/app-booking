@@ -48,6 +48,7 @@ class EmailTemplateController extends Controller
                 'index' => route('bookings.templates.index', ['current_team' => $team->slug]),
                 'store' => route('bookings.templates.store', ['current_team' => $team->slug]),
                 'customers' => route('bookings.customers.index', ['current_team' => $team->slug]),
+                'bookings' => route('bookings.index', ['current_team' => $team->slug]),
             ],
         ]);
     }

@@ -59,6 +59,7 @@ const props = defineProps<{
 
 defineOptions({
     layout: (props: {
+        urls: { bookings: string };
         activeListing: { name: string } | null;
         management: {
             manage: string;
@@ -79,7 +80,10 @@ defineOptions({
                       },
                       { title: 'Clientes' },
                   ]
-                : [{ title: 'Solicitudes', href: '/' }, { title: 'Clientes' }],
+                : [
+                      { title: 'Solicitudes', href: props.urls.bookings },
+                      { title: 'Clientes' },
+                  ],
         submenu:
             props.activeListing && props.management
                 ? [

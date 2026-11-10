@@ -51,9 +51,12 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
-        breadcrumbs: [{ title: 'Solicitudes', href: '/' }, { title: 'Hoy' }],
-    },
+    layout: (props: { urls: { bookings: string } }) => ({
+        breadcrumbs: [
+            { title: 'Solicitudes', href: props.urls.bookings },
+            { title: 'Hoy' },
+        ],
+    }),
 });
 
 function toggleMine(): void {

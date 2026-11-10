@@ -24,12 +24,14 @@ const props = defineProps<{
     } | null;
     urls: {
         index: string;
+        bookings: string;
         store: string;
     };
 }>();
 
 defineOptions({
     layout: (props: {
+        urls: { index: string; bookings: string };
         activeListing: { name: string } | null;
         management: {
             manage: string;
@@ -52,8 +54,8 @@ defineOptions({
                       { title: 'Importar CSV' },
                   ]
                 : [
-                      { title: 'Solicitudes', href: '/' },
-                      { title: 'Clientes', href: '/' },
+                      { title: 'Solicitudes', href: props.urls.bookings },
+                      { title: 'Clientes', href: props.urls.index },
                       { title: 'Importar CSV' },
                   ],
         submenu:

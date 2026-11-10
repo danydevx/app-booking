@@ -77,6 +77,7 @@ const props = defineProps<{
     };
     urls: {
         index: string;
+        bookings: string;
         update: string;
         activities_store: string;
         tasks_store: string;
@@ -100,6 +101,7 @@ defineOptions({
         customer: { name: string };
         section: string;
         sectionUrls: Record<string, string>;
+        urls: { index: string; bookings: string };
         activeListing: { name: string } | null;
         management: {
             manage: string;
@@ -137,8 +139,8 @@ defineOptions({
                       { title: sectionTitle },
                   ]
                 : [
-                      { title: 'Solicitudes', href: '/' },
-                      { title: 'Clientes' },
+                      { title: 'Solicitudes', href: props.urls.bookings },
+                      { title: 'Clientes', href: props.urls.index },
                       { title: props.customer.name, href: summaryUrl },
                       { title: sectionTitle },
                   ];

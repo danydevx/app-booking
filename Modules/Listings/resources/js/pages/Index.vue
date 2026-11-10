@@ -32,14 +32,14 @@ defineProps<{
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: { urls: { index: string } }) => ({
         breadcrumbs: [
             {
                 title: 'Terrazas',
-                href: '/',
+                href: props.urls.index,
             },
         ],
-    },
+    }),
 });
 
 function statusVariant(

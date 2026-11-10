@@ -21,16 +21,17 @@ const props = defineProps<{
         index: string;
         store: string;
         customers: string;
+        bookings: string;
     };
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: { urls: { bookings: string } }) => ({
         breadcrumbs: [
-            { title: 'Solicitudes', href: '/' },
+            { title: 'Solicitudes', href: props.urls.bookings },
             { title: 'Plantillas de correo' },
         ],
-    },
+    }),
 });
 
 const form = useForm({

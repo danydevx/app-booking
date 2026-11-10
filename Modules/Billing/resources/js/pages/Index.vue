@@ -65,14 +65,14 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: { team: { slug: string } }) => ({
         breadcrumbs: [
             {
                 title: 'Facturación',
-                href: '/',
+                href: `/${props.team.slug}/dashboard`,
             },
         ],
-    },
+    }),
 });
 
 const statusLabels: Record<string, string> = {

@@ -12,19 +12,20 @@ const props = defineProps<{
     statuses: StatusOption[];
     urls: {
         index: string;
+        bookings: string;
         customer: string;
         booking: string | null;
     };
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: { urls: { index: string; bookings: string } }) => ({
         breadcrumbs: [
-            { title: 'Solicitudes', href: '/' },
-            { title: 'Cotizaciones', href: '/' },
+            { title: 'Solicitudes', href: props.urls.bookings },
+            { title: 'Cotizaciones', href: props.urls.index },
             { title: 'Detalle' },
         ],
-    },
+    }),
 });
 
 const form = useForm({

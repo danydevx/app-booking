@@ -66,12 +66,12 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: { urls: { bookings: string } }) => ({
         breadcrumbs: [
-            { title: 'Solicitudes', href: '/' },
+            { title: 'Solicitudes', href: props.urls.bookings },
             { title: 'Reportes' },
         ],
-    },
+    }),
 });
 
 const form = reactive({

@@ -12,22 +12,23 @@ const props = defineProps<{
     inquiry: InquiryDetail;
     urls: {
         show: string;
+        index: string;
         update: string;
     };
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: { urls: { index: string } }) => ({
         breadcrumbs: [
             {
                 title: 'Solicitudes',
-                href: '/',
+                href: props.urls.index,
             },
             {
                 title: 'Editar reserva',
             },
         ],
-    },
+    }),
 });
 
 const today = new Date().toISOString().slice(0, 10);

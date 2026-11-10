@@ -49,6 +49,7 @@ const props = defineProps<{
 
 defineOptions({
     layout: (props: {
+        urls: { index: string };
         activeListing: { name: string } | null;
         management: {
             manage: string;
@@ -69,7 +70,7 @@ defineOptions({
                       },
                       { title: 'Reservaciones' },
                   ]
-                : [{ title: 'Solicitudes', href: '/' }],
+                : [{ title: 'Solicitudes', href: props.urls.index }],
         submenu:
             props.activeListing && props.management
                 ? [
