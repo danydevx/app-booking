@@ -14,7 +14,7 @@
 | 2. Tareas                           | Completado el 2026-11-10 |
 | 3. Etiquetas                        | Completado el 2026-11-10 |
 | 4. Métricas                         | Completado el 2026-11-10 |
-| 5. Pipeline                         | Pendiente                |
+| 5. Pipeline                         | Completado el 2026-11-10 |
 | 6. Importación/fusión/ciclo de vida | Pendiente                |
 | 7. Comunicaciones                   | Pendiente                |
 

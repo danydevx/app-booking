@@ -16,7 +16,7 @@ Last updated: 2026-11-10
 | 6 — Platform admin              | PASS        | `Modules/Platform`; activitylog 4.12; moderation, reports, audit; 181 tests/959 assertions; build 3,678 modules             | phase-6 commit |
 | 7 — Branding and communications | PASS        | `Modules/Platform` branding + account branding, queued mail, WhatsApp; 197 tests/1,041 assertions; build 3,683 modules      | phase-7 commit |
 | 8 — Production launch           | PARTIAL     | `docs/development/PRODUCTION.md` + `app:production-check`; deployment pending target/approval                               | —              |
-| 9 — Post-MVP                    | IN PROGRESS | CRM Pasos 1–4: timeline, notas, tareas, etiquetas y métricas; plan en `docs/development/CRM-PLAN.md`                        | —              |
+| 9 — Post-MVP                    | IN PROGRESS | CRM Pasos 1–5: timeline, notas, tareas, etiquetas, métricas y pipeline; plan en `docs/development/CRM-PLAN.md`              | —              |
 
 ## Current blockers
 
@@ -32,7 +32,7 @@ Last updated: 2026-11-10
 - PHP version: 8.3.6
 - Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
-- Test suite: 291 tests / 1,658 assertions (SQLite and MySQL 8.4)
+- Test suite: 295 tests / 1,679 assertions (SQLite and MySQL 8.4)
 - Architecture decisions: `docs/decisions/README.md` (ADR 0001–0004)
 - Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
 - CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
@@ -45,5 +45,5 @@ Last updated: 2026-11-10
   `Modules/Bookings`, `Modules/Billing`
 - Moderation audit: `spatie/laravel-activitylog` 4.12 with `moderation` log
 - Operational status: `/platform/system` shows queue, scheduler heartbeat and failed jobs
-- CRM: timeline, notes, tasks, tags and customer metrics are available (Pasos 1–4)
+- CRM: timeline, notes, tasks, tags, metrics and pipeline are available (Pasos 1–5)
 - Local mailer: `log`; Mailpit optional via `MAIL_HOST`/`MAIL_PORT`
