@@ -92,6 +92,7 @@ final class BookingPresenter
             'assignee' => $customer->relationLoaded('assignee')
                 ? $customer->assignee?->name
                 : null,
+            'email_opt_out_at' => $customer->email_opt_out_at?->toIso8601String(),
             'pipeline_stage' => $customer->pipeline_stage->value,
             'pipeline_stage_label' => $customer->pipeline_stage->label(),
             'is_archived' => $customer->archived_at !== null,

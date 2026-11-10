@@ -113,6 +113,7 @@ class BookingInquiryController extends Controller
                     : route('bookings.create', ['current_team' => $team->slug]),
                 'customers' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'today' => route('bookings.today', ['current_team' => $team->slug]),
+                'quotes' => route('bookings.quotes.index', ['current_team' => $team->slug]),
                 'billing' => route('billing.index', ['current_team' => $team->slug]),
             ],
         ]);

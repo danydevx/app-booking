@@ -22,12 +22,15 @@ use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Models\CustomerActivity;
+use Modules\Bookings\Models\CustomerQuote;
 use Modules\Bookings\Models\CustomerTag;
 use Modules\Bookings\Models\CustomerTask;
+use Modules\Bookings\Models\EmailTemplate;
 use Modules\Bookings\Support\BookingPresenter;
 use Modules\Bookings\Support\CustomerActivityPresenter;
 use Modules\Bookings\Support\CustomerCsvExport;
 use Modules\Bookings\Support\CustomerMetrics;
+use Modules\Bookings\Support\CustomerQuotePresenter;
 use Modules\Bookings\Support\CustomerTaskPresenter;
 use Modules\Listings\Models\Listing;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -485,6 +488,40 @@ class CustomerController extends Controller
             ))
             ->all();
 
+        $quotes = CustomerQuote::query()
+            ->with(['customer', 'listing'])
+            ->where('team_id', $team->id)
+            ->where('customer_id', $customer->id)
+            ->when($activeListing, fn ($query) => $query->where('listing_id', $activeListing->id))
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn (CustomerQuote $quote): array => CustomerQuotePresenter::present($quote, $team->slug))
+            ->all();
+
+        $quoteListings = Listing::query()
+            ->where('team_id', $team->id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug'])
+            ->map(fn (Listing $listing): array => [
+                'id' => $listing->id,
+                'name' => $listing->name,
+                'slug' => $listing->slug,
+            ])
+            ->all();
+
+        $emailTemplates = EmailTemplate::query()
+            ->where('team_id', $team->id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'subject', 'body'])
+            ->map(fn (EmailTemplate $template): array => [
+                'id' => $template->id,
+                'name' => $template->name,
+                'subject' => $template->subject,
+                'body' => $template->body,
+            ])
+            ->all();
+
         return Inertia::render('Bookings/Customers/Show', [
             'customer' => [
                 ...BookingPresenter::customerCard($customer, $team->slug, $activeListing?->slug),
@@ -514,6 +551,9 @@ class CustomerController extends Controller
             'teamMembers' => $teamMembers,
             'tags' => $tags,
             'canManageTags' => $canManageTags,
+            'quotes' => $quotes,
+            'quoteListings' => $quoteListings,
+            'emailTemplates' => $emailTemplates,
             'activeListing' => $activeListing,
             'management' => $activeListing ? [
                 'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
@@ -548,6 +588,20 @@ class CustomerController extends Controller
                     'customer' => $customer->id,
                 ]),
                 'tags_store' => route('bookings.customers.tags.store', ['current_team' => $team->slug]),
+                'quotes_store' => route('bookings.customers.quotes.store', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'quotes_index' => route('bookings.quotes.index', ['current_team' => $team->slug]),
+                'emails_send' => route('bookings.customers.emails.send', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'email_opt_in' => route('bookings.customers.email-opt-in', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'templates' => route('bookings.templates.index', ['current_team' => $team->slug]),
                 'tags_sync' => route('bookings.customers.tags.sync', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,

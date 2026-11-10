@@ -69,6 +69,7 @@ export type CustomerCard = {
     notes: string | null;
     assigned_to: number | null;
     assignee: string | null;
+    email_opt_out_at: string | null;
     pipeline_stage: string;
     pipeline_stage_label: string;
     is_archived: boolean;
@@ -100,6 +101,50 @@ export type InquiryDetail = InquiryCard & {
 
 export type CustomerDetail = CustomerCard & {
     inquiries: InquiryCard[];
+};
+
+export type CustomerQuoteCard = {
+    id: number;
+    status: string;
+    status_label: string;
+    start_date: string;
+    end_date: string;
+    start_date_label: string;
+    end_date_label: string;
+    event_type: string | null;
+    guests: number | null;
+    subtotal_cents: number;
+    deposit_cents: number;
+    subtotal_formatted: string;
+    deposit_formatted: string;
+    currency: string;
+    notes: string | null;
+    terms: string | null;
+    expires_at: string | null;
+    sent_at: string | null;
+    accepted_at: string | null;
+    declined_at: string | null;
+    converted_inquiry_id: number | null;
+    customer: {
+        id: number;
+        name: string;
+        email: string;
+        phone: string | null;
+    };
+    listing: {
+        id: number;
+        name: string;
+        slug: string;
+    };
+    public_url: string;
+    show_url: string;
+    update_url: string;
+    send_url: string;
+    convert_url: string;
+    can_edit: boolean;
+    can_send: boolean;
+    can_convert: boolean;
+    created_at: string | null;
 };
 
 export type CustomerActivity = {

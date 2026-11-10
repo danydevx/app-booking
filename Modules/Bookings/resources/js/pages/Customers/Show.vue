@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import type {
     CustomerActivity,
     CustomerDetail,
+    CustomerQuoteCard,
     CustomerTag,
     CustomerTask,
     InquiryStatus,
@@ -28,6 +29,14 @@ const props = defineProps<{
         }
     >;
     canManageTags: boolean;
+    quotes: CustomerQuoteCard[];
+    quoteListings: Array<{ id: number; name: string; slug: string }>;
+    emailTemplates: Array<{
+        id: number;
+        name: string;
+        subject: string;
+        body: string;
+    }>;
     pipelineStages: StatusOption[];
     activeListing: { id: number; name: string; slug: string } | null;
     management: {
@@ -71,6 +80,11 @@ const props = defineProps<{
         tasks_store: string;
         tags_store: string;
         tags_sync: string;
+        quotes_store: string;
+        quotes_index: string;
+        emails_send: string;
+        email_opt_in: string;
+        templates: string;
         pipeline_update: string;
         merge: string;
         archive: string;
@@ -168,6 +182,31 @@ const pipelineForm = useForm({
     stage: props.customer.pipeline_stage,
 });
 
+const quoteForm = useForm({
+    listing_id: props.activeListing?.id ?? props.quoteListings[0]?.id ?? '',
+    start_date: '',
+    end_date: '',
+    event_type: '',
+    guests: '',
+    subtotal: '',
+    deposit: '',
+    expires_at: '',
+    notes: '',
+    terms: '',
+});
+
+const emailForm = useForm({
+    template_id: '',
+    subject: '',
+    body: '',
+});
+
+const emailError = computed<string | null>(() => {
+    const errors = emailForm.errors as Record<string, string | undefined>;
+
+    return errors.email ?? null;
+});
+
 const mergeForm = useForm({
     target_id: '',
     reason: '',
@@ -220,6 +259,70 @@ function saveTags(): void {
 
 function savePipeline(): void {
     pipelineForm.patch(props.urls.pipeline_update, { preserveScroll: true });
+}
+
+function createQuote(): void {
+    quoteForm.post(props.urls.quotes_store, {
+        preserveScroll: true,
+        onSuccess: () => {
+            quoteForm.reset(
+                'start_date',
+                'end_date',
+                'event_type',
+                'guests',
+                'subtotal',
+                'deposit',
+                'expires_at',
+                'notes',
+                'terms',
+            );
+        },
+    });
+}
+
+function quoteStatusVariant(
+    status: string,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+    if (status === 'accepted') {
+        return 'default';
+    }
+
+    if (status === 'declined' || status === 'expired') {
+        return 'destructive';
+    }
+
+    if (status === 'sent') {
+        return 'secondary';
+    }
+
+    return 'outline';
+}
+
+function applyTemplate(): void {
+    const template = props.emailTemplates.find(
+        (item) => String(item.id) === emailForm.template_id,
+    );
+
+    if (!template) {
+        emailForm.subject = '';
+        emailForm.body = '';
+
+        return;
+    }
+
+    emailForm.subject = template.subject;
+    emailForm.body = template.body;
+}
+
+function sendEmail(): void {
+    emailForm.post(props.urls.emails_send, {
+        preserveScroll: true,
+        onSuccess: () => emailForm.reset('template_id', 'subject', 'body'),
+    });
+}
+
+function reactivateEmail(): void {
+    router.patch(props.urls.email_opt_in, {}, { preserveScroll: true });
 }
 
 function mergeCustomer(): void {
@@ -896,6 +999,338 @@ function statusVariant(
                     <p v-else class="mt-4 text-sm text-muted-foreground">
                         Todavía no hay actividades registradas.
                     </p>
+                </section>
+
+                <section class="rounded-xl border bg-card p-5">
+                    <div
+                        class="mb-4 flex flex-wrap items-start justify-between gap-3"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">Correo</h2>
+                            <p class="text-sm text-muted-foreground">
+                                Envía un correo de seguimiento usando una
+                                plantilla.
+                            </p>
+                        </div>
+                        <Button variant="outline" size="sm" as-child>
+                            <Link :href="urls.templates">Plantillas</Link>
+                        </Button>
+                    </div>
+
+                    <div
+                        v-if="customer.email_opt_out_at"
+                        class="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+                    >
+                        <p class="font-medium">
+                            El cliente canceló la suscripción de correos.
+                        </p>
+                        <Button
+                            class="mt-3"
+                            size="sm"
+                            variant="outline"
+                            @click="reactivateEmail"
+                        >
+                            Reactivar correo
+                        </Button>
+                    </div>
+
+                    <form
+                        v-else
+                        class="grid gap-3 rounded-lg border bg-muted/20 p-4"
+                        @submit.prevent="sendEmail"
+                    >
+                        <div class="grid gap-2">
+                            <Label for="email-template">Plantilla</Label>
+                            <select
+                                id="email-template"
+                                v-model="emailForm.template_id"
+                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                @change="applyTemplate"
+                            >
+                                <option value="">Sin plantilla</option>
+                                <option
+                                    v-for="template in emailTemplates"
+                                    :key="template.id"
+                                    :value="String(template.id)"
+                                >
+                                    {{ template.name }}
+                                </option>
+                            </select>
+                            <p
+                                v-if="emailForm.errors.template_id"
+                                class="text-sm text-destructive"
+                            >
+                                {{ emailForm.errors.template_id }}
+                            </p>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="email-subject">Asunto</Label>
+                            <Input
+                                id="email-subject"
+                                v-model="emailForm.subject"
+                                maxlength="200"
+                                required
+                            />
+                            <p
+                                v-if="emailForm.errors.subject"
+                                class="text-sm text-destructive"
+                            >
+                                {{ emailForm.errors.subject }}
+                            </p>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="email-body">Mensaje</Label>
+                            <textarea
+                                id="email-body"
+                                v-model="emailForm.body"
+                                rows="8"
+                                maxlength="20000"
+                                required
+                                class="min-h-40 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            />
+                            <p
+                                v-if="emailForm.errors.body"
+                                class="text-sm text-destructive"
+                            >
+                                {{ emailForm.errors.body }}
+                            </p>
+                            <p
+                                v-if="emailError"
+                                class="text-sm text-destructive"
+                            >
+                                {{ emailError }}
+                            </p>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Variables:
+                            <code v-pre>{{ nombre }}</code
+                            >, <code v-pre>{{ correo }}</code
+                            >, <code v-pre>{{ terraza }}</code
+                            >, <code v-pre>{{ fechas }}</code
+                            >, <code v-pre>{{ empresa }}</code
+                            >.
+                        </p>
+                        <div>
+                            <Button
+                                type="submit"
+                                :disabled="emailForm.processing"
+                            >
+                                Enviar correo
+                            </Button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="rounded-xl border bg-card p-5">
+                    <div
+                        class="mb-4 flex flex-wrap items-start justify-between gap-3"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">Cotizaciones</h2>
+                            <p class="text-sm text-muted-foreground">
+                                Propuestas enviadas a este cliente.
+                            </p>
+                        </div>
+                        <Button variant="outline" size="sm" as-child>
+                            <Link :href="urls.quotes_index">Ver todas</Link>
+                        </Button>
+                    </div>
+
+                    <div v-if="quotes.length > 0" class="space-y-3">
+                        <article
+                            v-for="quote in quotes"
+                            :key="quote.id"
+                            class="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3"
+                        >
+                            <div>
+                                <p class="font-medium">
+                                    {{ quote.listing.name }}
+                                </p>
+                                <p class="text-sm text-muted-foreground">
+                                    {{ quote.start_date_label }} al
+                                    {{ quote.end_date_label }} ·
+                                    {{ quote.subtotal_formatted }}
+                                    {{ quote.currency }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <Badge
+                                    :variant="quoteStatusVariant(quote.status)"
+                                >
+                                    {{ quote.status_label }}
+                                </Badge>
+                                <Button size="sm" variant="outline" as-child>
+                                    <Link :href="quote.show_url">Ver</Link>
+                                </Button>
+                            </div>
+                        </article>
+                    </div>
+                    <p v-else class="text-sm text-muted-foreground">
+                        Este cliente no tiene cotizaciones.
+                    </p>
+
+                    <details class="mt-5 border-t pt-4">
+                        <summary class="cursor-pointer text-sm font-medium">
+                            Nueva cotización
+                        </summary>
+                        <form
+                            class="mt-3 grid gap-3 sm:grid-cols-2"
+                            @submit.prevent="createQuote"
+                        >
+                            <div
+                                v-if="activeListing"
+                                class="grid gap-2 sm:col-span-2"
+                            >
+                                <Label>Terraza</Label>
+                                <p class="text-sm font-medium">
+                                    {{ activeListing.name }}
+                                </p>
+                            </div>
+                            <div v-else class="grid gap-2 sm:col-span-2">
+                                <Label for="quote-listing">Terraza</Label>
+                                <select
+                                    id="quote-listing"
+                                    v-model="quoteForm.listing_id"
+                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                    required
+                                >
+                                    <option value="">
+                                        Selecciona una terraza
+                                    </option>
+                                    <option
+                                        v-for="listing in quoteListings"
+                                        :key="listing.id"
+                                        :value="listing.id"
+                                    >
+                                        {{ listing.name }}
+                                    </option>
+                                </select>
+                                <p
+                                    v-if="quoteForm.errors.listing_id"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ quoteForm.errors.listing_id }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="quote-start">Inicio</Label>
+                                <Input
+                                    id="quote-start"
+                                    v-model="quoteForm.start_date"
+                                    type="date"
+                                    required
+                                />
+                                <p
+                                    v-if="quoteForm.errors.start_date"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ quoteForm.errors.start_date }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="quote-end">Fin</Label>
+                                <Input
+                                    id="quote-end"
+                                    v-model="quoteForm.end_date"
+                                    type="date"
+                                    required
+                                />
+                                <p
+                                    v-if="quoteForm.errors.end_date"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ quoteForm.errors.end_date }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="quote-event">Tipo de evento</Label>
+                                <Input
+                                    id="quote-event"
+                                    v-model="quoteForm.event_type"
+                                />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="quote-guests">Invitados</Label>
+                                <Input
+                                    id="quote-guests"
+                                    v-model="quoteForm.guests"
+                                    type="number"
+                                    min="1"
+                                />
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="quote-subtotal">Total (MXN)</Label>
+                                <Input
+                                    id="quote-subtotal"
+                                    v-model="quoteForm.subtotal"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    required
+                                />
+                                <p
+                                    v-if="quoteForm.errors.subtotal"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ quoteForm.errors.subtotal }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="quote-deposit"
+                                    >Anticipo (MXN)</Label
+                                >
+                                <Input
+                                    id="quote-deposit"
+                                    v-model="quoteForm.deposit"
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                />
+                                <p
+                                    v-if="quoteForm.errors.deposit"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ quoteForm.errors.deposit }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2 sm:col-span-2">
+                                <Label for="quote-expires">Vence</Label>
+                                <Input
+                                    id="quote-expires"
+                                    v-model="quoteForm.expires_at"
+                                    type="datetime-local"
+                                />
+                            </div>
+                            <div class="grid gap-2 sm:col-span-2">
+                                <Label for="quote-notes"
+                                    >Notas para el cliente</Label
+                                >
+                                <textarea
+                                    id="quote-notes"
+                                    v-model="quoteForm.notes"
+                                    rows="3"
+                                    class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                />
+                            </div>
+                            <div class="grid gap-2 sm:col-span-2">
+                                <Label for="quote-terms">Términos</Label>
+                                <textarea
+                                    id="quote-terms"
+                                    v-model="quoteForm.terms"
+                                    rows="3"
+                                    class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                />
+                            </div>
+                            <div class="sm:col-span-2">
+                                <Button
+                                    type="submit"
+                                    :disabled="quoteForm.processing"
+                                >
+                                    Crear cotización
+                                </Button>
+                            </div>
+                        </form>
+                    </details>
                 </section>
 
                 <section class="rounded-xl border bg-card p-5">

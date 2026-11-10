@@ -21,6 +21,7 @@ use Modules\Listings\Models\Listing;
  * @property int $team_id
  * @property int|null $listing_id
  * @property int|null $assigned_to
+ * @property Carbon|null $email_opt_out_at
  * @property string $name
  * @property string $email
  * @property string|null $phone
@@ -118,6 +119,7 @@ class Customer extends Model
             'merged_at' => 'datetime',
             'archived_at' => 'datetime',
             'anonymized_at' => 'datetime',
+            'email_opt_out_at' => 'datetime',
         ];
     }
 

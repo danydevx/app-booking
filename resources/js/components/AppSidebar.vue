@@ -4,10 +4,12 @@ import {
     BookOpen,
     Building2,
     CreditCard,
+    FileText,
     FolderGit2,
     Inbox,
     LayoutGrid,
     ListChecks,
+    Mail,
     Shield,
 } from '@lucide/vue';
 import { computed } from 'vue';
@@ -58,6 +60,16 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Hoy',
             href: `/${page.props.currentTeam.slug}/bookings/today`,
             icon: ListChecks,
+        });
+        items.push({
+            title: 'Cotizaciones',
+            href: `/${page.props.currentTeam.slug}/bookings/quotes`,
+            icon: FileText,
+        });
+        items.push({
+            title: 'Plantillas',
+            href: `/${page.props.currentTeam.slug}/bookings/templates`,
+            icon: Mail,
         });
 
         if (page.props.currentTeam.role === 'owner') {

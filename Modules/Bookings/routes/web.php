@@ -8,13 +8,18 @@ use Modules\Bookings\Http\Controllers\BookingInquiryController;
 use Modules\Bookings\Http\Controllers\CrmTodayController;
 use Modules\Bookings\Http\Controllers\CustomerActivityController;
 use Modules\Bookings\Http\Controllers\CustomerController;
+use Modules\Bookings\Http\Controllers\CustomerEmailController;
 use Modules\Bookings\Http\Controllers\CustomerImportController;
 use Modules\Bookings\Http\Controllers\CustomerLifecycleController;
 use Modules\Bookings\Http\Controllers\CustomerPipelineController;
+use Modules\Bookings\Http\Controllers\CustomerQuoteController;
 use Modules\Bookings\Http\Controllers\CustomerTagController;
 use Modules\Bookings\Http\Controllers\CustomerTaskController;
+use Modules\Bookings\Http\Controllers\EmailTemplateController;
 use Modules\Bookings\Http\Controllers\ManualBookingController;
 use Modules\Bookings\Http\Controllers\PublicAvailabilityController;
+use Modules\Bookings\Http\Controllers\PublicCustomerEmailController;
+use Modules\Bookings\Http\Controllers\PublicQuoteController;
 
 Route::middleware('web')->group(function (): void {
     Route::get('terrazas/{listing:slug}/disponibilidad', [PublicAvailabilityController::class, 'show'])
@@ -22,6 +27,19 @@ Route::middleware('web')->group(function (): void {
     Route::post('terrazas/{listing:slug}/solicitud', [PublicAvailabilityController::class, 'store'])
         ->middleware('throttle:5,1')
         ->name('public.bookings.inquiries.store');
+
+    Route::get('cotizaciones/{token}', [PublicQuoteController::class, 'show'])
+        ->name('public.quotes.show');
+    Route::post('cotizaciones/{token}/aceptar', [PublicQuoteController::class, 'accept'])
+        ->middleware('throttle:10,1')
+        ->name('public.quotes.accept');
+    Route::post('cotizaciones/{token}/rechazar', [PublicQuoteController::class, 'decline'])
+        ->middleware('throttle:10,1')
+        ->name('public.quotes.decline');
+
+    Route::get('baja/{customer}', [PublicCustomerEmailController::class, 'unsubscribe'])
+        ->middleware('signed')
+        ->name('public.customers.unsubscribe');
 });
 
 Route::get('{current_team}/listings/{listing}/bookings', [BookingInquiryController::class, 'listing'])
@@ -68,6 +86,23 @@ Route::prefix('{current_team}/bookings')
         Route::delete('/customers/tags/{tag}', [CustomerTagController::class, 'destroy'])
             ->name('customers.tags.destroy');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+        Route::post('/customers/{customer}/emails', [CustomerEmailController::class, 'send'])
+            ->name('customers.emails.send');
+        Route::patch('/customers/{customer}/email-opt-in', [CustomerEmailController::class, 'optIn'])
+            ->name('customers.email-opt-in');
+        Route::post('/customers/{customer}/quotes', [CustomerQuoteController::class, 'store'])
+            ->name('customers.quotes.store');
+
+        Route::get('/templates', [EmailTemplateController::class, 'index'])->name('templates.index');
+        Route::post('/templates', [EmailTemplateController::class, 'store'])->name('templates.store');
+        Route::patch('/templates/{template}', [EmailTemplateController::class, 'update'])->name('templates.update');
+        Route::delete('/templates/{template}', [EmailTemplateController::class, 'destroy'])->name('templates.destroy');
+
+        Route::get('/quotes', [CustomerQuoteController::class, 'index'])->name('quotes.index');
+        Route::get('/quotes/{quote}', [CustomerQuoteController::class, 'show'])->name('quotes.show');
+        Route::patch('/quotes/{quote}', [CustomerQuoteController::class, 'update'])->name('quotes.update');
+        Route::post('/quotes/{quote}/send', [CustomerQuoteController::class, 'send'])->name('quotes.send');
+        Route::post('/quotes/{quote}/convert', [CustomerQuoteController::class, 'convert'])->name('quotes.convert');
         Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
         Route::patch('/customers/{customer}/tags', [CustomerTagController::class, 'sync'])
             ->name('customers.tags.sync');
