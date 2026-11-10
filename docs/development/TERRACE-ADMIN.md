@@ -30,6 +30,7 @@ Las vistas de administración usan todo el ancho disponible; la distribución se
 - Cotizaciones de la terraza desde la ficha del cliente, con link público y conversión a reserva.
 - Correo de seguimiento con plantillas y baja voluntaria.
 - Portal del cliente para confirmar datos, agregar el evento al calendario, aceptar el contrato y dejar opinión.
+- Ficha de cliente con submenú: resumen, tareas, timeline, correo, cotizaciones, solicitudes, datos, etiquetas y ciclo de vida.
 - Próximas fechas no disponibles.
 - Enlaces a:
     - Solicitudes/reservaciones de la terraza en `/{current_team}/listings/{listing}/bookings`.

@@ -1,6 +1,6 @@
 # Plan de evolución del CRM
 
-**Estado:** Pasos 1–13 implementados; envío automatizado de WhatsApp pendiente de proveedor
+**Estado:** Pasos 1–14 implementados; envío automatizado de WhatsApp pendiente de proveedor
 **Módulo actual:** `Modules/Bookings`
 **Plan comercial:** Pro (`features.customers = true`)
 **Última actualización:** 2026-11-10
@@ -23,6 +23,7 @@
 | 11. Medición y notificaciones       | Completado el 2026-11-10                                                             |
 | 12. Portal del cliente y opiniones  | Completado el 2026-11-10                                                             |
 | 13. Contratos y aceptación          | Completado el 2026-11-10                                                             |
+| 14. Ficha de cliente por secciones  | Completado el 2026-11-10                                                             |
 
 ## 1. Punto de partida
 
@@ -542,6 +543,27 @@ crear cuenta; el propietario ve ambos en la ficha de la reserva.
 
 **Criterio de aceptación:** el cliente acepta los términos desde su portal y el
 propietario ve la aceptación con fecha y nombre.
+
+**Esfuerzo:** M.
+
+---
+
+### Paso 14 — Ficha de cliente por secciones
+
+**Objetivo:** evitar una sola página con demasiados formularios.
+
+**Implementado:**
+
+- Submenú sticky: Resumen, Tareas, Timeline, Correo, Cotizaciones, Solicitudes,
+  Datos, Etiquetas y Ciclo de vida.
+- Rutas propias por sección, tanto globales como scoped por terraza.
+- Resumen con métricas y solicitudes.
+- Formularios separados por tarea: tareas, timeline, correo, cotizaciones,
+  datos, etiquetas y ciclo de vida.
+- Breadcrumb y submenú conservan el contexto de terraza cuando aplica.
+
+**Criterio de aceptación:** cada sección tiene una URL propia y solo muestra los
+formularios que le corresponden.
 
 **Esfuerzo:** M.
 
