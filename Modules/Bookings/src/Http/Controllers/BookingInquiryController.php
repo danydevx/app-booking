@@ -27,6 +27,7 @@ use Modules\Bookings\Queries\BookingInquiryQuery;
 use Modules\Bookings\Support\BookingActivityPresenter;
 use Modules\Bookings\Support\BookingOptionCatalog;
 use Modules\Bookings\Support\BookingPresenter;
+use Modules\Listings\Models\Listing;
 use Spatie\Activitylog\Models\Activity;
 
 class BookingInquiryController extends Controller
@@ -48,6 +49,12 @@ class BookingInquiryController extends Controller
 
         $inquiries = $this->inquiries->paginate($team, $filters);
         $listings = $this->inquiries->listings($team);
+        $activeListing = $filters['listing'] ?? null
+            ? Listing::query()
+                ->where('team_id', $team->id)
+                ->where('slug', $filters['listing'])
+                ->first(['id', 'name', 'slug'])
+            : null;
 
         return Inertia::render('Bookings/Index', [
             'team' => [
@@ -60,6 +67,15 @@ class BookingInquiryController extends Controller
             'statuses' => BookingOptionCatalog::inquiryStatuses(),
             'canUseCustomers' => $this->entitlements->allows($team, 'customers'),
             'canCreateBooking' => Gate::allows('create', [BookingInquiry::class, $team]),
+            'activeListing' => $activeListing,
+            'management' => $activeListing ? [
+                'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'edit' => route('listings.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'bookings' => route('bookings.index', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'customers' => route('bookings.customers.index', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'availability' => route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'listings' => route('listings.index', ['current_team' => $team->slug]),
+            ] : null,
             'urls' => [
                 'index' => route('bookings.index', ['current_team' => $team->slug]),
                 'create' => route('bookings.create', ['current_team' => $team->slug]),

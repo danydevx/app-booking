@@ -52,6 +52,7 @@ const props = defineProps<{
     blockedDates: BlockedDate[];
     urls: {
         index: string;
+        manage: string;
         edit: string;
         bookings: string;
         customers: string;
@@ -61,12 +62,30 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: {
+        listing: { name: string };
+        urls: {
+            index: string;
+            manage: string;
+            edit: string;
+            bookings: string;
+            customers: string;
+            availability: string;
+        };
+    }) => ({
         breadcrumbs: [
-            { title: 'Terrazas', href: '/' },
-            { title: 'Administrar terraza' },
+            { title: 'Terrazas', href: props.urls.index },
+            { title: props.listing.name, href: props.urls.manage },
+            { title: 'Administración' },
         ],
-    },
+        submenu: [
+            { title: 'Resumen', href: props.urls.manage },
+            { title: 'Reservaciones', href: props.urls.bookings },
+            { title: 'Clientes', href: props.urls.customers },
+            { title: 'Disponibilidad', href: props.urls.availability },
+            { title: 'Fotos y datos', href: props.urls.edit },
+        ],
+    }),
 });
 
 function statusVariant(
@@ -150,34 +169,6 @@ function statusVariant(
                     </Button>
                 </div>
             </div>
-            <nav
-                class="flex flex-wrap gap-1 border-t bg-muted/20 px-3 py-2 text-sm"
-            >
-                <Link
-                    :href="urls.bookings"
-                    class="rounded-md px-3 py-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                    Reservaciones
-                </Link>
-                <Link
-                    :href="urls.customers"
-                    class="rounded-md px-3 py-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                    Clientes
-                </Link>
-                <Link
-                    :href="urls.availability"
-                    class="rounded-md px-3 py-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                    Disponibilidad
-                </Link>
-                <Link
-                    :href="urls.edit"
-                    class="rounded-md px-3 py-2 text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                    Fotos y datos
-                </Link>
-            </nav>
         </header>
 
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

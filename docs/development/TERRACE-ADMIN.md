@@ -9,6 +9,8 @@ edición: agrupa el trabajo diario del dueño.
 
 También se llega desde **Terrazas → Administrar**.
 
+El menú de gestión aparece como un submenú fijo debajo del breadcrumb y se mantiene visible al navegar entre resumen, reservaciones, clientes, disponibilidad y edición.
+
 ## Contenido
 
 - Cabecera con portada, estado, ubicación y medios.

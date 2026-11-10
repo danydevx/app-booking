@@ -35,7 +35,12 @@ const props = defineProps<{
     recurrences: StatusOption[];
     horizon_days: number;
     urls: {
+        index: string;
         bookings: string;
+        manage: string;
+        edit: string;
+        customers: string;
+        availability: string;
         block_range: string;
         unblock: string;
         unblock_range: string;
@@ -59,17 +64,30 @@ const weekdays = [
 ];
 
 defineOptions({
-    layout: {
+    layout: (props: {
+        listing: { name: string };
+        urls: {
+            index: string;
+            manage: string;
+            edit: string;
+            bookings: string;
+            customers: string;
+            availability: string;
+        };
+    }) => ({
         breadcrumbs: [
-            {
-                title: 'Solicitudes',
-                href: '/',
-            },
-            {
-                title: 'Disponibilidad',
-            },
+            { title: 'Terrazas', href: props.urls.index },
+            { title: props.listing.name, href: props.urls.manage },
+            { title: 'Disponibilidad' },
         ],
-    },
+        submenu: [
+            { title: 'Resumen', href: props.urls.manage },
+            { title: 'Reservaciones', href: props.urls.bookings },
+            { title: 'Clientes', href: props.urls.customers },
+            { title: 'Disponibilidad', href: props.urls.availability },
+            { title: 'Fotos y datos', href: props.urls.edit },
+        ],
+    }),
 });
 
 const form = useForm({

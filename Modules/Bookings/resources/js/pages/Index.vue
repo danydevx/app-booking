@@ -27,6 +27,15 @@ const props = defineProps<{
     statuses: StatusOption[];
     canUseCustomers: boolean;
     canCreateBooking: boolean;
+    activeListing: { id: number; name: string; slug: string } | null;
+    management: {
+        manage: string;
+        edit: string;
+        bookings: string;
+        customers: string;
+        availability: string;
+        listings: string;
+    } | null;
     urls: {
         index: string;
         create: string;
@@ -36,14 +45,45 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
-        breadcrumbs: [
-            {
-                title: 'Solicitudes',
-                href: '/',
-            },
-        ],
-    },
+    layout: (props: {
+        activeListing: { name: string } | null;
+        management: {
+            manage: string;
+            edit: string;
+            bookings: string;
+            customers: string;
+            availability: string;
+            listings: string;
+        } | null;
+    }) => ({
+        breadcrumbs:
+            props.activeListing && props.management
+                ? [
+                      { title: 'Terrazas', href: props.management.listings },
+                      {
+                          title: props.activeListing.name,
+                          href: props.management.manage,
+                      },
+                      { title: 'Reservaciones' },
+                  ]
+                : [{ title: 'Solicitudes', href: '/' }],
+        submenu:
+            props.activeListing && props.management
+                ? [
+                      { title: 'Resumen', href: props.management.manage },
+                      {
+                          title: 'Reservaciones',
+                          href: props.management.bookings,
+                      },
+                      { title: 'Clientes', href: props.management.customers },
+                      {
+                          title: 'Disponibilidad',
+                          href: props.management.availability,
+                      },
+                      { title: 'Fotos y datos', href: props.management.edit },
+                  ]
+                : [],
+    }),
 });
 
 const form = reactive({

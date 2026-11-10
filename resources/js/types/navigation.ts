@@ -6,6 +6,11 @@ export type BreadcrumbItem = {
     href: NonNullable<InertiaLinkProps['href']>;
 };
 
+export type SubmenuItem = {
+    title: string;
+    href: NonNullable<InertiaLinkProps['href']>;
+};
+
 export type NavItem = {
     title: string;
     href: NonNullable<InertiaLinkProps['href']>;

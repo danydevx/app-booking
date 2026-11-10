@@ -62,6 +62,26 @@ final class ListingFormData
     {
         return [
             'index' => route('listings.index', ['current_team' => $team->slug]),
+            'manage' => route('listings.manage', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'edit' => route('listings.edit', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'bookings' => route('bookings.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'customers' => route('bookings.customers.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
+            'availability' => route('bookings.availability.edit', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
             'update' => route('listings.update', [
                 'current_team' => $team->slug,
                 'listing' => $listing->slug,

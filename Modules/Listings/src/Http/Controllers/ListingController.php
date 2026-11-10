@@ -145,6 +145,10 @@ class ListingController extends Controller
             ...$this->adminSummary->for($listing, $team->slug),
             'urls' => [
                 'index' => route('listings.index', ['current_team' => $team->slug]),
+                'manage' => route('listings.manage', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
                 'edit' => route('listings.edit', [
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,

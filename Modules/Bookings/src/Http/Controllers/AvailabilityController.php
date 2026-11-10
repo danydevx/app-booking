@@ -77,7 +77,24 @@ class AvailabilityController extends Controller
             'recurrences' => AvailabilityRecurrence::options(),
             'horizon_days' => (int) config('bookings.availability_recurrence_horizon_days', 366),
             'urls' => [
+                'index' => route('listings.index', ['current_team' => $team->slug]),
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
+                'availability' => route('bookings.availability.edit', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'manage' => route('listings.manage', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'edit' => route('listings.edit', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'customers' => route('bookings.customers.index', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
                 'block_range' => route('bookings.availability.block-range', [
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,

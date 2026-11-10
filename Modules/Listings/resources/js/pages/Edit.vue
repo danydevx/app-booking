@@ -22,6 +22,11 @@ const props = defineProps<{
     canDelete: boolean;
     urls: {
         index: string;
+        manage: string;
+        edit: string;
+        bookings: string;
+        customers: string;
+        availability: string;
         update: string;
         publish: string;
         unpublish: string;
@@ -32,17 +37,31 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
+    layout: (props: {
+        listing: { name: string };
+        urls: {
+            index: string;
+            manage: string;
+            edit: string;
+            bookings: string;
+            customers: string;
+            availability: string;
+            update: string;
+        };
+    }) => ({
         breadcrumbs: [
-            {
-                title: 'Terrazas',
-                href: '/',
-            },
-            {
-                title: 'Editar terraza',
-            },
+            { title: 'Terrazas', href: props.urls.index },
+            { title: props.listing.name, href: props.urls.manage },
+            { title: 'Fotos y datos' },
         ],
-    },
+        submenu: [
+            { title: 'Resumen', href: props.urls.manage },
+            { title: 'Reservaciones', href: props.urls.bookings },
+            { title: 'Clientes', href: props.urls.customers },
+            { title: 'Disponibilidad', href: props.urls.availability },
+            { title: 'Fotos y datos', href: props.urls.edit },
+        ],
+    }),
 });
 
 function publish(): void {
