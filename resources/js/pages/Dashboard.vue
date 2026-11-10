@@ -40,6 +40,7 @@ const props = defineProps<{
         new_inquiries: number;
         upcoming_bookings: number;
         customers: number;
+        new_customers: number;
         open_tasks: number;
         overdue_tasks: number;
         occupancy_percent: number;
@@ -173,7 +174,8 @@ function statusVariant(
                 </CardHeader>
                 <CardContent class="space-y-2 text-sm text-muted-foreground">
                     <p>
-                        Anticipos recibidos:
+                        {{ props.overview.new_customers }} nuevos este mes ·
+                        anticipos:
                         {{
                             formatMoney(
                                 props.overview.deposits_received_cents,

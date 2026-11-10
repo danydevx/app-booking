@@ -257,6 +257,7 @@ function createCustomer(): void {
                             ? 'solicitud'
                             : 'solicitudes'
                     }}
+                    · {{ customer.accepted_inquiries_count }} aceptadas
                 </p>
                 <p
                     v-if="customer.open_tasks_count > 0"

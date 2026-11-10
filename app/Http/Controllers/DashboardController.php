@@ -134,6 +134,10 @@ class DashboardController extends Controller
                     ->where('start_date', '>=', $today)
                     ->count(),
                 'customers' => Customer::query()->where('team_id', $team->id)->count(),
+                'new_customers' => Customer::query()
+                    ->where('team_id', $team->id)
+                    ->where('created_at', '>=', now()->startOfMonth())
+                    ->count(),
                 'open_tasks' => CustomerTask::query()
                     ->where('team_id', $team->id)
                     ->where('status', CustomerTaskStatus::Open)

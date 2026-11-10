@@ -85,6 +85,7 @@ final class BookingPresenter
             'whatsapp_phone' => $customer->whatsapp_phone,
             'notes' => $customer->notes,
             'inquiries_count' => (int) ($customer->inquiries_count ?? 0),
+            'accepted_inquiries_count' => (int) ($customer->accepted_inquiries_count ?? 0),
             'open_tasks_count' => (int) ($customer->open_tasks_count ?? 0),
             'overdue_tasks_count' => (int) ($customer->overdue_tasks_count ?? 0),
             'created_at' => $customer->created_at?->toISOString(),

@@ -25,6 +25,7 @@ use Modules\Bookings\Models\CustomerTask;
 use Modules\Bookings\Support\BookingPresenter;
 use Modules\Bookings\Support\CustomerActivityPresenter;
 use Modules\Bookings\Support\CustomerCsvExport;
+use Modules\Bookings\Support\CustomerMetrics;
 use Modules\Bookings\Support\CustomerTaskPresenter;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -35,6 +36,7 @@ class CustomerController extends Controller
     public function __construct(
         private readonly Entitlements $entitlements,
         private readonly RecordCustomerActivity $activityLogger,
+        private readonly CustomerMetrics $metrics,
     ) {}
 
     public function index(Request $request): Response|RedirectResponse
@@ -53,6 +55,7 @@ class CustomerController extends Controller
             ->where('team_id', $team->id)
             ->withCount([
                 'inquiries',
+                'inquiries as accepted_inquiries_count' => fn ($query) => $query->where('status', 'accepted'),
                 'tasks as open_tasks_count' => fn ($query) => $query->where('status', 'open'),
                 'tasks as overdue_tasks_count' => fn ($query) => $query->where('status', 'open')->where('due_at', '<', now()),
             ])
@@ -169,6 +172,8 @@ class CustomerController extends Controller
             ])
             ->all();
 
+        $metrics = $this->metrics->for($customer);
+
         $activities = $customer->activities()
             ->with(['user', 'team'])
             ->latest('occurred_at')
@@ -190,6 +195,21 @@ class CustomerController extends Controller
             ],
             'activities' => $activities,
             'activityTypes' => CustomerActivityType::userOptions(),
+            'metrics' => [
+                'total_inquiries' => $metrics['total_inquiries'],
+                'accepted_inquiries' => $metrics['accepted_inquiries'],
+                'upcoming_bookings' => $metrics['upcoming_bookings'],
+                'deposits_received_cents' => $metrics['deposits_received_cents'],
+                'last_activity_at' => $metrics['last_activity_at'],
+                'next_task' => $metrics['next_task']
+                    ? [
+                        'id' => $metrics['next_task']->id,
+                        'title' => $metrics['next_task']->title,
+                        'due_at' => $metrics['next_task']->due_at?->toIso8601String(),
+                        'priority_label' => $metrics['next_task']->priority->label(),
+                    ]
+                    : null,
+            ],
             'tasks' => $tasks,
             'taskPriorities' => CustomerTaskPriority::options(),
             'teamMembers' => $teamMembers,

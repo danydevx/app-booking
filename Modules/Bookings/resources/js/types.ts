@@ -61,6 +61,7 @@ export type CustomerCard = {
     whatsapp_phone: string | null;
     notes: string | null;
     inquiries_count: number;
+    accepted_inquiries_count: number;
     open_tasks_count: number;
     overdue_tasks_count: number;
     created_at: string | null;

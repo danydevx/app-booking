@@ -20,6 +20,19 @@ const props = defineProps<{
     tasks: CustomerTask[];
     taskPriorities: StatusOption[];
     teamMembers: Array<{ id: number; name: string }>;
+    metrics: {
+        total_inquiries: number;
+        accepted_inquiries: number;
+        upcoming_bookings: number;
+        deposits_received_cents: number;
+        last_activity_at: string | null;
+        next_task: {
+            id: number;
+            title: string;
+            due_at: string | null;
+            priority_label: string;
+        } | null;
+    };
     urls: {
         index: string;
         update: string;
@@ -143,6 +156,13 @@ function formatActivityDate(value: string): string {
     });
 }
 
+function formatMoney(cents: number): string {
+    return new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN',
+    }).format(cents / 100);
+}
+
 function statusVariant(
     status: InquiryStatus,
 ): 'default' | 'secondary' | 'destructive' | 'outline' {
@@ -181,6 +201,45 @@ function statusVariant(
             <Button variant="outline" as-child>
                 <Link :href="urls.index">Volver</Link>
             </Button>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-xl border bg-card p-4">
+                <p class="text-xs text-muted-foreground">Solicitudes</p>
+                <p class="mt-1 text-2xl font-semibold">
+                    {{ metrics.total_inquiries }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    {{ metrics.accepted_inquiries }} aceptadas
+                </p>
+            </div>
+            <div class="rounded-xl border bg-card p-4">
+                <p class="text-xs text-muted-foreground">Reservas próximas</p>
+                <p class="mt-1 text-2xl font-semibold">
+                    {{ metrics.upcoming_bookings }}
+                </p>
+            </div>
+            <div class="rounded-xl border bg-card p-4">
+                <p class="text-xs text-muted-foreground">Anticipos recibidos</p>
+                <p class="mt-1 text-xl font-semibold">
+                    {{ formatMoney(metrics.deposits_received_cents) }}
+                </p>
+            </div>
+            <div class="rounded-xl border bg-card p-4">
+                <p class="text-xs text-muted-foreground">Próxima tarea</p>
+                <p class="mt-1 truncate text-sm font-medium">
+                    {{ metrics.next_task?.title ?? 'Sin tareas pendientes' }}
+                </p>
+                <p
+                    v-if="metrics.next_task"
+                    class="text-xs text-muted-foreground"
+                >
+                    {{ metrics.next_task.priority_label }}
+                    <span v-if="metrics.next_task.due_at">
+                        · {{ formatActivityDate(metrics.next_task.due_at) }}
+                    </span>
+                </p>
+            </div>
         </div>
 
         <form class="rounded-xl border bg-card p-5" @submit.prevent="submit">
