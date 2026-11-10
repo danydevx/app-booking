@@ -44,13 +44,17 @@ final class AvailabilityService
     /**
      * @return array<int, string>
      */
-    public function conflictingDates(Listing $listing, string $start, string $end): array
-    {
+    public function conflictingDates(
+        Listing $listing,
+        string $start,
+        string $end,
+        ?int $ignoreInquiryId = null,
+    ): array {
         return $this->datesWithStatuses($listing, $start, $end, [
             AvailabilityStatus::Blocked,
             AvailabilityStatus::Held,
             AvailabilityStatus::Booked,
-        ]);
+        ], $ignoreInquiryId);
     }
 
     /**
@@ -75,6 +79,7 @@ final class AvailabilityService
         string $start,
         string $end,
         array $statuses,
+        ?int $ignoreInquiryId = null,
     ): array {
         $dates = DateRange::dates($start, $end);
 
@@ -86,6 +91,12 @@ final class AvailabilityService
             ->where('listing_id', $listing->id)
             ->whereIn('date', $dates)
             ->whereIn('status', array_map(fn (AvailabilityStatus $status): string => $status->value, $statuses))
+            ->when($ignoreInquiryId !== null, function ($query) use ($ignoreInquiryId): void {
+                $query->where(function ($inner) use ($ignoreInquiryId): void {
+                    $inner->whereNull('booking_inquiry_id')
+                        ->orWhere('booking_inquiry_id', '!=', $ignoreInquiryId);
+                });
+            })
             ->get(['date'])
             ->map(fn (ListingUnavailability $date): string => $date->date->toDateString())
             ->all();

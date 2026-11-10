@@ -16,9 +16,12 @@ const props = defineProps<{
     depositStatuses: StatusOption[];
     depositMethods: StatusOption[];
     canManage: boolean;
+    canEdit: boolean;
     canManageDeposits: boolean;
     urls: {
         index: string;
+        edit: string;
+        update: string;
         contacted: string;
         accept: string;
         decline: string;
@@ -120,6 +123,18 @@ function updateDepositStatus(deposit: BookingDeposit, event: Event): void {
             <div class="flex flex-wrap gap-2">
                 <Button variant="outline" as-child>
                     <Link :href="urls.index">Volver</Link>
+                </Button>
+                <Button
+                    v-if="
+                        canEdit &&
+                        !['declined', 'cancelled', 'expired'].includes(
+                            inquiry.status,
+                        )
+                    "
+                    variant="outline"
+                    as-child
+                >
+                    <Link :href="urls.edit">Editar reserva</Link>
                 </Button>
                 <Button
                     v-if="inquiry.status === 'new'"

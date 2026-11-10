@@ -29,6 +29,11 @@ class BookingInquiryPolicy
         return $this->belongsToListingTeam($user, $inquiry);
     }
 
+    public function edit(User $user, BookingInquiry $inquiry): bool
+    {
+        return $this->canManage($user, $inquiry);
+    }
+
     public function accept(User $user, BookingInquiry $inquiry): bool
     {
         return $this->canManage($user, $inquiry);

@@ -16,9 +16,11 @@ use Modules\Bookings\Actions\CancelBookingInquiry;
 use Modules\Bookings\Actions\DeclineBookingInquiry;
 use Modules\Bookings\Actions\MarkInquiryContacted;
 use Modules\Bookings\Actions\UpdateBookingDeposit;
+use Modules\Bookings\Actions\UpdateBookingInquiry;
 use Modules\Bookings\Http\Requests\BookingInquiryIndexRequest;
 use Modules\Bookings\Http\Requests\StoreBookingDepositRequest;
 use Modules\Bookings\Http\Requests\UpdateBookingDepositRequest;
+use Modules\Bookings\Http\Requests\UpdateBookingInquiryRequest;
 use Modules\Bookings\Models\BookingDeposit;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Queries\BookingInquiryQuery;
@@ -80,9 +82,18 @@ class BookingInquiryController extends Controller
             'depositStatuses' => BookingOptionCatalog::depositStatuses(),
             'depositMethods' => BookingOptionCatalog::depositMethods(),
             'canManage' => Gate::allows('accept', $inquiry),
+            'canEdit' => Gate::allows('edit', $inquiry),
             'canManageDeposits' => Gate::allows('manageDeposits', $inquiry),
             'urls' => [
                 'index' => route('bookings.index', ['current_team' => $team->slug]),
+                'edit' => route('bookings.inquiries.edit', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+                'update' => route('bookings.inquiries.update', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
                 'contacted' => route('bookings.inquiries.contacted', [
                     'current_team' => $team->slug,
                     'inquiry' => $inquiry->id,
@@ -104,6 +115,63 @@ class BookingInquiryController extends Controller
                     'inquiry' => $inquiry->id,
                 ]),
             ],
+        ]);
+    }
+
+    public function edit(Request $request, string $currentTeam, BookingInquiry $inquiry): Response
+    {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        Gate::authorize('edit', $inquiry);
+
+        $inquiry->load(['listing', 'customer']);
+
+        return Inertia::render('Bookings/Edit', [
+            'team' => [
+                'name' => $team->name,
+                'slug' => $team->slug,
+            ],
+            'inquiry' => BookingPresenter::inquiryDetail($inquiry, $team->slug),
+            'urls' => [
+                'show' => route('bookings.show', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+                'update' => route('bookings.inquiries.update', [
+                    'current_team' => $team->slug,
+                    'inquiry' => $inquiry->id,
+                ]),
+            ],
+        ]);
+    }
+
+    public function update(
+        UpdateBookingInquiryRequest $request,
+        string $currentTeam,
+        BookingInquiry $inquiry,
+        UpdateBookingInquiry $updateInquiry,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($inquiry, $team->id);
+
+        Gate::authorize('edit', $inquiry);
+
+        $inquiry = $updateInquiry->handle(
+            $inquiry,
+            $request->user(),
+            $request->validated(),
+            $request->boolean('notify_customer', true),
+        );
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Reserva actualizada.',
+        ]);
+
+        return to_route('bookings.show', [
+            'current_team' => $team->slug,
+            'inquiry' => $inquiry->id,
         ]);
     }
 

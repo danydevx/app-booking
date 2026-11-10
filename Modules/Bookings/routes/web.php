@@ -40,6 +40,8 @@ Route::prefix('{current_team}/bookings')
             ->name('availability.unblock');
 
         Route::get('/inquiries/{inquiry}', [BookingInquiryController::class, 'show'])->name('show');
+        Route::get('/inquiries/{inquiry}/edit', [BookingInquiryController::class, 'edit'])->name('inquiries.edit');
+        Route::patch('/inquiries/{inquiry}', [BookingInquiryController::class, 'update'])->name('inquiries.update');
         Route::patch('/inquiries/{inquiry}/contacted', [BookingInquiryController::class, 'contacted'])->name('inquiries.contacted');
         Route::patch('/inquiries/{inquiry}/accept', [BookingInquiryController::class, 'accept'])->name('inquiries.accept');
         Route::patch('/inquiries/{inquiry}/decline', [BookingInquiryController::class, 'decline'])->name('inquiries.decline');
