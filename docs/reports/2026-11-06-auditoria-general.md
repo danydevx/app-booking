@@ -10,7 +10,7 @@
 
 ## 1. Resumen ejecutivo
 
-El proyecto es un SaaS multi-cuenta para renta de terrazas, construido sobre Laravel 13 + Inertia 3 + Vue 3/TypeScript + Tailwind 4 + shadcn-vue, con un monolito modular bajo `Modules/`. El MVP funcional (fases 0–7) está implementado y tiene una base de tests sólida: **313 tests / 1,834 aserciones, todos en verde**.
+El proyecto es un SaaS multi-cuenta para renta de terrazas, construido sobre Laravel 13 + Inertia 3 + Vue 3/TypeScript + Tailwind 4 + shadcn-vue, con un monolito modular bajo `Modules/`. El MVP funcional (fases 0–7) está implementado y tiene una base de tests sólida: **319 tests / 1,880 aserciones, todos en verde**.
 
 La calidad del backend es buena: Pint, PHPStan nivel 7, tipos de Vue y build pasan. Los **dos bloqueadores** detectados en la auditoría ya están resueltos:
 
@@ -19,7 +19,7 @@ La calidad del backend es buena: Pint, PHPStan nivel 7, tipos de Vue y build pas
 
 | Área                  | Comando                      | Resultado                                    |
 | --------------------- | ---------------------------- | -------------------------------------------- |
-| Tests backend         | `php artisan test`           | **PASS** — 313 tests, 1,834 assertions, ~8 s |
+| Tests backend         | `php artisan test`           | **PASS** — 319 tests, 1,880 assertions, ~8 s |
 | Formato PHP           | `vendor/bin/pint --test`     | **PASS**                                     |
 | Análisis estático     | `vendor/bin/phpstan analyse` | **PASS** — 0 errores, nivel 7                |
 | Tipos frontend        | `npm run types:check`        | **PASS**                                     |
@@ -71,11 +71,11 @@ El trabajo siguió un esquema de **fases 0–7 con documentación de cierre**:
 
 Esto se ve reflejado en los 8 reportes de fase existentes (`00` a `07`) y en las
 métricas de `PHASE-STATUS.md` (197 tests en fase 7, más los tests añadidos
-después: localización, singleton, clientes manuales, reservas manuales con confirmación, reprogramación, historial de reservas y anticipos, filtros y exportación de auditoría, métricas de ocupación y conversión, seeder de demo, selects de estado/municipio en edición y buscador, timeline, notas, tareas, etiquetas, métricas, pipeline, importación/fusión/ciclo de vida y comunicaciones manuales del CRM, disponibilidad interactiva y recurrente, administración unificada de terraza con solicitudes y nueva reserva propias, expiración, rangos, usuarios/roles, detalles de terraza, recordatorios, CSV, auditoría, dashboard, soporte de acceso, CSV endurecido y estado del sistema; 313 tests / 1,834 aserciones actuales).
+después: localización, singleton, clientes manuales, reservas manuales con confirmación, reprogramación, historial de reservas y anticipos, filtros y exportación de auditoría, métricas de ocupación y conversión, seeder de demo, selects de estado/municipio en edición y buscador, timeline, notas, tareas, etiquetas, métricas, pipeline, importación/fusión/ciclo de vida y comunicaciones manuales del CRM, disponibilidad interactiva y recurrente, administración unificada de terraza con solicitudes, nueva reserva y clientes propios, expiración, rangos, usuarios/roles, detalles de terraza, recordatorios, CSV, auditoría, dashboard, soporte de acceso, CSV endurecido y estado del sistema; 319 tests / 1,880 aserciones actuales).
 
 ### 2.3 Fortalezas del proceso
 
-- **Cultura de tests:** 313 tests, 59 archivos con `RefreshDatabase`, 17 archivos con aserciones de Inertia. Se prueban autorización, aislamiento multi-cuenta, límites de plan, webhooks y doble reserva.
+- **Cultura de tests:** 319 tests, 59 archivos con `RefreshDatabase`, 17 archivos con aserciones de Inertia. Se prueban autorización, aislamiento multi-cuenta, límites de plan, webhooks y doble reserva.
 - **Documentación de decisiones:** `docs/decisions/0001-mvp.md` fija el alcance; `docs/PRODUCT-PLAN.md` describe el producto; `docs/development/MODULES.md` define la estructura modular.
 - **Disciplina de alcance:** no se introdujo Bootstrap/jQuery ni una segunda librería de componentes; se respetó el starter kit.
 - **Cierre por fase:** cada fase dejó reporte, estado y evidencia de comandos.
@@ -162,7 +162,7 @@ después: localización, singleton, clientes manuales, reservas manuales con con
 
 | Comando                                  | Resultado | Evidencia                            |
 | ---------------------------------------- | --------- | ------------------------------------ |
-| `php artisan test`                       | PASS      | 313 passed, 1,834 assertions, 7.9 s  |
+| `php artisan test`                       | PASS      | 319 passed, 1,880 assertions, 7.9 s  |
 | `vendor/bin/pint --test`                 | PASS      | sin archivos por corregir            |
 | `vendor/bin/phpstan analyse`             | PASS      | 0 errores, nivel 7                   |
 | `npm run types:check`                    | PASS      | `vue-tsc --noEmit` sin errores       |
@@ -192,7 +192,7 @@ Estos resultados están alineados con `PHASE-STATUS.md` en tests y aserciones; l
 
 - **Estado:** resuelto el 2026-11-06.
 - **Evidencia:** `symfony/http-foundation`, `symfony/http-kernel`, `symfony/routing`, `symfony/serializer` y `symfony/yaml` actualizados a `v7.4.23`; `composer audit` → `No security vulnerability advisories found`.
-- **Verificación:** suite SQLite y suite MySQL 8.4 → 313 tests / 1,834 assertions en ambas.
+- **Verificación:** suite SQLite y suite MySQL 8.4 → 319 tests / 1,880 assertions en ambas.
 - **Nota:** se eliminó `@php artisan boost:update --ansi` de `post-update-cmd` porque fallaba cuando Boost no estaba inicializado (`boost:install`); el comando sigue disponible manualmente.
 
 ### 5.2 Prioridad media (P2)
@@ -358,7 +358,7 @@ $ php artisan --version
 Laravel Framework 13.39.0
 
 $ php artisan test
-{"tool":"phpunit","result":"passed","tests":313,"passed":313,"assertions":1834,"duration_ms":7900}
+{"tool":"phpunit","result":"passed","tests":319,"passed":319,"assertions":1880,"duration_ms":7900}
 
 $ vendor/bin/pint --test
 {"tool":"pint","result":"passed"}
@@ -391,8 +391,8 @@ $ php artisan route:list --except-vendor
 
 ### B. Inventario de tests
 
-- **Total:** 313 tests, 1,834 aserciones.
-- **Por área:** `tests/` 110; `Modules/Billing` 22; `Modules/Bookings` 103; `Modules/Listings` 31; `Modules/Platform` 47.
+- **Total:** 319 tests, 1,880 aserciones.
+- **Por área:** `tests/` 110; `Modules/Billing` 22; `Modules/Bookings` 109; `Modules/Listings` 31; `Modules/Platform` 47.
 - **Localización:** `tests/Unit/LocalizationTest.php` verifica mensajes de validación en español.
 - **Singleton:** `Modules/Platform/tests/Feature/PlatformSettingTest.php` verifica la fila única de `platform_settings`.
 - **Feature tests con `RefreshDatabase`:** 42 archivos.

@@ -26,14 +26,18 @@ Las vistas de administración usan todo el ancho disponible; la distribución se
     - Fechas bloqueadas en los próximos 30 días.
 - Próximas reservas.
 - Solicitudes recientes.
-- Clientes vinculados a solicitudes de esa terraza.
+- Clientes vinculados a la terraza por sus solicitudes o porque se registraron/importaron desde esta administración.
 - Próximas fechas no disponibles.
 - Enlaces a:
     - Solicitudes/reservaciones de la terraza en `/{current_team}/listings/{listing}/bookings`.
     - Nueva reserva dentro de la terraza en `/{current_team}/listings/{listing}/bookings/create`.
-        - Clientes filtrados por terraza.
-        - Disponibilidad.
-        - Edición de datos y fotos.
+    - Clientes de la terraza en `/{current_team}/listings/{listing}/customers`.
+    - Ficha de cliente dentro de la terraza en `/{current_team}/listings/{listing}/customers/{customer}`.
+    - Importación CSV con `?listing={slug}`.
+    - Disponibilidad.
+    - Edición de datos y fotos.
 
-El filtro de clientes por terraza usa las solicitudes asociadas a esa terraza y
-respeta el aislamiento por cuenta.
+El listado de clientes por terraza incluye las solicitudes de esa terraza y los
+clientes creados o importados directamente desde ella (`customers.listing_id`),
+respeta el aislamiento por cuenta y oculta el filtro global de terraza. La
+exportación CSV acepta el filtro `listing`.
