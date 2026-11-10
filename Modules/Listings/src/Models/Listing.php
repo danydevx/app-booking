@@ -33,6 +33,13 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property string|null $longitude
  * @property int|null $capacity
  * @property int|null $price_from_cents
+ * @property int|null $price_monday_cents
+ * @property int|null $price_tuesday_cents
+ * @property int|null $price_wednesday_cents
+ * @property int|null $price_thursday_cents
+ * @property int|null $price_friday_cents
+ * @property int|null $price_saturday_cents
+ * @property int|null $price_sunday_cents
  * @property int|null $price_weekday_cents
  * @property int|null $price_weekend_cents
  * @property int|null $included_hours
@@ -77,6 +84,13 @@ use Modules\Listings\Support\TerraceServiceCatalog;
     'longitude',
     'capacity',
     'price_from_cents',
+    'price_monday_cents',
+    'price_tuesday_cents',
+    'price_wednesday_cents',
+    'price_thursday_cents',
+    'price_friday_cents',
+    'price_saturday_cents',
+    'price_sunday_cents',
     'price_weekday_cents',
     'price_weekend_cents',
     'included_hours',
@@ -263,6 +277,13 @@ class Listing extends Model
             'longitude' => 'decimal:7',
             'capacity' => 'integer',
             'price_from_cents' => 'integer',
+            'price_monday_cents' => 'integer',
+            'price_tuesday_cents' => 'integer',
+            'price_wednesday_cents' => 'integer',
+            'price_thursday_cents' => 'integer',
+            'price_friday_cents' => 'integer',
+            'price_saturday_cents' => 'integer',
+            'price_sunday_cents' => 'integer',
             'price_weekday_cents' => 'integer',
             'price_weekend_cents' => 'integer',
             'included_hours' => 'integer',

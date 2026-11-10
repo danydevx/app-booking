@@ -28,8 +28,13 @@ class ListingCommercialTest extends TestCase
                 'listing' => $listing->slug,
             ]), [
                 'price_from' => '1900',
-                'price_weekday' => '1900',
-                'price_weekend' => '3500',
+                'price_monday' => '1900',
+                'price_tuesday' => '1900',
+                'price_wednesday' => '1900',
+                'price_thursday' => '1900',
+                'price_friday' => '3500',
+                'price_saturday' => '3500',
+                'price_sunday' => '3500',
                 'included_hours' => 8,
                 'included_people' => 50,
                 'extra_hour' => '400',
@@ -42,7 +47,9 @@ class ListingCommercialTest extends TestCase
         $listing->refresh();
 
         $this->assertSame(190000, $listing->price_from_cents);
-        $this->assertSame(350000, $listing->price_weekend_cents);
+        $this->assertSame(190000, $listing->price_monday_cents);
+        $this->assertSame(350000, $listing->price_friday_cents);
+        $this->assertSame(350000, $listing->price_sunday_cents);
         $this->assertSame(40000, $listing->extra_hour_cents);
         $this->assertSame('MXN', $listing->currency);
         $this->assertSame(['wifi', 'bathroom'], $listing->services);
@@ -52,7 +59,10 @@ class ListingCommercialTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('listing.pricing.has_pricing', true)
                 ->where('listing.pricing.price_from_formatted', '$1,900.00 MXN')
-                ->where('listing.pricing.price_weekend_formatted', '$3,500.00 MXN')
+                ->where('listing.pricing.daily_prices.0.label', 'Lunes')
+                ->where('listing.pricing.daily_prices.0.formatted', '$1,900.00 MXN')
+                ->where('listing.pricing.daily_prices.4.label', 'Viernes')
+                ->where('listing.pricing.daily_prices.4.formatted', '$3,500.00 MXN')
                 ->where('listing.pricing.included_hours', 8)
                 ->where('listing.pricing.extra_hour_formatted', '$400.00 MXN')
                 ->where('listing.pricing.price_notes', 'Precios por evento.'));

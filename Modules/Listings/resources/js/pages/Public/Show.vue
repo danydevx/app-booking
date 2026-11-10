@@ -157,7 +157,7 @@ const whatsappUrl = computed(
                                 con el anfitrión.
                             </p>
                         </div>
-                        <div class="grid gap-3 sm:grid-cols-3">
+                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                             <div
                                 v-if="listing.pricing.price_from_formatted"
                                 class="rounded-lg border p-3"
@@ -169,32 +169,22 @@ const whatsappUrl = computed(
                                     {{ listing.pricing.price_from_formatted }}
                                 </p>
                             </div>
-                            <div
-                                v-if="listing.pricing.price_weekday_formatted"
-                                class="rounded-lg border p-3"
+                            <template
+                                v-for="day in listing.pricing.daily_prices"
+                                :key="day.key"
                             >
-                                <p class="text-xs text-muted-foreground">
-                                    Lunes a jueves
-                                </p>
-                                <p class="text-xl font-semibold">
-                                    {{
-                                        listing.pricing.price_weekday_formatted
-                                    }}
-                                </p>
-                            </div>
-                            <div
-                                v-if="listing.pricing.price_weekend_formatted"
-                                class="rounded-lg border p-3"
-                            >
-                                <p class="text-xs text-muted-foreground">
-                                    Viernes a domingo
-                                </p>
-                                <p class="text-xl font-semibold">
-                                    {{
-                                        listing.pricing.price_weekend_formatted
-                                    }}
-                                </p>
-                            </div>
+                                <div
+                                    v-if="day.formatted"
+                                    class="rounded-lg border p-3"
+                                >
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ day.label }}
+                                    </p>
+                                    <p class="text-xl font-semibold">
+                                        {{ day.formatted }}
+                                    </p>
+                                </div>
+                            </template>
                         </div>
                         <p
                             v-if="

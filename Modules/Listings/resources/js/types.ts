@@ -27,11 +27,13 @@ export type ListingPricing = {
     has_pricing: boolean;
     currency: string;
     price_from_cents: number | null;
-    price_weekday_cents: number | null;
-    price_weekend_cents: number | null;
     price_from_formatted: string | null;
-    price_weekday_formatted: string | null;
-    price_weekend_formatted: string | null;
+    daily_prices: Array<{
+        key: string;
+        label: string;
+        cents: number | null;
+        formatted: string | null;
+    }>;
     included_hours: number | null;
     included_people: number | null;
     extra_hour_formatted: string | null;

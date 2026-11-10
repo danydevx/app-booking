@@ -18,6 +18,13 @@ final class ListingCommercialPresenter
     {
         $currency = $listing->currency ?: 'MXN';
         $hasPricing = $listing->price_from_cents !== null
+            || $listing->price_monday_cents !== null
+            || $listing->price_tuesday_cents !== null
+            || $listing->price_wednesday_cents !== null
+            || $listing->price_thursday_cents !== null
+            || $listing->price_friday_cents !== null
+            || $listing->price_saturday_cents !== null
+            || $listing->price_sunday_cents !== null
             || $listing->price_weekday_cents !== null
             || $listing->price_weekend_cents !== null
             || $listing->included_hours !== null
@@ -27,15 +34,30 @@ final class ListingCommercialPresenter
             || $listing->deposit_required_cents !== null
             || filled($listing->price_notes);
 
+        $dailyPrices = [
+            ['key' => 'monday', 'label' => 'Lunes', 'cents' => $listing->price_monday_cents],
+            ['key' => 'tuesday', 'label' => 'Martes', 'cents' => $listing->price_tuesday_cents],
+            ['key' => 'wednesday', 'label' => 'Miércoles', 'cents' => $listing->price_wednesday_cents],
+            ['key' => 'thursday', 'label' => 'Jueves', 'cents' => $listing->price_thursday_cents],
+            ['key' => 'friday', 'label' => 'Viernes', 'cents' => $listing->price_friday_cents],
+            ['key' => 'saturday', 'label' => 'Sábado', 'cents' => $listing->price_saturday_cents],
+            ['key' => 'sunday', 'label' => 'Domingo', 'cents' => $listing->price_sunday_cents],
+        ];
+
         return [
             'has_pricing' => $hasPricing,
             'currency' => $currency,
             'price_from_cents' => $listing->price_from_cents,
-            'price_weekday_cents' => $listing->price_weekday_cents,
-            'price_weekend_cents' => $listing->price_weekend_cents,
             'price_from_formatted' => self::money($listing->price_from_cents, $currency),
-            'price_weekday_formatted' => self::money($listing->price_weekday_cents, $currency),
-            'price_weekend_formatted' => self::money($listing->price_weekend_cents, $currency),
+            'daily_prices' => collect($dailyPrices)
+                ->map(fn (array $day): array => [
+                    'key' => $day['key'],
+                    'label' => $day['label'],
+                    'cents' => $day['cents'],
+                    'formatted' => self::money($day['cents'], $currency),
+                ])
+                ->values()
+                ->all(),
             'included_hours' => $listing->included_hours,
             'included_people' => $listing->included_people,
             'extra_hour_formatted' => self::money($listing->extra_hour_cents, $currency),

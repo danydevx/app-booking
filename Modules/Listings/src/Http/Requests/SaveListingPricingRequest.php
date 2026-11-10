@@ -18,8 +18,13 @@ class SaveListingPricingRequest extends FormRequest
     {
         return [
             'price_from' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
-            'price_weekday' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
-            'price_weekend' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
+            'price_monday' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
+            'price_tuesday' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
+            'price_wednesday' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
+            'price_thursday' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
+            'price_friday' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
+            'price_saturday' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
+            'price_sunday' => ['nullable', 'numeric', 'min:0', 'max:10000000'],
             'included_hours' => ['nullable', 'integer', 'min:1', 'max:168'],
             'included_people' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'extra_hour' => ['nullable', 'numeric', 'min:0', 'max:10000000'],

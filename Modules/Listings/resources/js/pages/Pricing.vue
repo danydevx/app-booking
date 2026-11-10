@@ -9,8 +9,13 @@ import { Label } from '@/components/ui/label';
 
 type Pricing = {
     price_from: string | null;
-    price_weekday: string | null;
-    price_weekend: string | null;
+    price_monday: string | null;
+    price_tuesday: string | null;
+    price_wednesday: string | null;
+    price_thursday: string | null;
+    price_friday: string | null;
+    price_saturday: string | null;
+    price_sunday: string | null;
     included_hours: number | null;
     included_people: number | null;
     extra_hour: string | null;
@@ -96,8 +101,13 @@ defineOptions({
 
 const form = useForm({
     price_from: props.pricing.price_from ?? '',
-    price_weekday: props.pricing.price_weekday ?? '',
-    price_weekend: props.pricing.price_weekend ?? '',
+    price_monday: props.pricing.price_monday ?? '',
+    price_tuesday: props.pricing.price_tuesday ?? '',
+    price_wednesday: props.pricing.price_wednesday ?? '',
+    price_thursday: props.pricing.price_thursday ?? '',
+    price_friday: props.pricing.price_friday ?? '',
+    price_saturday: props.pricing.price_saturday ?? '',
+    price_sunday: props.pricing.price_sunday ?? '',
     included_hours: props.pricing.included_hours ?? '',
     included_people: props.pricing.included_people ?? '',
     extra_hour: props.pricing.extra_hour ?? '',
@@ -105,6 +115,26 @@ const form = useForm({
     deposit_required: props.pricing.deposit_required ?? '',
     price_notes: props.pricing.price_notes ?? '',
 });
+
+const dayFields: Array<{
+    key:
+        | 'price_monday'
+        | 'price_tuesday'
+        | 'price_wednesday'
+        | 'price_thursday'
+        | 'price_friday'
+        | 'price_saturday'
+        | 'price_sunday';
+    label: string;
+}> = [
+    { key: 'price_monday', label: 'Lunes' },
+    { key: 'price_tuesday', label: 'Martes' },
+    { key: 'price_wednesday', label: 'Miércoles' },
+    { key: 'price_thursday', label: 'Jueves' },
+    { key: 'price_friday', label: 'Viernes' },
+    { key: 'price_saturday', label: 'Sábado' },
+    { key: 'price_sunday', label: 'Domingo' },
+];
 
 const preview = computed(() => {
     const rows: Array<{ label: string; value: string }> = [];
@@ -117,17 +147,14 @@ const preview = computed(() => {
     if (form.price_from !== '') {
         rows.push({ label: 'Desde', value: money(form.price_from) });
     }
-    if (form.price_weekday !== '') {
-        rows.push({
-            label: 'Lunes a jueves',
-            value: money(form.price_weekday),
-        });
-    }
-    if (form.price_weekend !== '') {
-        rows.push({
-            label: 'Viernes a domingo',
-            value: money(form.price_weekend),
-        });
+
+    for (const day of dayFields) {
+        if (form[day.key] !== '') {
+            rows.push({
+                label: day.label,
+                value: money(form[day.key]),
+            });
+        }
     }
     if (form.extra_hour !== '') {
         rows.push({
@@ -271,8 +298,8 @@ function rangeStatusVariant(
                 class="grid gap-6 rounded-xl border bg-card p-5"
                 @submit.prevent="submit"
             >
-                <section class="grid gap-4 sm:grid-cols-3">
-                    <div class="grid gap-2">
+                <section class="grid gap-4 border-b pb-5">
+                    <div class="grid gap-2 sm:max-w-xs">
                         <Label for="price-from">Precio desde (MXN)</Label>
                         <Input
                             id="price-from"
@@ -288,37 +315,35 @@ function rangeStatusVariant(
                             {{ form.errors.price_from }}
                         </p>
                     </div>
-                    <div class="grid gap-2">
-                        <Label for="price-weekday">Lunes a jueves</Label>
-                        <Input
-                            id="price-weekday"
-                            v-model="form.price_weekday"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                        />
-                        <p
-                            v-if="form.errors.price_weekday"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.price_weekday }}
+
+                    <div>
+                        <h3 class="text-sm font-semibold">Precio por día</h3>
+                        <p class="text-sm text-muted-foreground">
+                            Define el precio para cada día de la semana.
                         </p>
                     </div>
-                    <div class="grid gap-2">
-                        <Label for="price-weekend">Viernes a domingo</Label>
-                        <Input
-                            id="price-weekend"
-                            v-model="form.price_weekend"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                        />
-                        <p
-                            v-if="form.errors.price_weekend"
-                            class="text-sm text-destructive"
+
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <div
+                            v-for="day in dayFields"
+                            :key="day.key"
+                            class="grid gap-2"
                         >
-                            {{ form.errors.price_weekend }}
-                        </p>
+                            <Label :for="day.key">{{ day.label }}</Label>
+                            <Input
+                                :id="day.key"
+                                v-model="form[day.key]"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                            />
+                            <p
+                                v-if="form.errors[day.key]"
+                                class="text-sm text-destructive"
+                            >
+                                {{ form.errors[day.key] }}
+                            </p>
+                        </div>
                     </div>
                 </section>
 
