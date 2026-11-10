@@ -12,11 +12,15 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Billing\Support\Entitlements;
 use Modules\Bookings\Actions\CreateCustomer;
+use Modules\Bookings\Actions\RecordCustomerActivity;
+use Modules\Bookings\Enums\CustomerActivityType;
 use Modules\Bookings\Http\Requests\StoreCustomerRequest;
 use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
+use Modules\Bookings\Models\CustomerActivity;
 use Modules\Bookings\Support\BookingPresenter;
+use Modules\Bookings\Support\CustomerActivityPresenter;
 use Modules\Bookings\Support\CustomerCsvExport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -26,6 +30,7 @@ class CustomerController extends Controller
 
     public function __construct(
         private readonly Entitlements $entitlements,
+        private readonly RecordCustomerActivity $activityLogger,
     ) {}
 
     public function index(Request $request): Response|RedirectResponse
@@ -88,6 +93,13 @@ class CustomerController extends Controller
 
         $customer = $createCustomer->handle($team, $request->validated());
 
+        $this->activityLogger->handle(
+            $customer,
+            CustomerActivityType::System,
+            'Cliente creado manualmente.',
+            $request->user(),
+        );
+
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cliente creado.']);
 
         return to_route('bookings.customers.show', [
@@ -128,6 +140,18 @@ class CustomerController extends Controller
         $customer->load(['inquiries.listing', 'inquiries.deposits']);
         $customer->loadCount('inquiries');
 
+        $activities = $customer->activities()
+            ->with(['user', 'team'])
+            ->latest('occurred_at')
+            ->latest('id')
+            ->limit(30)
+            ->get()
+            ->map(fn (CustomerActivity $activity): array => CustomerActivityPresenter::present(
+                $activity,
+                Gate::allows('delete', $activity),
+            ))
+            ->all();
+
         return Inertia::render('Bookings/Customers/Show', [
             'customer' => [
                 ...BookingPresenter::customerCard($customer, $team->slug),
@@ -135,9 +159,15 @@ class CustomerController extends Controller
                     ->map(fn (BookingInquiry $inquiry): array => BookingPresenter::inquiryCard($inquiry, $team->slug))
                     ->all(),
             ],
+            'activities' => $activities,
+            'activityTypes' => CustomerActivityType::userOptions(),
             'urls' => [
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'update' => route('bookings.customers.update', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'activities_store' => route('bookings.customers.activities.store', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,
                 ]),
@@ -160,6 +190,15 @@ class CustomerController extends Controller
         }
 
         $customer->update($request->validated());
+
+        $this->activityLogger->handle(
+            $customer,
+            CustomerActivityType::System,
+            'Datos del cliente actualizados.',
+            $request->user(),
+            null,
+            ['changed' => array_keys($customer->getChanges())],
+        );
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cliente actualizado.']);
 

@@ -7,6 +7,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\ValidationException;
+use Modules\Bookings\Enums\CustomerActivityType;
 use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
@@ -20,6 +21,7 @@ final class CreateManualBooking
         private readonly AvailabilityService $availability,
         private readonly ReserveListingDates $reserveDates,
         private readonly RecordBookingActivity $activity,
+        private readonly RecordCustomerActivity $customerActivity,
     ) {}
 
     /**
@@ -102,6 +104,17 @@ final class CreateManualBooking
                 'start_date' => $booking->start_date->toDateString(),
                 'end_date' => $booking->end_date->toDateString(),
             ]);
+
+            if ($booking->customer) {
+                $this->customerActivity->handle(
+                    $booking->customer,
+                    CustomerActivityType::System,
+                    "Reserva manual vinculada: {$booking->listing->name}.",
+                    $user,
+                    null,
+                    ['booking_inquiry_id' => $booking->id],
+                );
+            }
 
             if ($notifyCustomer) {
                 Notification::route('mail', $booking->email)

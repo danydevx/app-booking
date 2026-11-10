@@ -4,6 +4,7 @@ use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 use Modules\Bookings\Http\Controllers\AvailabilityController;
 use Modules\Bookings\Http\Controllers\BookingInquiryController;
+use Modules\Bookings\Http\Controllers\CustomerActivityController;
 use Modules\Bookings\Http\Controllers\CustomerController;
 use Modules\Bookings\Http\Controllers\ManualBookingController;
 use Modules\Bookings\Http\Controllers\PublicAvailabilityController;
@@ -30,6 +31,10 @@ Route::prefix('{current_team}/bookings')
         Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::post('/customers/{customer}/activities', [CustomerActivityController::class, 'store'])
+            ->name('customers.activities.store');
+        Route::delete('/customers/{customer}/activities/{activity}', [CustomerActivityController::class, 'destroy'])
+            ->name('customers.activities.destroy');
 
         Route::get('/availability/{listing}', [AvailabilityController::class, 'edit'])->name('availability.edit');
         Route::post('/availability/{listing}/block', [AvailabilityController::class, 'block'])->name('availability.block');

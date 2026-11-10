@@ -85,6 +85,17 @@ export type CustomerDetail = CustomerCard & {
     inquiries: InquiryCard[];
 };
 
+export type CustomerActivity = {
+    id: number;
+    type: string;
+    type_label: string;
+    body: string;
+    author: string | null;
+    occurred_at: string;
+    can_delete: boolean;
+    delete_url: string;
+};
+
 export type BookingActivity = {
     id: number;
     event: string;

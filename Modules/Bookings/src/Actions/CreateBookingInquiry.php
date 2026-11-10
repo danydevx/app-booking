@@ -5,6 +5,7 @@ namespace Modules\Bookings\Actions;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Modules\Bookings\Enums\CustomerActivityType;
 use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
@@ -16,6 +17,7 @@ final class CreateBookingInquiry
 {
     public function __construct(
         private readonly RecordBookingActivity $activity,
+        private readonly RecordCustomerActivity $customerActivity,
     ) {}
 
     /**
@@ -64,6 +66,17 @@ final class CreateBookingInquiry
             'start_date' => $inquiry->start_date->toDateString(),
             'end_date' => $inquiry->end_date->toDateString(),
         ]);
+
+        if ($inquiry->customer) {
+            $this->customerActivity->handle(
+                $inquiry->customer,
+                CustomerActivityType::System,
+                "Solicitud vinculada: {$inquiry->listing->name}.",
+                null,
+                null,
+                ['booking_inquiry_id' => $inquiry->id],
+            );
+        }
 
         Notification::route('mail', $inquiry->email)
             ->notify(new InquiryReceivedVisitorNotification($inquiry));

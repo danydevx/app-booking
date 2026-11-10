@@ -47,6 +47,14 @@ class Customer extends Model
         return $this->hasMany(BookingInquiry::class)->latest();
     }
 
+    /**
+     * @return HasMany<CustomerActivity, $this>
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(CustomerActivity::class)->latest('occurred_at');
+    }
+
     protected static function newFactory(): CustomerFactory
     {
         return CustomerFactory::new();
