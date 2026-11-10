@@ -165,10 +165,11 @@ No activar live hasta comprobar en staging:
 4. Enviar inquiry y revisarla en la bandeja del owner.
 5. Aceptar reserva y comprobar fechas bloqueadas.
 6. Registrar una reserva manual y comprobar que también bloquea fechas.
-7. Registrar depósito.
-8. Checkout/portal en Stripe test mode.
-9. Panel de plataforma y moderación.
-10. Revisar logs, colas, scheduler, correo y disco.
+7. Reprogramar una reserva y comprobar que libera las fechas anteriores.
+8. Registrar depósito.
+9. Checkout/portal en Stripe test mode.
+10. Panel de plataforma y moderación.
+11. Revisar logs, colas, scheduler, correo y disco.
 
 ## Rollback
 
