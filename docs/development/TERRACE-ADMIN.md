@@ -30,9 +30,10 @@ Las vistas de administración usan todo el ancho disponible; la distribución se
 - Próximas fechas no disponibles.
 - Enlaces a:
     - Solicitudes/reservaciones de la terraza en `/{current_team}/listings/{listing}/bookings`.
-    - Clientes filtrados por terraza.
-    - Disponibilidad.
-    - Edición de datos y fotos.
+    - Nueva reserva dentro de la terraza en `/{current_team}/listings/{listing}/bookings/create`.
+        - Clientes filtrados por terraza.
+        - Disponibilidad.
+        - Edición de datos y fotos.
 
 El filtro de clientes por terraza usa las solicitudes asociadas a esa terraza y
 respeta el aislamiento por cuenta.
