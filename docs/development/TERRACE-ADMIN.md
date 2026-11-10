@@ -9,7 +9,7 @@ edición: agrupa el trabajo diario del dueño.
 
 También se llega desde **Terrazas → Administrar**.
 
-El menú de gestión aparece como un submenú fijo debajo del breadcrumb y se mantiene visible al navegar entre resumen, reservaciones, clientes, disponibilidad y edición.
+El menú de gestión aparece como un submenú fijo debajo del breadcrumb y se mantiene visible al navegar entre resumen, reservaciones, clientes, precios, paquetes, servicios, promociones, disponibilidad y edición. Su contenido se calcula desde un único origen compartido para evitar variaciones entre páginas.
 
 Las vistas de administración usan todo el ancho disponible; la distribución se resuelve con columnas y paneles laterales en lugar de limitar el contenedor principal.
 

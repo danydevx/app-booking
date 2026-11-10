@@ -359,7 +359,7 @@ Catálogo actual: **50 características en 8 categorías**.
 
 ## 11. Verificación y calidad
 
-- **391 tests / 2,694 aserciones** en SQLite y MySQL 8.4.
+- **392 tests / 2,975 aserciones** en SQLite y MySQL 8.4.
 - Smoke test de flujo completo:
   landing → solicitud → CRM → cotización → contrato → portal → reserva → opinión → reportes.
 - Pint, PHPStan, formato/lint frontend (`npm run check`), `vue-tsc`, build y `composer ci:check` en verde.
