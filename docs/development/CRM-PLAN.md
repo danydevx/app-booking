@@ -1,6 +1,6 @@
 # Plan de evolución del CRM
 
-**Estado:** Pasos 1–10 implementados; envío automatizado de WhatsApp pendiente de proveedor
+**Estado:** Pasos 1–11 implementados; envío automatizado de WhatsApp pendiente de proveedor
 **Módulo actual:** `Modules/Bookings`
 **Plan comercial:** Pro (`features.customers = true`)
 **Última actualización:** 2026-11-10
@@ -20,6 +20,7 @@
 | 8. Tablero Hoy y recordatorios      | Completado el 2026-11-10                                                             |
 | 9. Cotizador                        | Completado el 2026-11-10                                                             |
 | 10. Plantillas y correo             | Completado el 2026-11-10 (correo con opt-out; WhatsApp sigue manual)                 |
+| 11. Medición y notificaciones       | Completado el 2026-11-10                                                             |
 
 ## 1. Punto de partida
 
@@ -475,6 +476,26 @@ revisar cada fecha manualmente.
 
 **Criterio de aceptación:** el propietario envía correos de seguimiento y el
 cliente puede darse de baja sin intervención del negocio.
+
+**Esfuerzo:** M.
+
+---
+
+### Paso 11 — Medición y notificaciones
+
+**Objetivo:** saber qué canales convierten y avisar al equipo dentro de la app.
+
+**Implementado:**
+
+- Captura de UTM, `source_detail` y referrer externo en solicitudes públicas.
+- Reporte de embudo, conversión, primera respuesta, cierre, origen y terraza.
+- Comparación de cotizaciones creadas vs aceptadas.
+- Campana de notificaciones con contador y marcado de leídas.
+- Notificaciones de base de datos para nuevas solicitudes, tareas, cotizaciones
+  aceptadas y reservas próximas.
+
+**Criterio de aceptación:** el propietario entiende de dónde vienen los leads y
+recibe avisos sin revisar el correo.
 
 **Esfuerzo:** M.
 
