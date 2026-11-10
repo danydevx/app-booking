@@ -5,6 +5,7 @@ namespace Modules\Bookings\Http\Controllers;
 use App\Concerns\ResolvesCurrentTeam;
 use App\Http\Controllers\Controller;
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -14,14 +15,17 @@ use Modules\Billing\Support\Entitlements;
 use Modules\Bookings\Actions\CreateCustomer;
 use Modules\Bookings\Actions\RecordCustomerActivity;
 use Modules\Bookings\Enums\CustomerActivityType;
+use Modules\Bookings\Enums\CustomerTaskPriority;
 use Modules\Bookings\Http\Requests\StoreCustomerRequest;
 use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Models\CustomerActivity;
+use Modules\Bookings\Models\CustomerTask;
 use Modules\Bookings\Support\BookingPresenter;
 use Modules\Bookings\Support\CustomerActivityPresenter;
 use Modules\Bookings\Support\CustomerCsvExport;
+use Modules\Bookings\Support\CustomerTaskPresenter;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
@@ -47,7 +51,11 @@ class CustomerController extends Controller
 
         $customers = Customer::query()
             ->where('team_id', $team->id)
-            ->withCount('inquiries')
+            ->withCount([
+                'inquiries',
+                'tasks as open_tasks_count' => fn ($query) => $query->where('status', 'open'),
+                'tasks as overdue_tasks_count' => fn ($query) => $query->where('status', 'open')->where('due_at', '<', now()),
+            ])
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($searchQuery) use ($search): void {
                     $searchQuery->where('name', 'like', "%{$search}%")
@@ -140,6 +148,27 @@ class CustomerController extends Controller
         $customer->load(['inquiries.listing', 'inquiries.deposits']);
         $customer->loadCount('inquiries');
 
+        $tasks = $customer->tasks()
+            ->with(['assignee', 'team'])
+            ->orderByRaw("CASE WHEN status = 'open' THEN 0 ELSE 1 END")
+            ->orderBy('due_at')
+            ->latest('id')
+            ->get()
+            ->map(fn (CustomerTask $task): array => CustomerTaskPresenter::present(
+                $task,
+                Gate::allows('update', $task),
+            ))
+            ->all();
+
+        $teamMembers = $team->members()
+            ->orderBy('name')
+            ->get()
+            ->map(fn (User $member): array => [
+                'id' => $member->id,
+                'name' => $member->name,
+            ])
+            ->all();
+
         $activities = $customer->activities()
             ->with(['user', 'team'])
             ->latest('occurred_at')
@@ -161,6 +190,9 @@ class CustomerController extends Controller
             ],
             'activities' => $activities,
             'activityTypes' => CustomerActivityType::userOptions(),
+            'tasks' => $tasks,
+            'taskPriorities' => CustomerTaskPriority::options(),
+            'teamMembers' => $teamMembers,
             'urls' => [
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'update' => route('bookings.customers.update', [
@@ -168,6 +200,10 @@ class CustomerController extends Controller
                     'customer' => $customer->id,
                 ]),
                 'activities_store' => route('bookings.customers.activities.store', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'tasks_store' => route('bookings.customers.tasks.store', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,
                 ]),

@@ -9,9 +9,11 @@ use Modules\Bookings\Console\Commands\SendBookingReminders;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Models\CustomerActivity;
+use Modules\Bookings\Models\CustomerTask;
 use Modules\Bookings\Policies\BookingInquiryPolicy;
 use Modules\Bookings\Policies\CustomerActivityPolicy;
 use Modules\Bookings\Policies\CustomerPolicy;
+use Modules\Bookings\Policies\CustomerTaskPolicy;
 
 final class BookingsServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,7 @@ final class BookingsServiceProvider extends ServiceProvider
         Gate::policy(BookingInquiry::class, BookingInquiryPolicy::class);
         Gate::policy(Customer::class, CustomerPolicy::class);
         Gate::policy(CustomerActivity::class, CustomerActivityPolicy::class);
+        Gate::policy(CustomerTask::class, CustomerTaskPolicy::class);
 
         if ($this->app->runningInConsole()) {
             $this->commands([

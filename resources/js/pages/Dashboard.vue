@@ -40,6 +40,8 @@ const props = defineProps<{
         new_inquiries: number;
         upcoming_bookings: number;
         customers: number;
+        open_tasks: number;
+        overdue_tasks: number;
         occupancy_percent: number;
         conversion_percent: number;
         booked_days_30d: number;
@@ -178,6 +180,16 @@ function statusVariant(
                                 props.overview.currency,
                             )
                         }}
+                    </p>
+                    <p
+                        :class="
+                            props.overview.overdue_tasks > 0
+                                ? 'text-destructive'
+                                : ''
+                        "
+                    >
+                        {{ props.overview.open_tasks }} tareas pendientes ·
+                        {{ props.overview.overdue_tasks }} vencidas
                     </p>
                     <Link :href="urls.customers" class="underline">
                         Ver clientes

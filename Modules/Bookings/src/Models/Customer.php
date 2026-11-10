@@ -55,6 +55,14 @@ class Customer extends Model
         return $this->hasMany(CustomerActivity::class)->latest('occurred_at');
     }
 
+    /**
+     * @return HasMany<CustomerTask, $this>
+     */
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(CustomerTask::class);
+    }
+
     protected static function newFactory(): CustomerFactory
     {
         return CustomerFactory::new();

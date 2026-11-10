@@ -6,6 +6,7 @@ use Modules\Bookings\Http\Controllers\AvailabilityController;
 use Modules\Bookings\Http\Controllers\BookingInquiryController;
 use Modules\Bookings\Http\Controllers\CustomerActivityController;
 use Modules\Bookings\Http\Controllers\CustomerController;
+use Modules\Bookings\Http\Controllers\CustomerTaskController;
 use Modules\Bookings\Http\Controllers\ManualBookingController;
 use Modules\Bookings\Http\Controllers\PublicAvailabilityController;
 
@@ -35,6 +36,14 @@ Route::prefix('{current_team}/bookings')
             ->name('customers.activities.store');
         Route::delete('/customers/{customer}/activities/{activity}', [CustomerActivityController::class, 'destroy'])
             ->name('customers.activities.destroy');
+        Route::post('/customers/{customer}/tasks', [CustomerTaskController::class, 'store'])
+            ->name('customers.tasks.store');
+        Route::patch('/customers/{customer}/tasks/{task}', [CustomerTaskController::class, 'update'])
+            ->name('customers.tasks.update');
+        Route::patch('/customers/{customer}/tasks/{task}/complete', [CustomerTaskController::class, 'complete'])
+            ->name('customers.tasks.complete');
+        Route::patch('/customers/{customer}/tasks/{task}/cancel', [CustomerTaskController::class, 'cancel'])
+            ->name('customers.tasks.cancel');
 
         Route::get('/availability/{listing}', [AvailabilityController::class, 'edit'])->name('availability.edit');
         Route::post('/availability/{listing}/block', [AvailabilityController::class, 'block'])->name('availability.block');

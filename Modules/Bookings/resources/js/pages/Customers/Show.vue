@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import type {
     CustomerActivity,
     CustomerDetail,
+    CustomerTask,
     InquiryStatus,
     StatusOption,
 } from '../../types';
@@ -15,10 +17,14 @@ const props = defineProps<{
     customer: CustomerDetail;
     activities: CustomerActivity[];
     activityTypes: StatusOption[];
+    tasks: CustomerTask[];
+    taskPriorities: StatusOption[];
+    teamMembers: Array<{ id: number; name: string }>;
     urls: {
         index: string;
         update: string;
         activities_store: string;
+        tasks_store: string;
     };
 }>();
 
@@ -53,8 +59,63 @@ const activityForm = useForm({
     occurred_at: '',
 });
 
+const taskForm = useForm({
+    title: '',
+    notes: '',
+    due_at: '',
+    priority: 'normal',
+    assigned_to: '',
+});
+
+const editingTask = ref<CustomerTask | null>(null);
+
 function submit(): void {
     form.patch(props.urls.update, { preserveScroll: true });
+}
+
+function submitTask(): void {
+    if (editingTask.value) {
+        taskForm.patch(editingTask.value.update_url, {
+            preserveScroll: true,
+            onSuccess: resetTaskForm,
+        });
+
+        return;
+    }
+
+    taskForm.post(props.urls.tasks_store, {
+        preserveScroll: true,
+        onSuccess: resetTaskForm,
+    });
+}
+
+function editTask(task: CustomerTask): void {
+    editingTask.value = task;
+    taskForm.title = task.title;
+    taskForm.notes = task.notes ?? '';
+    taskForm.due_at = task.due_at ? task.due_at.slice(0, 16) : '';
+    taskForm.priority = task.priority;
+    taskForm.assigned_to =
+        task.assignee_id !== null ? String(task.assignee_id) : '';
+    taskForm.clearErrors();
+}
+
+function resetTaskForm(): void {
+    editingTask.value = null;
+    taskForm.reset();
+    taskForm.priority = 'normal';
+}
+
+function completeTask(task: CustomerTask): void {
+    router.patch(task.complete_url, {}, { preserveScroll: true });
+}
+
+function cancelTask(task: CustomerTask): void {
+    if (!window.confirm('¿Cancelar esta tarea?')) {
+        return;
+    }
+
+    router.patch(task.cancel_url, {}, { preserveScroll: true });
 }
 
 function recordActivity(): void {
@@ -160,6 +221,214 @@ function statusVariant(
                 Guardar cliente
             </Button>
         </form>
+
+        <section class="rounded-xl border bg-card p-5">
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold">Tareas</h2>
+                <p class="text-sm text-muted-foreground">
+                    Define el siguiente paso con este cliente.
+                </p>
+            </div>
+
+            <form
+                class="grid gap-3 rounded-lg border bg-muted/20 p-4 sm:grid-cols-2"
+                @submit.prevent="submitTask"
+            >
+                <div class="grid gap-2 sm:col-span-2">
+                    <Label for="task-title">Título</Label>
+                    <Input
+                        id="task-title"
+                        v-model="taskForm.title"
+                        maxlength="160"
+                        required
+                        placeholder="Ej. Confirmar número de invitados"
+                    />
+                    <p
+                        v-if="taskForm.errors.title"
+                        class="text-sm text-destructive"
+                    >
+                        {{ taskForm.errors.title }}
+                    </p>
+                </div>
+
+                <div class="grid gap-2">
+                    <Label for="task-due">Vencimiento</Label>
+                    <Input
+                        id="task-due"
+                        v-model="taskForm.due_at"
+                        type="datetime-local"
+                    />
+                    <p
+                        v-if="taskForm.errors.due_at"
+                        class="text-sm text-destructive"
+                    >
+                        {{ taskForm.errors.due_at }}
+                    </p>
+                </div>
+
+                <div class="grid gap-2">
+                    <Label for="task-priority">Prioridad</Label>
+                    <select
+                        id="task-priority"
+                        v-model="taskForm.priority"
+                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    >
+                        <option
+                            v-for="priority in taskPriorities"
+                            :key="priority.value"
+                            :value="priority.value"
+                        >
+                            {{ priority.label }}
+                        </option>
+                    </select>
+                    <p
+                        v-if="taskForm.errors.priority"
+                        class="text-sm text-destructive"
+                    >
+                        {{ taskForm.errors.priority }}
+                    </p>
+                </div>
+
+                <div class="grid gap-2 sm:col-span-2">
+                    <Label for="task-assignee">Responsable</Label>
+                    <select
+                        id="task-assignee"
+                        v-model="taskForm.assigned_to"
+                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    >
+                        <option value="">Sin asignar (yo al crear)</option>
+                        <option
+                            v-for="member in teamMembers"
+                            :key="member.id"
+                            :value="String(member.id)"
+                        >
+                            {{ member.name }}
+                        </option>
+                    </select>
+                    <p
+                        v-if="taskForm.errors.assigned_to"
+                        class="text-sm text-destructive"
+                    >
+                        {{ taskForm.errors.assigned_to }}
+                    </p>
+                </div>
+
+                <div class="grid gap-2 sm:col-span-2">
+                    <Label for="task-notes">Notas</Label>
+                    <textarea
+                        id="task-notes"
+                        v-model="taskForm.notes"
+                        rows="3"
+                        maxlength="2000"
+                        class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        placeholder="Detalle opcional de la tarea."
+                    />
+                    <p
+                        v-if="taskForm.errors.notes"
+                        class="text-sm text-destructive"
+                    >
+                        {{ taskForm.errors.notes }}
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap gap-2 sm:col-span-2">
+                    <Button type="submit" :disabled="taskForm.processing">
+                        {{ editingTask ? 'Guardar cambios' : 'Crear tarea' }}
+                    </Button>
+                    <Button
+                        v-if="editingTask"
+                        type="button"
+                        variant="secondary"
+                        @click="resetTaskForm"
+                    >
+                        Cancelar edición
+                    </Button>
+                </div>
+            </form>
+
+            <div v-if="tasks.length > 0" class="mt-5 space-y-3">
+                <article
+                    v-for="task in tasks"
+                    :key="task.id"
+                    class="rounded-lg border p-3"
+                    :class="{
+                        'border-destructive/40 bg-destructive/5':
+                            task.is_overdue,
+                    }"
+                >
+                    <div
+                        class="flex flex-wrap items-start justify-between gap-3"
+                    >
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="font-medium">{{ task.title }}</p>
+                                <Badge
+                                    :variant="
+                                        task.status === 'done'
+                                            ? 'secondary'
+                                            : task.status === 'cancelled'
+                                              ? 'outline'
+                                              : task.priority === 'high'
+                                                ? 'destructive'
+                                                : 'default'
+                                    "
+                                >
+                                    {{ task.status_label }}
+                                </Badge>
+                                <Badge
+                                    v-if="task.is_overdue"
+                                    variant="destructive"
+                                >
+                                    Vencida
+                                </Badge>
+                            </div>
+                            <p
+                                v-if="task.notes"
+                                class="mt-1 text-sm whitespace-pre-line text-muted-foreground"
+                            >
+                                {{ task.notes }}
+                            </p>
+                            <p class="mt-1 text-xs text-muted-foreground">
+                                {{
+                                    task.due_at
+                                        ? formatActivityDate(task.due_at)
+                                        : 'Sin fecha'
+                                }}
+                                <span v-if="task.assignee">
+                                    · {{ task.assignee }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div
+                            v-if="task.can_manage && task.status === 'open'"
+                            class="flex flex-wrap gap-2"
+                        >
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                @click="editTask(task)"
+                            >
+                                Editar
+                            </Button>
+                            <Button size="sm" @click="completeTask(task)">
+                                Completar
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                @click="cancelTask(task)"
+                            >
+                                Cancelar
+                            </Button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+            <p v-else class="mt-4 text-sm text-muted-foreground">
+                No hay tareas registradas.
+            </p>
+        </section>
 
         <section class="rounded-xl border bg-card p-5">
             <div class="mb-4">

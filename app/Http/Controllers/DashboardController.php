@@ -8,11 +8,13 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Bookings\Enums\AvailabilityStatus;
+use Modules\Bookings\Enums\CustomerTaskStatus;
 use Modules\Bookings\Enums\DepositStatus;
 use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingDeposit;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
+use Modules\Bookings\Models\CustomerTask;
 use Modules\Bookings\Models\ListingUnavailability;
 use Modules\Listings\Models\Listing;
 
@@ -132,6 +134,15 @@ class DashboardController extends Controller
                     ->where('start_date', '>=', $today)
                     ->count(),
                 'customers' => Customer::query()->where('team_id', $team->id)->count(),
+                'open_tasks' => CustomerTask::query()
+                    ->where('team_id', $team->id)
+                    ->where('status', CustomerTaskStatus::Open)
+                    ->count(),
+                'overdue_tasks' => CustomerTask::query()
+                    ->where('team_id', $team->id)
+                    ->where('status', CustomerTaskStatus::Open)
+                    ->where('due_at', '<', now())
+                    ->count(),
                 'occupancy_percent' => $occupancyPercent,
                 'conversion_percent' => $conversionPercent,
                 'booked_days_30d' => $bookedDays,

@@ -258,6 +258,24 @@ function createCustomer(): void {
                             : 'solicitudes'
                     }}
                 </p>
+                <p
+                    v-if="customer.open_tasks_count > 0"
+                    class="mt-1 text-xs"
+                    :class="
+                        customer.overdue_tasks_count > 0
+                            ? 'text-destructive'
+                            : 'text-muted-foreground'
+                    "
+                >
+                    {{ customer.open_tasks_count }}
+                    {{ customer.open_tasks_count === 1 ? 'tarea' : 'tareas' }}
+                    pendientes
+                    <span v-if="customer.overdue_tasks_count > 0">
+                        · {{ customer.overdue_tasks_count }} vencida{{
+                            customer.overdue_tasks_count === 1 ? '' : 's'
+                        }}
+                    </span>
+                </p>
                 <Button class="mt-3" size="sm" variant="outline" as-child>
                     <Link :href="customer.show_url">Ver ficha</Link>
                 </Button>

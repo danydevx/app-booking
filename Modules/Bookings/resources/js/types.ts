@@ -61,6 +61,8 @@ export type CustomerCard = {
     whatsapp_phone: string | null;
     notes: string | null;
     inquiries_count: number;
+    open_tasks_count: number;
+    overdue_tasks_count: number;
     created_at: string | null;
     show_url: string;
 };
@@ -94,6 +96,24 @@ export type CustomerActivity = {
     occurred_at: string;
     can_delete: boolean;
     delete_url: string;
+};
+
+export type CustomerTask = {
+    id: number;
+    title: string;
+    notes: string | null;
+    due_at: string | null;
+    priority: string;
+    priority_label: string;
+    status: string;
+    status_label: string;
+    assignee: string | null;
+    assignee_id: number | null;
+    is_overdue: boolean;
+    can_manage: boolean;
+    update_url: string;
+    complete_url: string;
+    cancel_url: string;
 };
 
 export type BookingActivity = {
