@@ -111,7 +111,7 @@ function dateTitle(date: string): string {
 
 <template>
     <div class="space-y-5">
-        <div class="grid gap-5 md:grid-cols-2">
+        <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             <section
                 v-for="month in monthData"
                 :key="month.key"
