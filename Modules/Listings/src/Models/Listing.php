@@ -61,6 +61,7 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property-read Collection<int, ListingPackage> $packages
  * @property-read Collection<int, ListingService> $commercialServices
  * @property-read Collection<int, ListingPromotion> $promotions
+ * @property-read Collection<int, ListingPriceRange> $priceRanges
  * @property-read int $images_count
  * @property-read int $videos_count
  */
@@ -136,6 +137,14 @@ class Listing extends Model
     public function promotions(): HasMany
     {
         return $this->hasMany(ListingPromotion::class)->orderByDesc('starts_at')->orderByDesc('id');
+    }
+
+    /**
+     * @return HasMany<ListingPriceRange, $this>
+     */
+    public function priceRanges(): HasMany
+    {
+        return $this->hasMany(ListingPriceRange::class)->orderBy('starts_at')->orderBy('id');
     }
 
     /**

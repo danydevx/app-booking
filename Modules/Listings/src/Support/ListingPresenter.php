@@ -6,6 +6,7 @@ use App\Support\WhatsApp;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingMedia;
 use Modules\Listings\Models\ListingPackage;
+use Modules\Listings\Models\ListingPriceRange;
 use Modules\Listings\Models\ListingPromotion;
 use Modules\Listings\Models\ListingService;
 
@@ -123,6 +124,11 @@ final class ListingPresenter
                 ->all(),
             'serviceGroups' => TerraceServiceCatalog::groupsFor($listing->services ?? []),
             'pricing' => ListingCommercialPresenter::pricing($listing),
+            'priceRanges' => $listing->priceRanges
+                ->filter(fn (ListingPriceRange $range): bool => $range->active && $range->isNotExpired())
+                ->map(fn (ListingPriceRange $range): array => ListingCommercialPresenter::publicPriceRange($range))
+                ->values()
+                ->all(),
             'packages' => $listing->packages
                 ->where('active', true)
                 ->map(fn (ListingPackage $package): array => ListingCommercialPresenter::publicPackage($package))

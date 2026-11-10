@@ -12,6 +12,8 @@ use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Listings\Http\Requests\SaveListingPricingRequest;
 use Modules\Listings\Models\Listing;
+use Modules\Listings\Models\ListingPriceRange;
+use Modules\Listings\Support\ListingCommercialPresenter;
 use Modules\Listings\Support\ListingFormData;
 
 class ListingPricingController extends Controller
@@ -47,7 +49,17 @@ class ListingPricingController extends Controller
                 'price_notes' => $listing->price_notes,
                 'currency' => $listing->currency ?: 'MXN',
             ],
-            'urls' => $this->formData->ownerUrls($team, $listing),
+            'priceRanges' => $listing->priceRanges()
+                ->get()
+                ->map(fn (ListingPriceRange $range): array => ListingCommercialPresenter::ownerPriceRange($range, $team, $listing))
+                ->all(),
+            'urls' => [
+                ...$this->formData->ownerUrls($team, $listing),
+                'range_store' => route('listings.pricing.ranges.store', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+            ],
         ]);
     }
 

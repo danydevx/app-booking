@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -18,15 +20,41 @@ type Pricing = {
     currency: string;
 };
 
+type PriceRange = {
+    id: number;
+    name: string;
+    starts_at: string;
+    ends_at: string;
+    starts_at_label: string;
+    ends_at_label: string;
+    price: string | null;
+    price_formatted: string;
+    included_hours: number | null;
+    included_people: number | null;
+    extra_hour: string | null;
+    extra_person: string | null;
+    deposit_required: string | null;
+    extra_hour_formatted: string | null;
+    extra_person_formatted: string | null;
+    deposit_required_formatted: string | null;
+    conditions: string | null;
+    active: boolean;
+    status: { value: string; label: string };
+    update_url: string;
+    delete_url: string;
+};
+
 const props = defineProps<{
     listing: { id: number; name: string; slug: string };
     pricing: Pricing;
+    priceRanges: PriceRange[];
     urls: {
         index: string;
         manage: string;
         edit: string;
         pricing: string;
         pricing_update: string;
+        range_store: string;
         packages: string;
         services: string;
         promotions: string;
@@ -125,6 +153,88 @@ const preview = computed(() => {
 
 function submit(): void {
     form.patch(props.urls.pricing_update, { preserveScroll: true });
+}
+
+const rangeForm = useForm({
+    name: '',
+    starts_at: '',
+    ends_at: '',
+    price: '',
+    included_hours: '',
+    included_people: '',
+    extra_hour: '',
+    extra_person: '',
+    deposit_required: '',
+    conditions: '',
+    active: true,
+});
+
+const editingRange = ref<PriceRange | null>(null);
+
+function submitRange(): void {
+    if (editingRange.value) {
+        rangeForm.patch(editingRange.value.update_url, {
+            preserveScroll: true,
+            onSuccess: resetRange,
+        });
+
+        return;
+    }
+
+    rangeForm.post(props.urls.range_store, {
+        preserveScroll: true,
+        onSuccess: resetRange,
+    });
+}
+
+function editRange(range: PriceRange): void {
+    editingRange.value = range;
+    rangeForm.name = range.name;
+    rangeForm.starts_at = range.starts_at;
+    rangeForm.ends_at = range.ends_at;
+    rangeForm.price = range.price ?? '';
+    rangeForm.included_hours =
+        range.included_hours !== null ? String(range.included_hours) : '';
+    rangeForm.included_people =
+        range.included_people !== null ? String(range.included_people) : '';
+    rangeForm.extra_hour = range.extra_hour ?? '';
+    rangeForm.extra_person = range.extra_person ?? '';
+    rangeForm.deposit_required = range.deposit_required ?? '';
+    rangeForm.conditions = range.conditions ?? '';
+    rangeForm.active = range.active;
+    rangeForm.clearErrors();
+}
+
+function resetRange(): void {
+    editingRange.value = null;
+    rangeForm.reset();
+    rangeForm.active = true;
+}
+
+function destroyRange(range: PriceRange): void {
+    if (!window.confirm(`¿Eliminar la tarifa ${range.name}?`)) {
+        return;
+    }
+
+    router.delete(range.delete_url, { preserveScroll: true });
+}
+
+function rangeStatusVariant(
+    status: string,
+): 'default' | 'secondary' | 'destructive' | 'outline' {
+    if (status === 'current') {
+        return 'default';
+    }
+
+    if (status === 'expired') {
+        return 'destructive';
+    }
+
+    if (status === 'upcoming') {
+        return 'secondary';
+    }
+
+    return 'outline';
 }
 </script>
 
@@ -377,5 +487,284 @@ function submit(): void {
                 </section>
             </aside>
         </div>
+
+        <section class="rounded-xl border bg-card p-5">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 class="text-lg font-semibold">Tarifas por temporada</h2>
+                    <p class="text-sm text-muted-foreground">
+                        Precios por rangos de fechas, por ejemplo temporada
+                        alta, vacaciones o fechas especiales.
+                    </p>
+                </div>
+            </div>
+
+            <div
+                class="mt-5 grid items-start gap-6 xl:grid-cols-[minmax(0,25rem)_minmax(0,1fr)]"
+            >
+                <form
+                    class="grid gap-4 rounded-xl border bg-muted/20 p-4"
+                    @submit.prevent="submitRange"
+                >
+                    <h3 class="font-semibold">
+                        {{ editingRange ? 'Editar tarifa' : 'Nueva tarifa' }}
+                    </h3>
+                    <div class="grid gap-2">
+                        <Label for="range-name">Nombre</Label>
+                        <Input
+                            id="range-name"
+                            v-model="rangeForm.name"
+                            maxlength="120"
+                            required
+                            placeholder="Temporada alta"
+                        />
+                        <p
+                            v-if="rangeForm.errors.name"
+                            class="text-sm text-destructive"
+                        >
+                            {{ rangeForm.errors.name }}
+                        </p>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="range-start">Inicio</Label>
+                            <Input
+                                id="range-start"
+                                v-model="rangeForm.starts_at"
+                                type="date"
+                                required
+                            />
+                            <p
+                                v-if="rangeForm.errors.starts_at"
+                                class="text-sm text-destructive"
+                            >
+                                {{ rangeForm.errors.starts_at }}
+                            </p>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="range-end">Fin</Label>
+                            <Input
+                                id="range-end"
+                                v-model="rangeForm.ends_at"
+                                type="date"
+                                required
+                            />
+                            <p
+                                v-if="rangeForm.errors.ends_at"
+                                class="text-sm text-destructive"
+                            >
+                                {{ rangeForm.errors.ends_at }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="range-price">Precio (MXN)</Label>
+                        <Input
+                            id="range-price"
+                            v-model="rangeForm.price"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            required
+                        />
+                        <p
+                            v-if="rangeForm.errors.price"
+                            class="text-sm text-destructive"
+                        >
+                            {{ rangeForm.errors.price }}
+                        </p>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="range-hours">Horas incluidas</Label>
+                            <Input
+                                id="range-hours"
+                                v-model="rangeForm.included_hours"
+                                type="number"
+                                min="1"
+                                max="168"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="range-people">Personas incluidas</Label>
+                            <Input
+                                id="range-people"
+                                v-model="rangeForm.included_people"
+                                type="number"
+                                min="1"
+                            />
+                        </div>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="grid gap-2">
+                            <Label for="range-extra-hour">Hora adicional</Label>
+                            <Input
+                                id="range-extra-hour"
+                                v-model="rangeForm.extra_hour"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                            />
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="range-extra-person">
+                                Persona adicional
+                            </Label>
+                            <Input
+                                id="range-extra-person"
+                                v-model="rangeForm.extra_person"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                            />
+                        </div>
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="range-deposit">Anticipo requerido</Label>
+                        <Input
+                            id="range-deposit"
+                            v-model="rangeForm.deposit_required"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                        />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="range-conditions">Condiciones</Label>
+                        <textarea
+                            id="range-conditions"
+                            v-model="rangeForm.conditions"
+                            rows="3"
+                            maxlength="2000"
+                            class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        />
+                    </div>
+                    <label class="flex items-center gap-3 text-sm">
+                        <Checkbox v-model:checked="rangeForm.active" />
+                        Tarifa activa
+                    </label>
+                    <div class="flex flex-wrap gap-2">
+                        <Button type="submit" :disabled="rangeForm.processing">
+                            {{
+                                editingRange ? 'Guardar tarifa' : 'Crear tarifa'
+                            }}
+                        </Button>
+                        <Button
+                            v-if="editingRange"
+                            type="button"
+                            variant="secondary"
+                            @click="resetRange"
+                        >
+                            Cancelar
+                        </Button>
+                    </div>
+                </form>
+
+                <div class="space-y-3">
+                    <div
+                        v-if="priceRanges.length === 0"
+                        class="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground"
+                    >
+                        No hay tarifas por temporada configuradas.
+                    </div>
+
+                    <article
+                        v-for="range in priceRanges"
+                        :key="range.id"
+                        class="rounded-xl border bg-card p-4"
+                    >
+                        <div
+                            class="flex flex-wrap items-start justify-between gap-3"
+                        >
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="font-semibold">
+                                        {{ range.name }}
+                                    </h3>
+                                    <Badge
+                                        :variant="
+                                            rangeStatusVariant(
+                                                range.status.value,
+                                            )
+                                        "
+                                    >
+                                        {{ range.status.label }}
+                                    </Badge>
+                                </div>
+                                <p class="mt-1 text-sm text-muted-foreground">
+                                    {{ range.starts_at_label }} al
+                                    {{ range.ends_at_label }} ·
+                                    {{ range.price_formatted }}
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    @click="editRange(range)"
+                                >
+                                    Editar
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    @click="destroyRange(range)"
+                                >
+                                    Eliminar
+                                </Button>
+                            </div>
+                        </div>
+                        <p
+                            v-if="range.included_hours || range.included_people"
+                            class="mt-2 text-sm text-muted-foreground"
+                        >
+                            Incluye
+                            <span v-if="range.included_hours">
+                                {{ range.included_hours }} horas
+                            </span>
+                            <span
+                                v-if="
+                                    range.included_hours &&
+                                    range.included_people
+                                "
+                            >
+                                para
+                            </span>
+                            <span v-if="range.included_people">
+                                {{ range.included_people }} personas
+                            </span>
+                            .
+                        </p>
+                        <p
+                            v-if="
+                                range.extra_hour_formatted ||
+                                range.extra_person_formatted ||
+                                range.deposit_required_formatted
+                            "
+                            class="mt-1 text-xs text-muted-foreground"
+                        >
+                            <span v-if="range.extra_hour_formatted">
+                                Hora adicional:
+                                {{ range.extra_hour_formatted }}
+                            </span>
+                            <span v-if="range.extra_person_formatted">
+                                · Persona adicional:
+                                {{ range.extra_person_formatted }}
+                            </span>
+                            <span v-if="range.deposit_required_formatted">
+                                · Anticipo:
+                                {{ range.deposit_required_formatted }}
+                            </span>
+                        </p>
+                        <p
+                            v-if="range.conditions"
+                            class="mt-2 text-xs text-muted-foreground"
+                        >
+                            {{ range.conditions }}
+                        </p>
+                    </article>
+                </div>
+            </div>
+        </section>
     </div>
 </template>

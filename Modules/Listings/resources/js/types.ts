@@ -81,6 +81,24 @@ export type ListingPromotionPublic = {
     conditions: string | null;
 };
 
+export type ListingPriceRangePublic = {
+    id: number;
+    name: string;
+    starts_at: string;
+    ends_at: string;
+    starts_at_label: string;
+    ends_at_label: string;
+    price_formatted: string;
+    currency: string;
+    included_hours: number | null;
+    included_people: number | null;
+    extra_hour_formatted: string | null;
+    extra_person_formatted: string | null;
+    deposit_required_formatted: string | null;
+    conditions: string | null;
+    status: { value: string; label: string };
+};
+
 export type ListingLimits = {
     max_images: number;
     max_videos: number;
@@ -186,6 +204,7 @@ export type ListingPublicDetail = {
         services: ServiceOption[];
     }>;
     pricing: ListingPricing;
+    priceRanges: ListingPriceRangePublic[];
     packages: ListingPackagePublic[];
     commercialServices: ListingCommercialService[];
     promotions: ListingPromotionPublic[];

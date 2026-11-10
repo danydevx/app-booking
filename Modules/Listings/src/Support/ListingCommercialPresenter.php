@@ -5,6 +5,7 @@ namespace Modules\Listings\Support;
 use App\Models\Team;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingPackage;
+use Modules\Listings\Models\ListingPriceRange;
 use Modules\Listings\Models\ListingPromotion;
 use Modules\Listings\Models\ListingService;
 
@@ -42,6 +43,79 @@ final class ListingCommercialPresenter
             'deposit_required_formatted' => self::money($listing->deposit_required_cents, $currency),
             'price_notes' => $listing->price_notes,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function publicPriceRange(ListingPriceRange $range): array
+    {
+        $currency = $range->listing->currency ?: 'MXN';
+
+        return [
+            'id' => $range->id,
+            'name' => $range->name,
+            'starts_at' => $range->starts_at->toDateString(),
+            'ends_at' => $range->ends_at->toDateString(),
+            'starts_at_label' => $range->starts_at->format('d/m/Y'),
+            'ends_at_label' => $range->ends_at->format('d/m/Y'),
+            'price_formatted' => self::money($range->price_cents, $currency),
+            'currency' => $currency,
+            'included_hours' => $range->included_hours,
+            'included_people' => $range->included_people,
+            'extra_hour_formatted' => self::money($range->extra_hour_cents, $currency),
+            'extra_person_formatted' => self::money($range->extra_person_cents, $currency),
+            'deposit_required_formatted' => self::money($range->deposit_required_cents, $currency),
+            'conditions' => $range->conditions,
+            'status' => self::priceRangeStatus($range),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function ownerPriceRange(ListingPriceRange $range, Team $team, Listing $listing): array
+    {
+        return [
+            ...self::publicPriceRange($range),
+            'price' => self::decimal($range->price_cents),
+            'extra_hour' => self::decimal($range->extra_hour_cents),
+            'extra_person' => self::decimal($range->extra_person_cents),
+            'deposit_required' => self::decimal($range->deposit_required_cents),
+            'active' => $range->active,
+            'update_url' => route('listings.pricing.ranges.update', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+                'range' => $range->id,
+            ]),
+            'delete_url' => route('listings.pricing.ranges.destroy', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+                'range' => $range->id,
+            ]),
+        ];
+    }
+
+    /**
+     * @return array{value: string, label: string}
+     */
+    public static function priceRangeStatus(ListingPriceRange $range): array
+    {
+        $today = now()->toDateString();
+
+        if (! $range->active) {
+            return ['value' => 'inactive', 'label' => 'Inactiva'];
+        }
+
+        if ($range->starts_at->toDateString() > $today) {
+            return ['value' => 'upcoming', 'label' => 'Próxima'];
+        }
+
+        if ($range->ends_at->toDateString() < $today) {
+            return ['value' => 'expired', 'label' => 'Vencida'];
+        }
+
+        return ['value' => 'current', 'label' => 'Vigente'];
     }
 
     /**

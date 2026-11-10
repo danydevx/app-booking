@@ -144,7 +144,10 @@ const whatsappUrl = computed(
                     </section>
 
                     <section
-                        v-if="listing.pricing.has_pricing"
+                        v-if="
+                            listing.pricing.has_pricing ||
+                            listing.priceRanges.length > 0
+                        "
                         class="space-y-4 rounded-xl border bg-card p-5"
                     >
                         <div>
@@ -248,6 +251,105 @@ const whatsappUrl = computed(
                         >
                             {{ listing.pricing.price_notes }}
                         </p>
+
+                        <div
+                            v-if="listing.priceRanges.length > 0"
+                            class="space-y-3 border-t pt-4"
+                        >
+                            <h3 class="text-sm font-semibold">
+                                Tarifas por temporada
+                            </h3>
+                            <div class="grid gap-3 md:grid-cols-2">
+                                <article
+                                    v-for="range in listing.priceRanges"
+                                    :key="range.id"
+                                    class="rounded-lg border p-3"
+                                >
+                                    <div
+                                        class="flex flex-wrap items-center justify-between gap-2"
+                                    >
+                                        <h4 class="font-medium">
+                                            {{ range.name }}
+                                        </h4>
+                                        <Badge
+                                            :variant="
+                                                range.status.value === 'current'
+                                                    ? 'default'
+                                                    : 'secondary'
+                                            "
+                                        >
+                                            {{ range.status.label }}
+                                        </Badge>
+                                    </div>
+                                    <p class="mt-1 text-lg font-semibold">
+                                        {{ range.price_formatted }}
+                                    </p>
+                                    <p class="text-xs text-muted-foreground">
+                                        {{ range.starts_at_label }} al
+                                        {{ range.ends_at_label }}
+                                    </p>
+                                    <p
+                                        v-if="
+                                            range.included_hours ||
+                                            range.included_people
+                                        "
+                                        class="mt-1 text-sm text-muted-foreground"
+                                    >
+                                        Incluye
+                                        <span v-if="range.included_hours">
+                                            {{ range.included_hours }} horas
+                                        </span>
+                                        <span
+                                            v-if="
+                                                range.included_hours &&
+                                                range.included_people
+                                            "
+                                        >
+                                            para
+                                        </span>
+                                        <span v-if="range.included_people">
+                                            {{ range.included_people }} personas
+                                        </span>
+                                        .
+                                    </p>
+                                    <p
+                                        v-if="
+                                            range.extra_hour_formatted ||
+                                            range.extra_person_formatted ||
+                                            range.deposit_required_formatted
+                                        "
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        <span v-if="range.extra_hour_formatted">
+                                            Hora adicional:
+                                            {{ range.extra_hour_formatted }}
+                                        </span>
+                                        <span
+                                            v-if="range.extra_person_formatted"
+                                        >
+                                            · Persona adicional:
+                                            {{ range.extra_person_formatted }}
+                                        </span>
+                                        <span
+                                            v-if="
+                                                range.deposit_required_formatted
+                                            "
+                                        >
+                                            · Anticipo:
+                                            {{
+                                                range.deposit_required_formatted
+                                            }}
+                                        </span>
+                                    </p>
+                                    <p
+                                        v-if="range.conditions"
+                                        class="mt-2 text-xs text-muted-foreground"
+                                    >
+                                        {{ range.conditions }}
+                                    </p>
+                                </article>
+                            </div>
+                        </div>
                     </section>
 
                     <section

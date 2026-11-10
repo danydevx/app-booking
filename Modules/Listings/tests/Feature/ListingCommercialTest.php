@@ -9,6 +9,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Listings\Enums\ListingServicePriceUnit;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingPackage;
+use Modules\Listings\Models\ListingPriceRange;
 use Modules\Listings\Models\ListingPromotion;
 use Modules\Listings\Models\ListingService;
 use Tests\TestCase;
@@ -329,6 +330,7 @@ class ListingCommercialTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->where('listing.pricing.has_pricing', false)
+                ->has('listing.priceRanges', 0)
                 ->has('listing.packages', 0)
                 ->has('listing.commercialServices', 0)
                 ->has('listing.promotions', 0));
@@ -340,6 +342,7 @@ class ListingCommercialTest extends TestCase
         ListingPackage::factory()->forListing($listing)->create();
         ListingService::factory()->forListing($listing)->create();
         ListingPromotion::factory()->forListing($listing)->create();
+        ListingPriceRange::factory()->forListing($listing)->create();
 
         $this->actingAs($owner)
             ->get(route('listings.pricing.edit', [
@@ -349,7 +352,8 @@ class ListingCommercialTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Listings/Pricing')
-                ->where('listing.id', $listing->id));
+                ->where('listing.id', $listing->id)
+                ->has('priceRanges', 1));
 
         $this->actingAs($owner)
             ->get(route('listings.packages.index', [
@@ -401,6 +405,116 @@ class ListingCommercialTest extends TestCase
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                 ])));
+    }
+
+    public function test_price_ranges_crud_and_public_visibility(): void
+    {
+        [$owner, $team, $listing] = $this->ownerListing();
+
+        $this->actingAs($owner)
+            ->post(route('listings.pricing.ranges.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'name' => 'Temporada alta',
+                'starts_at' => now()->subDay()->toDateString(),
+                'ends_at' => now()->addDays(20)->toDateString(),
+                'price' => '3200',
+                'included_hours' => 8,
+                'included_people' => 50,
+                'extra_hour' => '450',
+                'extra_person' => '60',
+                'deposit_required' => '1500',
+                'conditions' => 'No aplica en días festivos.',
+                'active' => true,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $range = ListingPriceRange::query()->firstOrFail();
+        $this->assertSame(320000, $range->price_cents);
+        $this->assertSame(45000, $range->extra_hour_cents);
+
+        ListingPriceRange::factory()->forListing($listing)->create([
+            'name' => 'Temporada vencida',
+            'starts_at' => now()->subDays(20)->toDateString(),
+            'ends_at' => now()->subDays(10)->toDateString(),
+        ]);
+        ListingPriceRange::factory()->forListing($listing)->create([
+            'name' => 'Temporada inactiva',
+            'active' => false,
+        ]);
+
+        $this->get(route('public.listings.show', ['listing' => $listing->slug]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('listing.priceRanges', 1)
+                ->where('listing.priceRanges.0.id', $range->id)
+                ->where('listing.priceRanges.0.name', 'Temporada alta')
+                ->where('listing.priceRanges.0.price_formatted', '$3,200.00 MXN')
+                ->where('listing.priceRanges.0.status.value', 'current')
+                ->where('listing.priceRanges.0.conditions', 'No aplica en días festivos.'));
+
+        $this->actingAs($owner)
+            ->patch(route('listings.pricing.ranges.update', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+                'range' => $range->id,
+            ]), [
+                'name' => 'Temporada alta actualizada',
+                'starts_at' => now()->subDay()->toDateString(),
+                'ends_at' => now()->addDays(20)->toDateString(),
+                'price' => '3400',
+                'active' => false,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame('Temporada alta actualizada', $range->fresh()->name);
+        $this->assertFalse($range->fresh()->active);
+
+        $this->actingAs($owner)
+            ->delete(route('listings.pricing.ranges.destroy', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+                'range' => $range->id,
+            ]))
+            ->assertSessionHasNoErrors();
+
+        $this->assertDatabaseMissing('listing_price_ranges', ['id' => $range->id]);
+    }
+
+    public function test_price_range_dates_and_team_are_validated(): void
+    {
+        [$owner, $team, $listing] = $this->ownerListing();
+
+        $this->actingAs($owner)
+            ->post(route('listings.pricing.ranges.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'name' => 'Fechas inválidas',
+                'starts_at' => now()->toDateString(),
+                'ends_at' => now()->subDay()->toDateString(),
+                'price' => '1000',
+                'active' => true,
+            ])
+            ->assertSessionHasErrors('ends_at');
+
+        $foreignListing = Listing::factory()->forTeam(Team::factory()->create())->create();
+        $foreignRange = ListingPriceRange::factory()->forListing($foreignListing)->create();
+
+        $this->actingAs($owner)
+            ->patch(route('listings.pricing.ranges.update', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+                'range' => $foreignRange->id,
+            ]), [
+                'name' => 'Intrusa',
+                'starts_at' => now()->toDateString(),
+                'ends_at' => now()->addDay()->toDateString(),
+                'price' => '1000',
+                'active' => true,
+            ])
+            ->assertNotFound();
     }
 
     /**

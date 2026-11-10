@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Listings\Http\Controllers\ListingController;
 use Modules\Listings\Http\Controllers\ListingMediaController;
 use Modules\Listings\Http\Controllers\ListingPackageController;
+use Modules\Listings\Http\Controllers\ListingPriceRangeController;
 use Modules\Listings\Http\Controllers\ListingPricingController;
 use Modules\Listings\Http\Controllers\ListingPromotionController;
 use Modules\Listings\Http\Controllers\ListingServiceController;
@@ -28,6 +29,9 @@ Route::prefix('app/{current_team}/listings')
         Route::get('/{listing}/edit', [ListingController::class, 'edit'])->name('edit');
         Route::get('/{listing}/pricing', [ListingPricingController::class, 'edit'])->name('pricing.edit');
         Route::patch('/{listing}/pricing', [ListingPricingController::class, 'update'])->name('pricing.update');
+        Route::post('/{listing}/pricing/ranges', [ListingPriceRangeController::class, 'store'])->name('pricing.ranges.store');
+        Route::patch('/{listing}/pricing/ranges/{range}', [ListingPriceRangeController::class, 'update'])->name('pricing.ranges.update');
+        Route::delete('/{listing}/pricing/ranges/{range}', [ListingPriceRangeController::class, 'destroy'])->name('pricing.ranges.destroy');
 
         Route::get('/{listing}/packages', [ListingPackageController::class, 'index'])->name('packages.index');
         Route::post('/{listing}/packages', [ListingPackageController::class, 'store'])->name('packages.store');
