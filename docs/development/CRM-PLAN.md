@@ -1,22 +1,25 @@
 # Plan de evolución del CRM
 
-**Estado:** Paso 1 implementado; pasos 2–7 pendientes
+**Estado:** Pasos 1–10 implementados; envío automatizado de WhatsApp pendiente de proveedor
 **Módulo actual:** `Modules/Bookings`
 **Plan comercial:** Pro (`features.customers = true`)
 **Última actualización:** 2026-11-10
 
 ## Estado de implementación
 
-| Paso                                | Estado                                                                                |
-| ----------------------------------- | ------------------------------------------------------------------------------------- |
-| 0. CRUD base                        | Completado                                                                            |
-| 1. Timeline y notas                 | Completado el 2026-11-10                                                              |
-| 2. Tareas                           | Completado el 2026-11-10                                                              |
-| 3. Etiquetas                        | Completado el 2026-11-10                                                              |
-| 4. Métricas                         | Completado el 2026-11-10                                                              |
-| 5. Pipeline                         | Completado el 2026-11-10                                                              |
-| 6. Importación/fusión/ciclo de vida | Completado el 2026-11-10                                                              |
-| 7. Comunicaciones                   | Completado el 2026-11-10 (registro manual; envío automatizado pendiente de proveedor) |
+| Paso                                | Estado                                                                               |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| 0. CRUD base                        | Completado                                                                           |
+| 1. Timeline y notas                 | Completado el 2026-11-10                                                             |
+| 2. Tareas                           | Completado el 2026-11-10                                                             |
+| 3. Etiquetas                        | Completado el 2026-11-10                                                             |
+| 4. Métricas                         | Completado el 2026-11-10                                                             |
+| 5. Pipeline                         | Completado el 2026-11-10                                                             |
+| 6. Importación/fusión/ciclo de vida | Completado el 2026-11-10                                                             |
+| 7. Comunicaciones                   | Completado el 2026-11-10 (registro manual; envío automatizado de WhatsApp pendiente) |
+| 8. Tablero Hoy y recordatorios      | Completado el 2026-11-10                                                             |
+| 9. Cotizador                        | Completado el 2026-11-10                                                             |
+| 10. Plantillas y correo             | Completado el 2026-11-10 (correo con opt-out; WhatsApp sigue manual)                 |
 
 ## 1. Punto de partida
 
@@ -418,6 +421,65 @@ comunicación sin que la aplicación envíe mensajes no autorizados.
 
 ---
 
+### Paso 8 — Tablero Hoy, recordatorios y responsables
+
+**Objetivo:** convertir las tareas en una rutina diaria y repartir la cartera.
+
+**Implementado:**
+
+- Tablero `/{team}/bookings/today` con tareas vencidas, de hoy y próximas 7 días.
+- Filtro “solo mis tareas”.
+- Asignación de clientes a miembros de la cuenta y filtro por responsable.
+- Comando diario `bookings:send-task-reminders` con digest por responsable.
+- Detección de posibles duplicados por teléfono/WhatsApp en la ficha.
+
+**Criterio de aceptación:** el equipo sabe qué atender hoy y quién es responsable
+de cada cliente.
+
+**Esfuerzo:** S/M.
+
+---
+
+### Paso 9 — Cotizador
+
+**Objetivo:** cerrar el ciclo comercial entre la solicitud y la reserva.
+
+**Implementado:**
+
+- Cotización con terraza, fechas, invitados, total, anticipo, notas y términos.
+- Estados: borrador, enviada, aceptada, rechazada y vencida.
+- Link público tokenizado para aceptar o rechazar sin cuenta.
+- Envío por correo y aviso al propietario al aceptar.
+- Conversión de una cotización aceptada en reserva con bloqueo de fechas.
+- Listado general y sección de cotizaciones en la ficha del cliente.
+
+**Criterio de aceptación:** una cotización aceptada se convierte en reserva sin
+revisar cada fecha manualmente.
+
+**Esfuerzo:** M.
+
+---
+
+### Paso 10 — Plantillas y correo con opt-out
+
+**Objetivo:** enviar seguimiento por correo sin depender de WhatsApp API.
+
+**Implementado:**
+
+- Plantillas por cuenta con variables `{{nombre}}`, `{{correo}}`, `{{terraza}}`,
+  `{{fechas}}` y `{{empresa}}`.
+- Composer de correo desde la ficha del cliente.
+- Envío en cola y registro automático en el timeline.
+- Baja con link firmado y bloqueo de envíos posteriores.
+- Reactivación manual del correo desde la ficha.
+
+**Criterio de aceptación:** el propietario envía correos de seguimiento y el
+cliente puede darse de baja sin intervención del negocio.
+
+**Esfuerzo:** M.
+
+---
+
 ## 5. Orden recomendado de implementación
 
 1. Paso 0: cierre del CRUD base.
@@ -445,6 +507,7 @@ integraciones externas.
 - No introducir Bootstrap, jQuery ni otra librería de componentes.
 - No crear campos dinámicos ni un constructor de CRM genérico.
 - No enviar correo/WhatsApp al cliente sin consentimiento y proveedor definido.
+  El correo del CRM usa opt-out y el WhatsApp sigue siendo un enlace manual.
 
 ## 7. Fuera de alcance de esta evolución
 

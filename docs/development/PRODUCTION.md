@@ -133,6 +133,9 @@ php artisan queue:work --tries=3 --timeout=90
 Verificar `/up` y `/platform/system`. El comando `app:schedule-heartbeat` corre
 cada minuto y registra la última ejecución del scheduler; la página muestra
 también el tamaño de la cola y permite reintentar o descartar trabajos fallidos.
+El scheduler ejecuta `bookings:expire-inquiries`, `bookings:send-reminders` y
+`bookings:send-task-reminders`; revisar que el worker de colas esté activo para
+los correos.
 Añadir `php artisan queue:monitor` si se incorpora el paquete de monitorización.
 
 ## Backups y restauración
