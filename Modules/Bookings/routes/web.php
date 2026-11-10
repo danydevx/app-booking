@@ -6,6 +6,7 @@ use Modules\Bookings\Http\Controllers\AvailabilityController;
 use Modules\Bookings\Http\Controllers\BookingInquiryController;
 use Modules\Bookings\Http\Controllers\CustomerActivityController;
 use Modules\Bookings\Http\Controllers\CustomerController;
+use Modules\Bookings\Http\Controllers\CustomerTagController;
 use Modules\Bookings\Http\Controllers\CustomerTaskController;
 use Modules\Bookings\Http\Controllers\ManualBookingController;
 use Modules\Bookings\Http\Controllers\PublicAvailabilityController;
@@ -30,8 +31,14 @@ Route::prefix('{current_team}/bookings')
         Route::get('/customers', [CustomerController::class, 'index'])->name('customers.index');
         Route::post('/customers', [CustomerController::class, 'store'])->name('customers.store');
         Route::get('/customers/export', [CustomerController::class, 'export'])->name('customers.export');
+        Route::post('/customers/tags', [CustomerTagController::class, 'store'])
+            ->name('customers.tags.store');
+        Route::delete('/customers/tags/{tag}', [CustomerTagController::class, 'destroy'])
+            ->name('customers.tags.destroy');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::patch('/customers/{customer}/tags', [CustomerTagController::class, 'sync'])
+            ->name('customers.tags.sync');
         Route::post('/customers/{customer}/activities', [CustomerActivityController::class, 'store'])
             ->name('customers.activities.store');
         Route::delete('/customers/{customer}/activities/{activity}', [CustomerActivityController::class, 'destroy'])

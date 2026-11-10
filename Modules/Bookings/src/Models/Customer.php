@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Modules\Bookings\Database\Factories\CustomerFactory;
@@ -61,6 +62,15 @@ class Customer extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(CustomerTask::class);
+    }
+
+    /**
+     * @return BelongsToMany<CustomerTag, $this>
+     */
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(CustomerTag::class, 'customer_tag_assignments', 'customer_id', 'customer_tag_id')
+            ->withTimestamps();
     }
 
     protected static function newFactory(): CustomerFactory

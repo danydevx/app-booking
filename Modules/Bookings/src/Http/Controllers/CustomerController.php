@@ -21,6 +21,7 @@ use Modules\Bookings\Http\Requests\UpdateCustomerRequest;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Models\CustomerActivity;
+use Modules\Bookings\Models\CustomerTag;
 use Modules\Bookings\Models\CustomerTask;
 use Modules\Bookings\Support\BookingPresenter;
 use Modules\Bookings\Support\CustomerActivityPresenter;
@@ -50,9 +51,15 @@ class CustomerController extends Controller
         }
 
         $search = $request->string('search')->toString();
+        $tag = $request->string('tag')->toString();
 
         $customers = Customer::query()
             ->where('team_id', $team->id)
+            ->with('tags')
+            ->when($tag !== '', fn ($query) => $query->whereHas(
+                'tags',
+                fn ($tagQuery) => $tagQuery->where('slug', $tag),
+            ))
             ->withCount([
                 'inquiries',
                 'inquiries as accepted_inquiries_count' => fn ($query) => $query->where('status', 'accepted'),
@@ -74,13 +81,26 @@ class CustomerController extends Controller
             fn (Customer $customer): array => BookingPresenter::customerCard($customer, $team->slug),
         );
 
+        $tags = CustomerTag::query()
+            ->where('team_id', $team->id)
+            ->orderBy('name')
+            ->get()
+            ->map(fn (CustomerTag $tag): array => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+                'slug' => $tag->slug,
+                'color' => $tag->color,
+            ])
+            ->all();
+
         return Inertia::render('Bookings/Customers/Index', [
             'team' => [
                 'name' => $team->name,
                 'slug' => $team->slug,
             ],
             'customers' => $customers,
-            'filters' => ['search' => $search],
+            'tags' => $tags,
+            'filters' => ['search' => $search, 'tag' => $tag],
             'urls' => [
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
@@ -148,8 +168,26 @@ class CustomerController extends Controller
             return $this->upgradeRedirect($team);
         }
 
-        $customer->load(['inquiries.listing', 'inquiries.deposits']);
+        $customer->load(['inquiries.listing', 'inquiries.deposits', 'tags']);
         $customer->loadCount('inquiries');
+
+        $canManageTags = Gate::allows('create', [CustomerTag::class, $team]);
+        $tags = CustomerTag::query()
+            ->where('team_id', $team->id)
+            ->withCount('customers')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (CustomerTag $tag): array => [
+                'id' => $tag->id,
+                'name' => $tag->name,
+                'slug' => $tag->slug,
+                'color' => $tag->color,
+                'customers_count' => (int) $tag->customers_count,
+                'delete_url' => $canManageTags
+                    ? route('bookings.customers.tags.destroy', ['current_team' => $team->slug, 'tag' => $tag->id])
+                    : null,
+            ])
+            ->all();
 
         $tasks = $customer->tasks()
             ->with(['assignee', 'team'])
@@ -213,6 +251,8 @@ class CustomerController extends Controller
             'tasks' => $tasks,
             'taskPriorities' => CustomerTaskPriority::options(),
             'teamMembers' => $teamMembers,
+            'tags' => $tags,
+            'canManageTags' => $canManageTags,
             'urls' => [
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'update' => route('bookings.customers.update', [
@@ -224,6 +264,11 @@ class CustomerController extends Controller
                     'customer' => $customer->id,
                 ]),
                 'tasks_store' => route('bookings.customers.tasks.store', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
+                'tags_store' => route('bookings.customers.tags.store', ['current_team' => $team->slug]),
+                'tags_sync' => route('bookings.customers.tags.sync', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,
                 ]),

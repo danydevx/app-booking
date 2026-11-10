@@ -16,12 +16,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { CustomerCard, Paginated } from '../../types';
+import type { CustomerCard, CustomerTag, Paginated } from '../../types';
 
 const props = defineProps<{
     team: { name: string; slug: string };
     customers: Paginated<CustomerCard>;
-    filters: { search?: string };
+    tags: CustomerTag[];
+    filters: { search?: string; tag?: string };
     urls: {
         bookings: string;
         index: string;
@@ -46,6 +47,7 @@ defineOptions({
 
 const form = reactive({
     search: props.filters.search ?? '',
+    tag: props.filters.tag ?? '',
 });
 
 function search(): void {
@@ -220,6 +222,19 @@ function createCustomer(): void {
                     placeholder="Nombre, correo o teléfono"
                 />
             </div>
+            <div class="grid min-w-48 gap-2">
+                <Label for="tag-filter">Etiqueta</Label>
+                <select
+                    id="tag-filter"
+                    v-model="form.tag"
+                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                    <option value="">Todas</option>
+                    <option v-for="tag in tags" :key="tag.id" :value="tag.slug">
+                        {{ tag.name }}
+                    </option>
+                </select>
+            </div>
             <Button type="submit">Buscar</Button>
         </form>
 
@@ -250,6 +265,19 @@ function createCustomer(): void {
                 <p class="text-sm text-muted-foreground">
                     {{ customer.phone }}
                 </p>
+                <div
+                    v-if="customer.tags.length > 0"
+                    class="mt-2 flex flex-wrap gap-1"
+                >
+                    <span
+                        v-for="tag in customer.tags"
+                        :key="tag.id"
+                        class="rounded-full px-2 py-0.5 text-xs font-medium text-white"
+                        :style="{ backgroundColor: tag.color }"
+                    >
+                        {{ tag.name }}
+                    </span>
+                </div>
                 <p class="mt-2 text-xs text-muted-foreground">
                     {{ customer.inquiries_count }}
                     {{

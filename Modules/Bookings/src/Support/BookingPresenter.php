@@ -6,6 +6,7 @@ use App\Support\WhatsApp;
 use Modules\Bookings\Models\BookingDeposit;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
+use Modules\Bookings\Models\CustomerTag;
 
 final class BookingPresenter
 {
@@ -87,6 +88,17 @@ final class BookingPresenter
             'inquiries_count' => (int) ($customer->inquiries_count ?? 0),
             'accepted_inquiries_count' => (int) ($customer->accepted_inquiries_count ?? 0),
             'open_tasks_count' => (int) ($customer->open_tasks_count ?? 0),
+            'tags' => $customer->relationLoaded('tags')
+                ? $customer->tags
+                    ->map(fn (CustomerTag $tag): array => [
+                        'id' => $tag->id,
+                        'name' => $tag->name,
+                        'slug' => $tag->slug,
+                        'color' => $tag->color,
+                    ])
+                    ->values()
+                    ->all()
+                : [],
             'overdue_tasks_count' => (int) ($customer->overdue_tasks_count ?? 0),
             'created_at' => $customer->created_at?->toISOString(),
             'show_url' => route('bookings.customers.show', [

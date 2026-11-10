@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import type {
     CustomerActivity,
     CustomerDetail,
+    CustomerTag,
     CustomerTask,
     InquiryStatus,
     StatusOption,
@@ -20,6 +21,13 @@ const props = defineProps<{
     tasks: CustomerTask[];
     taskPriorities: StatusOption[];
     teamMembers: Array<{ id: number; name: string }>;
+    tags: Array<
+        CustomerTag & {
+            customers_count: number;
+            delete_url: string | null;
+        }
+    >;
+    canManageTags: boolean;
     metrics: {
         total_inquiries: number;
         accepted_inquiries: number;
@@ -38,6 +46,8 @@ const props = defineProps<{
         update: string;
         activities_store: string;
         tasks_store: string;
+        tags_store: string;
+        tags_sync: string;
     };
 }>();
 
@@ -82,6 +92,15 @@ const taskForm = useForm({
 
 const editingTask = ref<CustomerTask | null>(null);
 
+const tagForm = useForm({
+    tag_ids: props.customer.tags.map((tag) => tag.id),
+});
+
+const tagCreateForm = useForm({
+    name: '',
+    color: '#64748b',
+});
+
 function submit(): void {
     form.patch(props.urls.update, { preserveScroll: true });
 }
@@ -117,6 +136,34 @@ function resetTaskForm(): void {
     editingTask.value = null;
     taskForm.reset();
     taskForm.priority = 'normal';
+}
+
+function saveTags(): void {
+    tagForm.patch(props.urls.tags_sync, { preserveScroll: true });
+}
+
+function toggleTag(tagId: number): void {
+    tagForm.tag_ids = tagForm.tag_ids.includes(tagId)
+        ? tagForm.tag_ids.filter((id) => id !== tagId)
+        : [...tagForm.tag_ids, tagId];
+}
+
+function createTag(): void {
+    tagCreateForm.post(props.urls.tags_store, {
+        preserveScroll: true,
+        onSuccess: () => tagCreateForm.reset(),
+    });
+}
+
+function deleteTag(tag: CustomerTag & { delete_url: string | null }): void {
+    if (
+        !tag.delete_url ||
+        !window.confirm(`¿Eliminar la etiqueta ${tag.name}?`)
+    ) {
+        return;
+    }
+
+    router.delete(tag.delete_url, { preserveScroll: true });
 }
 
 function completeTask(task: CustomerTask): void {
@@ -241,6 +288,129 @@ function statusVariant(
                 </p>
             </div>
         </div>
+
+        <section class="rounded-xl border bg-card p-5">
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold">Etiquetas</h2>
+                <p class="text-sm text-muted-foreground">
+                    Segmenta al cliente para encontrarlo y filtrarlo después.
+                </p>
+            </div>
+
+            <form @submit.prevent="saveTags">
+                <div class="flex flex-wrap gap-3">
+                    <label
+                        v-for="tag in tags"
+                        :key="tag.id"
+                        class="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm"
+                    >
+                        <input
+                            type="checkbox"
+                            class="size-4 rounded border-input"
+                            :checked="tagForm.tag_ids.includes(tag.id)"
+                            @change="toggleTag(tag.id)"
+                        />
+                        <span
+                            class="size-2.5 rounded-full"
+                            :style="{ backgroundColor: tag.color }"
+                        />
+                        {{ tag.name }}
+                        <span class="text-xs text-muted-foreground">
+                            ({{ tag.customers_count }})
+                        </span>
+                    </label>
+                    <p
+                        v-if="tags.length === 0"
+                        class="text-sm text-muted-foreground"
+                    >
+                        No hay etiquetas creadas.
+                    </p>
+                </div>
+                <p
+                    v-if="tagForm.errors.tag_ids"
+                    class="mt-2 text-sm text-destructive"
+                >
+                    {{ tagForm.errors.tag_ids }}
+                </p>
+                <Button
+                    v-if="tags.length > 0"
+                    class="mt-4"
+                    type="submit"
+                    :disabled="tagForm.processing"
+                >
+                    Guardar etiquetas
+                </Button>
+            </form>
+
+            <div v-if="canManageTags" class="mt-5 border-t pt-5">
+                <h3 class="text-sm font-medium">Nueva etiqueta</h3>
+                <form
+                    class="mt-3 flex flex-wrap items-end gap-3"
+                    @submit.prevent="createTag"
+                >
+                    <div class="grid min-w-56 flex-1 gap-2">
+                        <Label for="new-tag-name">Nombre</Label>
+                        <Input
+                            id="new-tag-name"
+                            v-model="tagCreateForm.name"
+                            maxlength="60"
+                            required
+                            placeholder="Ej. Corporativo"
+                        />
+                        <p
+                            v-if="tagCreateForm.errors.name"
+                            class="text-sm text-destructive"
+                        >
+                            {{ tagCreateForm.errors.name }}
+                        </p>
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="new-tag-color">Color</Label>
+                        <input
+                            id="new-tag-color"
+                            v-model="tagCreateForm.color"
+                            type="color"
+                            class="h-9 w-14 rounded-md border border-input bg-transparent p-1"
+                        />
+                        <p
+                            v-if="tagCreateForm.errors.color"
+                            class="text-sm text-destructive"
+                        >
+                            {{ tagCreateForm.errors.color }}
+                        </p>
+                    </div>
+                    <Button
+                        type="submit"
+                        variant="outline"
+                        :disabled="tagCreateForm.processing"
+                    >
+                        Crear etiqueta
+                    </Button>
+                </form>
+
+                <div v-if="tags.length > 0" class="mt-4 space-y-2">
+                    <p class="text-xs text-muted-foreground">
+                        Administrar etiquetas de la cuenta
+                    </p>
+                    <div
+                        v-for="tag in tags"
+                        :key="`manage-${tag.id}`"
+                        class="flex items-center justify-between gap-3 text-sm"
+                    >
+                        <span>{{ tag.name }}</span>
+                        <Button
+                            v-if="tag.delete_url"
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            @click="deleteTag(tag)"
+                        >
+                            Eliminar
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <form class="rounded-xl border bg-card p-5" @submit.prevent="submit">
             <h2 class="mb-4 text-lg font-semibold">Datos del cliente</h2>

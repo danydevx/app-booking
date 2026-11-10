@@ -53,6 +53,13 @@ export type BookingDeposit = {
     update_url: string;
 };
 
+export type CustomerTag = {
+    id: number;
+    name: string;
+    slug: string;
+    color: string;
+};
+
 export type CustomerCard = {
     id: number;
     name: string;
@@ -64,6 +71,7 @@ export type CustomerCard = {
     accepted_inquiries_count: number;
     open_tasks_count: number;
     overdue_tasks_count: number;
+    tags: CustomerTag[];
     created_at: string | null;
     show_url: string;
 };
