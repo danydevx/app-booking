@@ -5,11 +5,11 @@ import type {
     ListingDetailField,
     ListingLimits,
     ListingLocations,
-    ServiceOption,
+    ServiceGroup,
 } from '../types';
 
 defineProps<{
-    services: ServiceOption[];
+    serviceGroups: ServiceGroup[];
     detailFields: Record<string, ListingDetailField>;
     locations: ListingLocations;
     limits: ListingLimits;
@@ -49,7 +49,7 @@ defineOptions({
         <div class="rounded-xl border bg-card p-5 sm:p-6">
             <ListingForm
                 mode="create"
-                :services="services"
+                :service-groups="serviceGroups"
                 :detail-fields="detailFields"
                 :locations="locations"
                 :urls="urls"

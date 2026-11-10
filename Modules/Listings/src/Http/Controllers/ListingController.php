@@ -85,7 +85,7 @@ class ListingController extends Controller
         }
 
         return Inertia::render('Listings/Create', [
-            'services' => $this->formData->services(),
+            'serviceGroups' => $this->formData->serviceGroups(),
             'detailFields' => $this->formData->detailFields(),
             'locations' => $this->formData->locations(),
             'limits' => $this->formData->mediaLimits($team),
@@ -181,7 +181,7 @@ class ListingController extends Controller
 
         return Inertia::render('Listings/Edit', [
             'listing' => ListingPresenter::ownerForm($listing, $team->slug),
-            'services' => $this->formData->services(),
+            'serviceGroups' => $this->formData->serviceGroups(),
             'detailFields' => $this->formData->detailFields(),
             'locations' => $this->formData->locations(),
             'limits' => $this->formData->mediaLimits($team),

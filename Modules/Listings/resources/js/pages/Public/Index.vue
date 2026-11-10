@@ -39,7 +39,8 @@ const props = defineProps<{
     center: { lat: number; lng: number } | null;
     radius: number | null;
     filters: PublicFilters;
-    services: ServiceOption[];
+    priorityServices: ServiceOption[];
+    additionalServices: ServiceOption[];
     locations: ListingLocations;
     urls: {
         index: string;
@@ -179,14 +180,25 @@ function search(): void {
                         v-model="form.service"
                         class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
-                        <option value="">Cualquier servicio</option>
-                        <option
-                            v-for="service in services"
-                            :key="service.value"
-                            :value="service.value"
-                        >
-                            {{ service.label }}
-                        </option>
+                        <option value="">Cualquier característica</option>
+                        <optgroup label="Destacadas">
+                            <option
+                                v-for="service in priorityServices"
+                                :key="service.value"
+                                :value="service.value"
+                            >
+                                {{ service.label }}
+                            </option>
+                        </optgroup>
+                        <optgroup label="Más características">
+                            <option
+                                v-for="service in additionalServices"
+                                :key="service.value"
+                                :value="service.value"
+                            >
+                                {{ service.label }}
+                            </option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="flex items-end lg:col-span-2">
@@ -305,11 +317,20 @@ function search(): void {
 
                             <div class="flex flex-wrap gap-1">
                                 <Badge
-                                    v-for="service in listing.services"
+                                    v-for="service in listing.services.slice(
+                                        0,
+                                        5,
+                                    )"
                                     :key="service"
                                     variant="secondary"
                                 >
                                     {{ service }}
+                                </Badge>
+                                <Badge
+                                    v-if="listing.services.length > 5"
+                                    variant="outline"
+                                >
+                                    +{{ listing.services.length - 5 }}
                                 </Badge>
                             </div>
 

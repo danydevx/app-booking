@@ -5,6 +5,12 @@ export type ServiceOption = {
     label: string;
 };
 
+export type ServiceGroup = {
+    key: string;
+    label: string;
+    services: ServiceOption[];
+};
+
 export type ListingDetailField = {
     label: string;
     type: 'text' | 'select';
@@ -116,6 +122,11 @@ export type ListingPublicDetail = {
     longitude: number | null;
     capacity: number | null;
     services: ListingService[];
+    serviceGroups: Array<{
+        key: string;
+        label: string;
+        services: ServiceOption[];
+    }>;
     details: Array<{ key: string; label: string; value: string }>;
     rules: string | null;
     contact_name: string | null;

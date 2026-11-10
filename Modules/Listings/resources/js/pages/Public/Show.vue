@@ -144,18 +144,29 @@ const whatsappUrl = computed(
                     </section>
 
                     <section
-                        v-if="listing.services.length > 0"
-                        class="space-y-3"
+                        v-if="listing.serviceGroups.length > 0"
+                        class="space-y-4"
                     >
-                        <h2 class="text-lg font-semibold">Servicios</h2>
-                        <div class="flex flex-wrap gap-2">
-                            <Badge
-                                v-for="service in listing.services"
-                                :key="service.key"
-                                variant="secondary"
+                        <h2 class="text-lg font-semibold">Características</h2>
+                        <div
+                            v-for="group in listing.serviceGroups"
+                            :key="group.key"
+                            class="space-y-2"
+                        >
+                            <h3
+                                class="text-sm font-medium text-muted-foreground"
                             >
-                                {{ service.label }}
-                            </Badge>
+                                {{ group.label }}
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                                <Badge
+                                    v-for="service in group.services"
+                                    :key="service.value"
+                                    variant="secondary"
+                                >
+                                    {{ service.label }}
+                                </Badge>
+                            </div>
                         </div>
                     </section>
 

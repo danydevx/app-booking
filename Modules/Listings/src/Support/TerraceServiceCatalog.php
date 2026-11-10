@@ -5,9 +5,28 @@ namespace Modules\Listings\Support;
 final class TerraceServiceCatalog
 {
     /**
-     * @return array<string, string>
+     * @var array<int, string>
      */
-    public static function all(): array
+    private const PRIORITY = [
+        'pool',
+        'heated_pool',
+        'parking',
+        'wifi',
+        'grill',
+        'kitchen',
+        'bathroom',
+        'tables',
+        'bounce_house',
+        'green_areas',
+        'covered_terrace',
+        'lodging',
+        'accessible',
+    ];
+
+    /**
+     * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
+     */
+    public static function groups(): array
     {
         $configured = config('verticals.terrace.services', []);
 
@@ -15,11 +34,59 @@ final class TerraceServiceCatalog
             return [];
         }
 
+        $groups = [];
+        $legacy = [];
+
+        foreach ($configured as $key => $group) {
+            if (
+                is_string($key)
+                && is_array($group)
+                && isset($group['items'])
+                && is_array($group['items'])
+            ) {
+                $items = self::items($group['items']);
+
+                if ($items === []) {
+                    continue;
+                }
+
+                $groups[] = [
+                    'key' => $key,
+                    'label' => is_string($group['label'] ?? null)
+                        ? $group['label']
+                        : $key,
+                    'services' => self::toOptions($items),
+                ];
+
+                continue;
+            }
+
+            if (is_string($key) && is_string($group)) {
+                $legacy[$key] = $group;
+            }
+        }
+
+        if ($legacy !== []) {
+            $groups[] = [
+                'key' => 'other',
+                'label' => 'Otros',
+                'services' => self::toOptions($legacy),
+            ];
+        }
+
+        return $groups;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function all(): array
+    {
         $services = [];
 
-        foreach ($configured as $key => $label) {
-            if (is_string($key) && is_string($label)) {
-                $services[$key] = $label;
+        foreach (self::groups() as $group) {
+            foreach ($group['services'] as $service) {
+                $services[$service['value']] = $service['label'];
             }
         }
 
@@ -31,9 +98,136 @@ final class TerraceServiceCatalog
      */
     public static function options(): array
     {
+        return self::toOptions(self::all());
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function priorityOptions(): array
+    {
+        $all = self::all();
         $options = [];
 
-        foreach (self::all() as $value => $label) {
+        foreach (self::PRIORITY as $key) {
+            if (isset($all[$key])) {
+                $options[] = [
+                    'value' => $key,
+                    'label' => $all[$key],
+                ];
+            }
+        }
+
+        return $options;
+    }
+
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function additionalOptions(): array
+    {
+        $priority = array_column(self::priorityOptions(), 'value');
+
+        return array_values(array_filter(
+            self::options(),
+            fn (array $option): bool => ! in_array($option['value'], $priority, true),
+        ));
+    }
+
+    /**
+     * Return only the groups that contain selected services, without empty groups.
+     *
+     * @param  array<int, string>  $keys
+     * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
+     */
+    public static function groupsFor(array $keys): array
+    {
+        $selected = [];
+
+        foreach ($keys as $key) {
+            if ($key !== '' && ! in_array($key, $selected, true)) {
+                $selected[] = $key;
+            }
+        }
+
+        if ($selected === []) {
+            return [];
+        }
+
+        $groups = [];
+        $used = [];
+
+        foreach (self::groups() as $group) {
+            $services = array_values(array_filter(
+                $group['services'],
+                fn (array $service): bool => in_array($service['value'], $selected, true),
+            ));
+
+            if ($services === []) {
+                continue;
+            }
+
+            $groups[] = [
+                'key' => $group['key'],
+                'label' => $group['label'],
+                'services' => $services,
+            ];
+
+            foreach ($services as $service) {
+                $used[] = $service['value'];
+            }
+        }
+
+        $unknown = array_values(array_diff($selected, $used));
+
+        if ($unknown !== []) {
+            $groups[] = [
+                'key' => 'other',
+                'label' => 'Otros',
+                'services' => array_map(
+                    fn (string $key): array => [
+                        'value' => $key,
+                        'label' => $key,
+                    ],
+                    $unknown,
+                ),
+            ];
+        }
+
+        return $groups;
+    }
+
+    public static function label(string $key): string
+    {
+        return self::all()[$key] ?? $key;
+    }
+
+    /**
+     * @param  array<int|string, mixed>  $items
+     * @return array<string, string>
+     */
+    private static function items(array $items): array
+    {
+        $services = [];
+
+        foreach ($items as $key => $label) {
+            if (is_string($key) && is_string($label)) {
+                $services[$key] = $label;
+            }
+        }
+
+        return $services;
+    }
+
+    /**
+     * @param  array<string, string>  $services
+     * @return array<int, array{value: string, label: string}>
+     */
+    private static function toOptions(array $services): array
+    {
+        $options = [];
+
+        foreach ($services as $value => $label) {
             $options[] = [
                 'value' => $value,
                 'label' => $label,
@@ -41,10 +235,5 @@ final class TerraceServiceCatalog
         }
 
         return $options;
-    }
-
-    public static function label(string $key): string
-    {
-        return self::all()[$key] ?? $key;
     }
 }

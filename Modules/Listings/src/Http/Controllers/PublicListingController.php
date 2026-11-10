@@ -29,7 +29,8 @@ class PublicListingController extends Controller
             'center' => $result['center'],
             'radius' => $result['radius'],
             'filters' => $request->validated(),
-            'services' => TerraceServiceCatalog::options(),
+            'priorityServices' => TerraceServiceCatalog::priorityOptions(),
+            'additionalServices' => TerraceServiceCatalog::additionalOptions(),
             'locations' => MexicoLocationCatalog::all(),
             'urls' => [
                 'index' => route('public.listings.index'),

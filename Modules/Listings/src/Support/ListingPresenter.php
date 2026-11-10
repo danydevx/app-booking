@@ -118,6 +118,7 @@ final class ListingPresenter
                 ])
                 ->values()
                 ->all(),
+            'serviceGroups' => TerraceServiceCatalog::groupsFor($listing->services ?? []),
             'details' => collect(TerraceDetailCatalog::keys())
                 ->filter(fn (string $key): bool => filled(($listing->details ?? [])[$key] ?? null))
                 ->map(fn (string $key): array => [

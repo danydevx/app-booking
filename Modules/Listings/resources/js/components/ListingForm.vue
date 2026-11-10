@@ -17,13 +17,13 @@ import type {
     ListingDetailField,
     ListingFormData,
     ListingLocations,
-    ServiceOption,
+    ServiceGroup,
 } from '../types';
 
 const props = defineProps<{
     mode: 'create' | 'edit';
     listing?: ListingFormData | null;
-    services: ServiceOption[];
+    serviceGroups: ServiceGroup[];
     detailFields: Record<string, ListingDetailField>;
     locations: ListingLocations;
     urls: {
@@ -296,24 +296,33 @@ function submit(): void {
 
         <section class="space-y-5 border-t pt-8">
             <div>
-                <h2 class="text-lg font-semibold">Servicios</h2>
+                <h2 class="text-lg font-semibold">Características</h2>
                 <p class="text-sm text-muted-foreground">
                     Selecciona lo que ya está disponible en el espacio.
                 </p>
             </div>
 
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <label
-                    v-for="service in services"
-                    :key="service.value"
-                    class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm hover:bg-accent/40"
+            <div class="space-y-5">
+                <div
+                    v-for="group in serviceGroups"
+                    :key="group.key"
+                    class="space-y-3"
                 >
-                    <Checkbox
-                        :checked="form.services.includes(service.value)"
-                        @update:checked="toggleService(service.value)"
-                    />
-                    <span>{{ service.label }}</span>
-                </label>
+                    <h3 class="text-sm font-semibold">{{ group.label }}</h3>
+                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <label
+                            v-for="service in group.services"
+                            :key="service.value"
+                            class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm hover:bg-accent/40"
+                        >
+                            <Checkbox
+                                :checked="form.services.includes(service.value)"
+                                @update:checked="toggleService(service.value)"
+                            />
+                            <span>{{ service.label }}</span>
+                        </label>
+                    </div>
+                </div>
             </div>
             <InputError :message="form.errors.services" />
         </section>

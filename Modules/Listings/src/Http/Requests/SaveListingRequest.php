@@ -94,7 +94,10 @@ class SaveListingRequest extends FormRequest
             ->all();
 
         $this->merge([
-            'services' => array_values(array_filter((array) $this->input('services', []))),
+            'services' => array_values(array_unique(array_filter(
+                (array) $this->input('services', []),
+                fn (mixed $service): bool => is_string($service) && $service !== '',
+            ))),
             'details' => $details === [] ? null : $details,
         ]);
     }

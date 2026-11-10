@@ -13,11 +13,11 @@ final class ListingFormData
     ) {}
 
     /**
-     * @return array<int, array{value: string, label: string}>
+     * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
      */
-    public function services(): array
+    public function serviceGroups(): array
     {
-        return TerraceServiceCatalog::options();
+        return TerraceServiceCatalog::groups();
     }
 
     /**
