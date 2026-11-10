@@ -117,6 +117,7 @@ rutas, migraciones, páginas Vue y tests.
 - Estado de fases: `docs/development/PHASE-STATUS.md`
 - Producción: `docs/development/PRODUCTION.md`
 - Disponibilidad: `docs/development/AVAILABILITY.md`
+- Administración de terraza: `docs/development/TERRACE-ADMIN.md`
 - Plan CRM: `docs/development/CRM-PLAN.md`
 - Seguridad: `SECURITY.md`
 - Guía para agentes: `.opencode/skills/app-booking-development/SKILL.md`
