@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -103,6 +103,7 @@ const taskForm = useForm({
 });
 
 const editingTask = ref<CustomerTask | null>(null);
+const activityBody = ref<HTMLTextAreaElement | null>(null);
 
 const tagForm = useForm({
     tag_ids: props.customer.tags.map((tag) => tag.id),
@@ -275,6 +276,15 @@ function formatMoney(cents: number): string {
     }).format(cents / 100);
 }
 
+const mailtoUrl = computed(() => {
+    const subject = encodeURIComponent(`Seguimiento a ${props.customer.name}`);
+    const body = encodeURIComponent(
+        `Hola ${props.customer.name},\n\nTe contacto para dar seguimiento a tu solicitud.\n\nSaludos.`,
+    );
+
+    return `mailto:${props.customer.email}?subject=${subject}&body=${body}`;
+});
+
 const whatsappUrl = computed<string | null>(() => {
     const phone = props.customer.whatsapp_phone ?? props.customer.phone;
 
@@ -283,9 +293,23 @@ const whatsappUrl = computed<string | null>(() => {
     }
 
     const digits = phone.replace(/\D/g, '');
+    const message = encodeURIComponent(
+        `Hola ${props.customer.name}, te contacto para dar seguimiento a tu solicitud.`,
+    );
 
-    return digits === '' ? null : `https://wa.me/${digits}`;
+    return digits === '' ? null : `https://wa.me/${digits}?text=${message}`;
 });
+
+function startActivity(type: string): void {
+    activityForm.type = type;
+
+    void nextTick(() => {
+        activityBody.value?.focus();
+        document
+            .getElementById('timeline')
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+}
 
 function statusVariant(
     status: InquiryStatus,
@@ -383,7 +407,7 @@ function statusVariant(
 
                 <div class="flex flex-wrap gap-2">
                     <Button variant="outline" as-child>
-                        <a :href="`mailto:${customer.email}`">Enviar correo</a>
+                        <a :href="mailtoUrl">Enviar correo</a>
                     </Button>
                     <Button v-if="whatsappUrl" variant="outline" as-child>
                         <a
@@ -674,13 +698,25 @@ function statusVariant(
                     </p>
                 </section>
 
-                <section class="rounded-xl border bg-card p-5">
+                <section id="timeline" class="rounded-xl border bg-card p-5">
                     <div class="mb-4">
                         <h2 class="text-lg font-semibold">Timeline</h2>
                         <p class="text-sm text-muted-foreground">
                             Registra llamadas, correos, reuniones y notas de
                             seguimiento.
                         </p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <Button
+                                v-for="type in activityTypes"
+                                :key="`quick-${type.value}`"
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                @click="startActivity(type.value)"
+                            >
+                                {{ type.label }}
+                            </Button>
+                        </div>
                     </div>
 
                     <form
@@ -731,6 +767,7 @@ function statusVariant(
                             <Label for="activity-body">Detalle</Label>
                             <textarea
                                 id="activity-body"
+                                ref="activityBody"
                                 v-model="activityForm.body"
                                 rows="3"
                                 maxlength="5000"
@@ -753,6 +790,11 @@ function statusVariant(
                             >
                                 Registrar actividad
                             </Button>
+                            <p class="mt-2 text-xs text-muted-foreground">
+                                El correo y WhatsApp se abren en tu cliente o
+                                aplicación externa; la plataforma no los envía
+                                automáticamente.
+                            </p>
                         </div>
                     </form>
 
