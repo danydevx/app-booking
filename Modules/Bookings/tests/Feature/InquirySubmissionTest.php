@@ -128,7 +128,7 @@ class InquirySubmissionTest extends TestCase
             $this->payload(),
         )->assertRedirect();
 
-        Queue::assertPushed(SendQueuedNotifications::class, 2);
+        Queue::assertPushed(SendQueuedNotifications::class, 3);
     }
 
     /**

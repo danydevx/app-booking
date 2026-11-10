@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 const props = defineProps<{
     storeUrl: string;
     listingName: string;
+    attribution: Record<string, string>;
 }>();
 
 const today = new Date().toISOString().slice(0, 10);
@@ -23,6 +24,13 @@ const form = useForm({
     event_type: '',
     guests: '' as number | string,
     message: '',
+    source_detail: props.attribution.source_detail ?? '',
+    utm_source: props.attribution.utm_source ?? '',
+    utm_medium: props.attribution.utm_medium ?? '',
+    utm_campaign: props.attribution.utm_campaign ?? '',
+    utm_term: props.attribution.utm_term ?? '',
+    utm_content: props.attribution.utm_content ?? '',
+    referrer: props.attribution.referrer ?? '',
     consent: false,
     website: '',
 });
@@ -56,6 +64,14 @@ function submit(): void {
                 autocomplete="off"
             />
         </div>
+
+        <input type="hidden" v-model="form.source_detail" />
+        <input type="hidden" v-model="form.utm_source" />
+        <input type="hidden" v-model="form.utm_medium" />
+        <input type="hidden" v-model="form.utm_campaign" />
+        <input type="hidden" v-model="form.utm_term" />
+        <input type="hidden" v-model="form.utm_content" />
+        <input type="hidden" v-model="form.referrer" />
 
         <div class="grid gap-4 sm:grid-cols-2">
             <div class="grid gap-2">

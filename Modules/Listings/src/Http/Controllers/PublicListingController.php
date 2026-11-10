@@ -4,9 +4,11 @@ namespace Modules\Listings\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Bookings\Support\AvailabilityService;
+use Modules\Bookings\Support\LeadAttribution;
 use Modules\Listings\Http\Requests\PublicListingSearchRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Queries\PublicListingSearch;
@@ -35,11 +37,13 @@ class PublicListingController extends Controller
         ]);
     }
 
-    public function show(Listing $listing, AvailabilityService $availability): Response
+    public function show(Request $request, Listing $listing, AvailabilityService $availability): Response
     {
         abort_unless($listing->isPubliclyVisible(), 404);
 
         $listing->load('media');
+
+        LeadAttribution::capture($request, $listing);
 
         $today = CarbonImmutable::now($listing->timezone)->toDateString();
         $end = CarbonImmutable::now($listing->timezone)->addDays(90)->toDateString();

@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import {
     BookOpen,
     Building2,
+    ChartColumn,
     CreditCard,
     FileText,
     FolderGit2,
@@ -70,6 +71,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Plantillas',
             href: `/${page.props.currentTeam.slug}/bookings/templates`,
             icon: Mail,
+        });
+        items.push({
+            title: 'Reportes',
+            href: `/${page.props.currentTeam.slug}/bookings/reports`,
+            icon: ChartColumn,
         });
 
         if (page.props.currentTeam.role === 'owner') {

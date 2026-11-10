@@ -42,6 +42,7 @@ const props = defineProps<{
         customers: string;
         today: string;
         quotes: string;
+        reports: string;
         billing: string;
     };
 }>();
@@ -148,6 +149,11 @@ function statusVariant(
                 <Button variant="outline" as-child>
                     <Link :href="canUseCustomers ? urls.quotes : urls.billing">
                         Cotizaciones
+                    </Link>
+                </Button>
+                <Button variant="outline" as-child>
+                    <Link :href="canUseCustomers ? urls.reports : urls.billing">
+                        Reportes
                     </Link>
                 </Button>
                 <Button v-if="canCreateBooking" as-child>

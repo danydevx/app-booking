@@ -30,6 +30,13 @@ use Modules\Listings\Models\Listing;
  * @property string|null $message
  * @property InquiryStatus $status
  * @property string $source
+ * @property string|null $source_detail
+ * @property string|null $utm_source
+ * @property string|null $utm_medium
+ * @property string|null $utm_campaign
+ * @property string|null $utm_term
+ * @property string|null $utm_content
+ * @property string|null $referrer
  * @property CarbonImmutable|null $consent_at
  * @property string|null $ip_hash
  * @property CarbonImmutable|null $contacted_at
@@ -56,6 +63,13 @@ use Modules\Listings\Models\Listing;
     'event_type',
     'guests',
     'message',
+    'source_detail',
+    'utm_source',
+    'utm_medium',
+    'utm_campaign',
+    'utm_term',
+    'utm_content',
+    'referrer',
 ])]
 class BookingInquiry extends Model
 {

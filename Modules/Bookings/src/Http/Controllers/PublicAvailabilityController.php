@@ -11,6 +11,7 @@ use Inertia\Response;
 use Modules\Bookings\Actions\CreateBookingInquiry;
 use Modules\Bookings\Http\Requests\StoreBookingInquiryRequest;
 use Modules\Bookings\Support\AvailabilityService;
+use Modules\Bookings\Support\LeadAttribution;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Support\ListingPresenter;
 
@@ -25,6 +26,8 @@ class PublicAvailabilityController extends Controller
 
         $listing->load('media');
 
+        LeadAttribution::capture($request, $listing);
+
         $today = CarbonImmutable::now($listing->timezone)->toDateString();
         $end = CarbonImmutable::now($listing->timezone)
             ->addDays((int) config('bookings.public_calendar_days', 90))
@@ -33,6 +36,7 @@ class PublicAvailabilityController extends Controller
         return Inertia::render('Bookings/Public/Availability', [
             'listing' => ListingPresenter::publicDetail($listing),
             'blocked_dates' => $availability->blockedDates($listing, $today, $end),
+            'attribution' => LeadAttribution::resolve($request, $listing),
             'submitted' => $request->session()->get('inquiry_submitted'),
             'urls' => [
                 'index' => route('public.listings.index'),
@@ -49,7 +53,27 @@ class PublicAvailabilityController extends Controller
     ): RedirectResponse {
         abort_unless($listing->isPubliclyVisible(), 404);
 
-        $createInquiry->handle($listing, $request->validated(), $request->ip());
+        $data = $request->validated();
+
+        $attribution = array_filter([
+            'source_detail' => $data['source_detail'] ?? null,
+            'utm_source' => $data['utm_source'] ?? null,
+            'utm_medium' => $data['utm_medium'] ?? null,
+            'utm_campaign' => $data['utm_campaign'] ?? null,
+            'utm_term' => $data['utm_term'] ?? null,
+            'utm_content' => $data['utm_content'] ?? null,
+            'referrer' => $data['referrer'] ?? null,
+        ], fn (mixed $value): bool => $value !== null && $value !== '');
+
+        if ($attribution === []) {
+            $attribution = LeadAttribution::resolve($request, $listing);
+        }
+
+        $createInquiry->handle(
+            $listing,
+            array_merge($data, $attribution),
+            $request->ip(),
+        );
 
         return to_route('public.bookings.availability', ['listing' => $listing->slug])
             ->with('inquiry_submitted', 'Recibimos tu solicitud. El anfitrión se pondrá en contacto contigo.');

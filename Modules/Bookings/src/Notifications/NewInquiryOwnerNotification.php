@@ -20,7 +20,25 @@ class NewInquiryOwnerNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        $inquiry = $this->inquiry;
+
+        return [
+            'title' => 'Nueva solicitud',
+            'message' => "{$inquiry->name} quiere rentar {$inquiry->listing->name}.",
+            'url' => route('bookings.show', [
+                'current_team' => $inquiry->listing->team->slug,
+                'inquiry' => $inquiry->id,
+            ]),
+            'kind' => 'inquiry',
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage

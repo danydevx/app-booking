@@ -26,7 +26,25 @@ class CustomerTaskDigest extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'title' => 'Tareas pendientes',
+            'message' => "Tienes {$this->count()} tareas por atender en {$this->teamName}.",
+            'url' => $this->todayUrl,
+            'kind' => 'task',
+        ];
+    }
+
+    private function count(): int
+    {
+        return count($this->tasks);
     }
 
     public function toMail(object $notifiable): MailMessage

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import NotificationBell from '@/components/NotificationBell.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import type { BreadcrumbItem, SubmenuItem } from '@/types';
@@ -30,6 +31,9 @@ const { isCurrentUrl } = useCurrentUrl();
             <template v-if="breadcrumbs && breadcrumbs.length > 0">
                 <Breadcrumbs :breadcrumbs="breadcrumbs" />
             </template>
+            <div class="ml-auto flex items-center gap-2">
+                <NotificationBell />
+            </div>
         </div>
 
         <nav

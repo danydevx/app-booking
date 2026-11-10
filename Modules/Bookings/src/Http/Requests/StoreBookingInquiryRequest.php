@@ -30,6 +30,13 @@ class StoreBookingInquiryRequest extends FormRequest
             'event_type' => ['nullable', 'string', 'max:80'],
             'guests' => ['nullable', 'integer', 'min:1', 'max:10000'],
             'message' => ['nullable', 'string', 'max:2000'],
+            'source_detail' => ['nullable', 'string', 'max:500'],
+            'utm_source' => ['nullable', 'string', 'max:500'],
+            'utm_medium' => ['nullable', 'string', 'max:500'],
+            'utm_campaign' => ['nullable', 'string', 'max:500'],
+            'utm_term' => ['nullable', 'string', 'max:500'],
+            'utm_content' => ['nullable', 'string', 'max:500'],
+            'referrer' => ['nullable', 'string', 'max:2000'],
             'consent' => ['accepted'],
             'website' => ['prohibited'],
         ];

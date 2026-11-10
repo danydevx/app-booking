@@ -11,6 +11,7 @@ import type { BlockedDate, PublicListingSummary } from '../../types';
 const props = defineProps<{
     listing: PublicListingSummary;
     blocked_dates: BlockedDate[];
+    attribution: Record<string, string>;
     submitted: string | null;
     urls: {
         index: string;
@@ -112,6 +113,7 @@ const cover = computed(
                         <InquiryForm
                             :store-url="urls.store"
                             :listing-name="listing.name"
+                            :attribution="attribution"
                         />
                     </div>
                 </aside>

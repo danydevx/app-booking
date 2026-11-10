@@ -211,7 +211,31 @@ function formatActivityDate(value: string | null): string {
                         </div>
                         <div>
                             <dt class="text-muted-foreground">Origen</dt>
-                            <dd class="font-medium">{{ inquiry.source }}</dd>
+                            <dd class="font-medium">
+                                {{ inquiry.source_detail ?? inquiry.source }}
+                            </dd>
+                        </div>
+                        <div v-if="inquiry.utm_source || inquiry.utm_campaign">
+                            <dt class="text-muted-foreground">Campaña</dt>
+                            <dd class="font-medium">
+                                {{ inquiry.utm_source ?? '—' }}
+                                <span v-if="inquiry.utm_campaign">
+                                    · {{ inquiry.utm_campaign }}
+                                </span>
+                            </dd>
+                        </div>
+                        <div v-if="inquiry.referrer" class="sm:col-span-2">
+                            <dt class="text-muted-foreground">Referencia</dt>
+                            <dd class="truncate font-medium">
+                                <a
+                                    :href="inquiry.referrer"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    class="underline underline-offset-4"
+                                >
+                                    {{ inquiry.referrer }}
+                                </a>
+                            </dd>
                         </div>
                     </dl>
                     <p

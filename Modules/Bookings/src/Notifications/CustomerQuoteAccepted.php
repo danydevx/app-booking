@@ -22,7 +22,23 @@ class CustomerQuoteAccepted extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'title' => 'Cotización aceptada',
+            'message' => "{$this->quote->customer->name} aceptó la cotización de {$this->quote->listing->name}.",
+            'url' => route('bookings.quotes.show', [
+                'current_team' => $this->quote->team->slug,
+                'quote' => $this->quote->id,
+            ]),
+            'kind' => 'quote',
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage

@@ -22,7 +22,23 @@ class UpcomingBookingReminder extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(object $notifiable): array
+    {
+        return [
+            'title' => 'Reserva próxima',
+            'message' => "La reserva de {$this->inquiry->listing->name} comienza en {$this->inquiry->start_date->diffForHumans()}.",
+            'url' => route('bookings.show', [
+                'current_team' => $this->inquiry->listing->team->slug,
+                'inquiry' => $this->inquiry->id,
+            ]),
+            'kind' => 'booking',
+        ];
     }
 
     public function toMail(object $notifiable): MailMessage
