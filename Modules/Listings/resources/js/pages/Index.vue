@@ -153,6 +153,9 @@ function statusVariant(
 
                     <div class="flex flex-wrap gap-2">
                         <Button size="sm" as-child>
+                            <Link :href="listing.manage_url">Administrar</Link>
+                        </Button>
+                        <Button size="sm" variant="outline" as-child>
                             <Link :href="listing.edit_url">Editar</Link>
                         </Button>
                         <Button

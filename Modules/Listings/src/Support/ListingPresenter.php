@@ -25,6 +25,10 @@ final class ListingPresenter
             'images_count' => (int) ($listing->images_count ?? 0),
             'videos_count' => (int) ($listing->videos_count ?? 0),
             'public_url' => $listing->isPublished() ? self::publicUrl($listing) : null,
+            'manage_url' => route('listings.manage', [
+                'current_team' => $teamSlug,
+                'listing' => $listing->slug,
+            ]),
             'edit_url' => route('listings.edit', [
                 'current_team' => $teamSlug,
                 'listing' => $listing->slug,

@@ -82,6 +82,7 @@ export type ListingOwnerCard = {
     images_count: number;
     videos_count: number;
     public_url: string | null;
+    manage_url: string;
     edit_url: string;
     updated_at: string | null;
 };

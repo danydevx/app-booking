@@ -29,6 +29,7 @@ use Modules\Bookings\Support\CustomerActivityPresenter;
 use Modules\Bookings\Support\CustomerCsvExport;
 use Modules\Bookings\Support\CustomerMetrics;
 use Modules\Bookings\Support\CustomerTaskPresenter;
+use Modules\Listings\Models\Listing;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CustomerController extends Controller
@@ -54,6 +55,7 @@ class CustomerController extends Controller
         $search = $request->string('search')->toString();
         $tag = $request->string('tag')->toString();
         $stage = $request->string('stage')->toString();
+        $listingFilter = $request->string('listing')->toString();
         $archived = $request->boolean('archived');
 
         $customers = Customer::query()
@@ -65,6 +67,13 @@ class CustomerController extends Controller
                 fn ($query) => $query->whereNull('archived_at'),
             )
             ->when($stage !== '', fn ($query) => $query->where('pipeline_stage', $stage))
+            ->when($listingFilter !== '', fn ($query) => $query->whereHas(
+                'inquiries',
+                fn ($inquiryQuery) => $inquiryQuery->whereHas(
+                    'listing',
+                    fn ($listingQuery) => $listingQuery->where('slug', $listingFilter),
+                ),
+            ))
             ->when($tag !== '', fn ($query) => $query->whereHas(
                 'tags',
                 fn ($tagQuery) => $tagQuery->where('slug', $tag),
@@ -102,6 +111,17 @@ class CustomerController extends Controller
             ])
             ->all();
 
+        $listingOptions = Listing::query()
+            ->where('team_id', $team->id)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug'])
+            ->map(fn (Listing $item): array => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'slug' => $item->slug,
+            ])
+            ->all();
+
         return Inertia::render('Bookings/Customers/Index', [
             'team' => [
                 'name' => $team->name,
@@ -109,9 +129,15 @@ class CustomerController extends Controller
             ],
             'customers' => $customers,
             'tags' => $tags,
+            'listings' => $listingOptions,
             'pipelineStages' => CustomerPipelineStage::options(),
             'archived' => $archived,
-            'filters' => ['search' => $search, 'tag' => $tag, 'stage' => $stage],
+            'filters' => [
+                'search' => $search,
+                'tag' => $tag,
+                'stage' => $stage,
+                'listing' => $listingFilter,
+            ],
             'urls' => [
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'index' => route('bookings.customers.index', ['current_team' => $team->slug]),

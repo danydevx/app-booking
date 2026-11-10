@@ -12,6 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Billing\Support\Entitlements;
+use Modules\Bookings\Support\ListingAdminSummary;
 use Modules\Listings\Actions\CreateListing;
 use Modules\Listings\Actions\DeleteListing;
 use Modules\Listings\Actions\PublishListing;
@@ -31,6 +32,7 @@ class ListingController extends Controller
         private readonly Entitlements $entitlements,
         private readonly OwnerListingQuery $listings,
         private readonly ListingFormData $formData,
+        private readonly ListingAdminSummary $adminSummary,
     ) {}
 
     public function index(Request $request): Response
@@ -120,6 +122,47 @@ class ListingController extends Controller
         return to_route('listings.edit', [
             'current_team' => $team->slug,
             'listing' => $listing->slug,
+        ]);
+    }
+
+    public function manage(
+        Request $request,
+        string $currentTeam,
+        Listing $listing,
+    ): Response {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($listing, $team);
+
+        Gate::authorize('view', $listing);
+
+        $listing->load(['media', 'coverImage']);
+
+        return Inertia::render('Listings/Manage', [
+            'listing' => [
+                ...ListingPresenter::ownerCard($listing, $team->slug),
+                'description' => $listing->description,
+            ],
+            ...$this->adminSummary->for($listing, $team->slug),
+            'urls' => [
+                'index' => route('listings.index', ['current_team' => $team->slug]),
+                'edit' => route('listings.edit', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'bookings' => route('bookings.index', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'customers' => route('bookings.customers.index', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'availability' => route('bookings.availability.edit', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
+                'public' => $listing->isPublished() ? route('public.listings.show', ['listing' => $listing->slug]) : null,
+            ],
         ]);
     }
 

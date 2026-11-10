@@ -28,9 +28,15 @@ const props = defineProps<{
     team: { name: string; slug: string };
     customers: Paginated<CustomerCard>;
     tags: CustomerTag[];
+    listings: Array<{ id: number; name: string; slug: string }>;
     pipelineStages: StatusOption[];
     archived: boolean;
-    filters: { search?: string; tag?: string; stage?: string };
+    filters: {
+        search?: string;
+        tag?: string;
+        stage?: string;
+        listing?: string;
+    };
     urls: {
         bookings: string;
         index: string;
@@ -58,6 +64,7 @@ const form = reactive({
     search: props.filters.search ?? '',
     tag: props.filters.tag ?? '',
     stage: props.filters.stage ?? '',
+    listing: props.filters.listing ?? '',
 });
 
 function search(): void {
@@ -261,6 +268,23 @@ function createCustomer(): void {
                     <option value="">Todas</option>
                     <option v-for="tag in tags" :key="tag.id" :value="tag.slug">
                         {{ tag.name }}
+                    </option>
+                </select>
+            </div>
+            <div class="grid min-w-44 gap-2">
+                <Label for="listing-filter">Terraza</Label>
+                <select
+                    id="listing-filter"
+                    v-model="form.listing"
+                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                    <option value="">Todas</option>
+                    <option
+                        v-for="listing in listings"
+                        :key="listing.id"
+                        :value="listing.slug"
+                    >
+                        {{ listing.name }}
                     </option>
                 </select>
             </div>

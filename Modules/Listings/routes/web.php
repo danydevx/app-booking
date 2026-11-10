@@ -20,6 +20,7 @@ Route::prefix('{current_team}/listings')
         Route::get('/', [ListingController::class, 'index'])->name('index');
         Route::get('/create', [ListingController::class, 'create'])->name('create');
         Route::post('/', [ListingController::class, 'store'])->name('store');
+        Route::get('/{listing}', [ListingController::class, 'manage'])->name('manage');
         Route::get('/{listing}/edit', [ListingController::class, 'edit'])->name('edit');
         Route::match(['put', 'patch'], '/{listing}', [ListingController::class, 'update'])->name('update');
         Route::delete('/{listing}', [ListingController::class, 'destroy'])->name('destroy');
