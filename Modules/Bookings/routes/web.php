@@ -35,6 +35,16 @@ Route::post('{current_team}/listings/{listing}/bookings/create', [ManualBookingC
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('bookings.listing.create.store');
 
+Route::get('{current_team}/listings/{listing}/customers', [CustomerController::class, 'forListing'])
+    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+    ->name('bookings.listing.customers');
+Route::post('{current_team}/listings/{listing}/customers', [CustomerController::class, 'storeForListing'])
+    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+    ->name('bookings.listing.customers.store');
+Route::get('{current_team}/listings/{listing}/customers/{customer}', [CustomerController::class, 'showForListing'])
+    ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+    ->name('bookings.listing.customers.show');
+
 Route::prefix('{current_team}/bookings')
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('bookings.')

@@ -12,6 +12,7 @@ use Modules\Bookings\Actions\CreateCustomer;
 use Modules\Bookings\Actions\RecordCustomerActivity;
 use Modules\Bookings\Enums\CustomerActivityType;
 use Modules\Bookings\Models\Customer;
+use Modules\Listings\Models\Listing;
 
 final class ImportCustomersCsv
 {
@@ -23,7 +24,7 @@ final class ImportCustomersCsv
     /**
      * @return array{created: int, skipped: int, errors: array<int, array{line: int, message: string}>}
      */
-    public function handle(Team $team, User $actor, UploadedFile $file): array
+    public function handle(Team $team, User $actor, UploadedFile $file, ?Listing $listing = null): array
     {
         $handle = fopen($file->getRealPath(), 'r');
 
@@ -110,7 +111,7 @@ final class ImportCustomersCsv
 
             $seenEmails[$data['email']] = true;
 
-            $customer = $this->createCustomer->handle($team, $data);
+            $customer = $this->createCustomer->handle($team, $data, $listing);
 
             $this->activity->handle(
                 $customer,

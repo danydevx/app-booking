@@ -13,10 +13,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Modules\Bookings\Database\Factories\CustomerFactory;
 use Modules\Bookings\Enums\CustomerPipelineStage;
+use Modules\Listings\Models\Listing;
 
 /**
  * @property int $id
  * @property int $team_id
+ * @property int|null $listing_id
  * @property string $name
  * @property string $email
  * @property string|null $phone
@@ -30,9 +32,10 @@ use Modules\Bookings\Enums\CustomerPipelineStage;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Team $team
+ * @property-read Listing|null $listing
  * @property-read Collection<int, BookingInquiry> $inquiries
  */
-#[Fillable(['name', 'email', 'phone', 'whatsapp_phone', 'notes'])]
+#[Fillable(['name', 'email', 'phone', 'whatsapp_phone', 'notes', 'listing_id'])]
 class Customer extends Model
 {
     /** @use HasFactory<CustomerFactory> */
@@ -51,6 +54,14 @@ class Customer extends Model
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
+    }
+
+    /**
+     * @return BelongsTo<Listing, $this>
+     */
+    public function listing(): BelongsTo
+    {
+        return $this->belongsTo(Listing::class);
     }
 
     /**

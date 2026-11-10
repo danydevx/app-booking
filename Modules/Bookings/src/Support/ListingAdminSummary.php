@@ -58,7 +58,7 @@ final class ListingAdminSummary
             ->limit(6)
             ->get()
             ->map(fn (Customer $customer): array => [
-                ...BookingPresenter::customerCard($customer, $teamSlug),
+                ...BookingPresenter::customerCard($customer, $teamSlug, $listing->slug),
                 'listing_inquiries_count' => (int) $customer->getAttribute('listing_inquiries_count'),
             ])
             ->all();

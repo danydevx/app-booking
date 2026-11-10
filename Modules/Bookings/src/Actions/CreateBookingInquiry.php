@@ -39,6 +39,7 @@ final class CreateBookingInquiry
                     'whatsapp_phone' => $data['whatsapp_phone'] ?? null,
                 ]);
                 $customer->team_id = $listing->team_id;
+                $customer->listing_id = $listing->id;
                 $customer->save();
             } elseif (blank($customer->phone) && filled($data['phone'] ?? null)) {
                 $customer->update(['phone' => $data['phone']]);

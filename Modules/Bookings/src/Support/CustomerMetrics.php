@@ -7,6 +7,7 @@ use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingDeposit;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Models\CustomerTask;
+use Modules\Listings\Models\Listing;
 
 final class CustomerMetrics
 {
@@ -20,9 +21,10 @@ final class CustomerMetrics
      *     next_task: CustomerTask|null
      * }
      */
-    public function for(Customer $customer): array
+    public function for(Customer $customer, ?Listing $listing = null): array
     {
-        $inquiries = $customer->inquiries();
+        $inquiries = $customer->inquiries()
+            ->when($listing, fn ($query) => $query->where('listing_id', $listing->id));
         $timezone = $customer->team->timezone;
 
         $nextTask = $customer->tasks()
@@ -41,7 +43,10 @@ final class CustomerMetrics
                 ->where('start_date', '>=', now($timezone)->toDateString())
                 ->count(),
             'deposits_received_cents' => (int) BookingDeposit::query()
-                ->whereHas('inquiry', fn ($query) => $query->where('customer_id', $customer->id))
+                ->whereHas('inquiry', function ($query) use ($customer, $listing): void {
+                    $query->where('customer_id', $customer->id)
+                        ->when($listing, fn ($scoped) => $scoped->where('listing_id', $listing->id));
+                })
                 ->where('status', DepositStatus::Received)
                 ->sum('amount_cents'),
             'last_activity_at' => $customer->activities()

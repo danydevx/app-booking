@@ -157,7 +157,7 @@ class ListingController extends Controller
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                 ]),
-                'customers' => route('bookings.customers.index', [
+                'customers' => route('bookings.listing.customers', [
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                 ]),

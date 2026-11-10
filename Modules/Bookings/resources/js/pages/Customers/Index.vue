@@ -109,6 +109,7 @@ function search(): void {
         props.urls.index,
         {
             ...form,
+            listing: props.activeListing ? undefined : form.listing,
             archived: props.archived ? 1 : undefined,
         },
         { preserveScroll: true },
@@ -158,9 +159,16 @@ function createCustomer(): void {
     <div class="flex flex-col gap-6 p-4">
         <div class="flex flex-wrap items-start justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-semibold">Clientes</h1>
+                <h1 class="text-2xl font-semibold">
+                    {{
+                        activeListing
+                            ? `Clientes · ${activeListing.name}`
+                            : 'Clientes'
+                    }}
+                </h1>
                 <p class="text-sm text-muted-foreground">
-                    Personas que han solicitado una terraza de {{ team.name }}.
+                    Personas que han solicitado una terraza de
+                    {{ activeListing?.name ?? team.name }}.
                 </p>
             </div>
             <div class="flex flex-wrap gap-2">
@@ -177,7 +185,7 @@ function createCustomer(): void {
                                 <DialogTitle>Nuevo cliente</DialogTitle>
                                 <DialogDescription>
                                     Registra un cliente manualmente para
-                                    {{ team.name }}.
+                                    {{ activeListing?.name ?? team.name }}.
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -308,7 +316,7 @@ function createCustomer(): void {
                     </option>
                 </select>
             </div>
-            <div class="grid min-w-44 gap-2">
+            <div v-if="!activeListing" class="grid min-w-44 gap-2">
                 <Label for="listing-filter">Terraza</Label>
                 <select
                     id="listing-filter"

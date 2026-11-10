@@ -4,12 +4,16 @@ namespace Modules\Bookings\Support;
 
 use App\Models\Team;
 use Modules\Bookings\Models\Customer;
+use Modules\Listings\Models\Listing;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class CustomerCsvExport
 {
-    public function stream(Team $team, string $search = ''): StreamedResponse
-    {
+    public function stream(
+        Team $team,
+        string $search = '',
+        ?Listing $listing = null,
+    ): StreamedResponse {
         $search = trim($search);
 
         $filename = sprintf(
@@ -18,7 +22,7 @@ final class CustomerCsvExport
             now()->format('Ymd-His'),
         );
 
-        return response()->streamDownload(function () use ($team, $search): void {
+        return response()->streamDownload(function () use ($team, $search, $listing): void {
             $output = fopen('php://output', 'w');
 
             if ($output === false) {
@@ -30,6 +34,14 @@ final class CustomerCsvExport
 
             Customer::query()
                 ->where('team_id', $team->id)
+                ->when($listing !== null, fn ($query) => $query->where(
+                    fn ($scoped) => $scoped
+                        ->where('listing_id', $listing->id)
+                        ->orWhereHas(
+                            'inquiries',
+                            fn ($inquiryQuery) => $inquiryQuery->where('listing_id', $listing->id),
+                        ),
+                ))
                 ->when($search !== '', function ($query) use ($search): void {
                     $query->where(function ($searchQuery) use ($search): void {
                         $searchQuery->where('name', 'like', "%{$search}%")

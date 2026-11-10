@@ -76,8 +76,11 @@ final class BookingPresenter
     /**
      * @return array<string, mixed>
      */
-    public static function customerCard(Customer $customer, string $teamSlug): array
-    {
+    public static function customerCard(
+        Customer $customer,
+        string $teamSlug,
+        ?string $listingSlug = null,
+    ): array {
         return [
             'id' => $customer->id,
             'name' => $customer->name,
@@ -105,10 +108,16 @@ final class BookingPresenter
                 : [],
             'overdue_tasks_count' => (int) ($customer->overdue_tasks_count ?? 0),
             'created_at' => $customer->created_at?->toISOString(),
-            'show_url' => route('bookings.customers.show', [
-                'current_team' => $teamSlug,
-                'customer' => $customer->id,
-            ]),
+            'show_url' => $listingSlug
+                ? route('bookings.listing.customers.show', [
+                    'current_team' => $teamSlug,
+                    'listing' => $listingSlug,
+                    'customer' => $customer->id,
+                ])
+                : route('bookings.customers.show', [
+                    'current_team' => $teamSlug,
+                    'customer' => $customer->id,
+                ]),
         ];
     }
 

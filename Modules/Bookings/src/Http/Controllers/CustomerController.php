@@ -44,6 +44,24 @@ class CustomerController extends Controller
 
     public function index(Request $request): Response|RedirectResponse
     {
+        return $this->renderIndex($request);
+    }
+
+    public function forListing(
+        Request $request,
+        string $currentTeam,
+        Listing $listing,
+    ): Response|RedirectResponse {
+        $team = $this->currentTeam($request);
+        abort_unless($listing->team_id === $team->id, 404);
+
+        return $this->renderIndex($request, $listing);
+    }
+
+    private function renderIndex(
+        Request $request,
+        ?Listing $activeListing = null,
+    ): Response|RedirectResponse {
         $team = $this->currentTeam($request);
 
         Gate::authorize('viewAny', [Customer::class, $team]);
@@ -55,8 +73,22 @@ class CustomerController extends Controller
         $search = $request->string('search')->toString();
         $tag = $request->string('tag')->toString();
         $stage = $request->string('stage')->toString();
-        $listingFilter = $request->string('listing')->toString();
+        $listingFilter = $activeListing === null
+            ? $request->string('listing')->toString()
+            : $activeListing->slug;
         $archived = $request->boolean('archived');
+
+        if ($activeListing === null && $listingFilter !== '') {
+            $activeListing = Listing::query()
+                ->where('team_id', $team->id)
+                ->where('slug', $listingFilter)
+                ->first(['id', 'name', 'slug']);
+        }
+
+        $scopeInquiries = fn ($query) => $query->when(
+            $activeListing,
+            fn ($scoped) => $scoped->where('listing_id', $activeListing->id),
+        );
 
         $customers = Customer::query()
             ->where('team_id', $team->id)
@@ -67,20 +99,24 @@ class CustomerController extends Controller
                 fn ($query) => $query->whereNull('archived_at'),
             )
             ->when($stage !== '', fn ($query) => $query->where('pipeline_stage', $stage))
-            ->when($listingFilter !== '', fn ($query) => $query->whereHas(
-                'inquiries',
-                fn ($inquiryQuery) => $inquiryQuery->whereHas(
-                    'listing',
-                    fn ($listingQuery) => $listingQuery->where('slug', $listingFilter),
-                ),
+            ->when($listingFilter !== '', fn ($query) => $query->where(
+                fn ($scoped) => $scoped
+                    ->where('listing_id', $activeListing === null ? 0 : $activeListing->id)
+                    ->orWhereHas(
+                        'inquiries',
+                        fn ($inquiryQuery) => $inquiryQuery->whereHas(
+                            'listing',
+                            fn ($listingQuery) => $listingQuery->where('slug', $listingFilter),
+                        ),
+                    ),
             ))
             ->when($tag !== '', fn ($query) => $query->whereHas(
                 'tags',
                 fn ($tagQuery) => $tagQuery->where('slug', $tag),
             ))
             ->withCount([
-                'inquiries',
-                'inquiries as accepted_inquiries_count' => fn ($query) => $query->where('status', 'accepted'),
+                'inquiries' => $scopeInquiries,
+                'inquiries as accepted_inquiries_count' => fn ($query) => $scopeInquiries($query)->where('status', 'accepted'),
                 'tasks as open_tasks_count' => fn ($query) => $query->where('status', 'open'),
                 'tasks as overdue_tasks_count' => fn ($query) => $query->where('status', 'open')->where('due_at', '<', now()),
             ])
@@ -96,18 +132,22 @@ class CustomerController extends Controller
             ->withQueryString();
 
         $customers->through(
-            fn (Customer $customer): array => BookingPresenter::customerCard($customer, $team->slug),
+            fn (Customer $customer): array => BookingPresenter::customerCard(
+                $customer,
+                $team->slug,
+                $activeListing?->slug,
+            ),
         );
 
         $tags = CustomerTag::query()
             ->where('team_id', $team->id)
             ->orderBy('name')
             ->get()
-            ->map(fn (CustomerTag $tag): array => [
-                'id' => $tag->id,
-                'name' => $tag->name,
-                'slug' => $tag->slug,
-                'color' => $tag->color,
+            ->map(fn (CustomerTag $item): array => [
+                'id' => $item->id,
+                'name' => $item->name,
+                'slug' => $item->slug,
+                'color' => $item->color,
             ])
             ->all();
 
@@ -121,12 +161,15 @@ class CustomerController extends Controller
                 'slug' => $item->slug,
             ])
             ->all();
-        $activeListing = $listingFilter !== ''
-            ? Listing::query()
-                ->where('team_id', $team->id)
-                ->where('slug', $listingFilter)
-                ->first(['id', 'name', 'slug'])
-            : null;
+
+        $management = $activeListing ? [
+            'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+            'edit' => route('listings.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+            'bookings' => route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+            'customers' => route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+            'availability' => route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+            'listings' => route('listings.index', ['current_team' => $team->slug]),
+        ] : null;
 
         return Inertia::render('Bookings/Customers/Index', [
             'team' => [
@@ -137,14 +180,7 @@ class CustomerController extends Controller
             'tags' => $tags,
             'listings' => $listingOptions,
             'activeListing' => $activeListing,
-            'management' => $activeListing ? [
-                'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
-                'edit' => route('listings.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
-                'bookings' => route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
-                'customers' => route('bookings.customers.index', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
-                'availability' => route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
-                'listings' => route('listings.index', ['current_team' => $team->slug]),
-            ] : null,
+            'management' => $management,
             'pipelineStages' => CustomerPipelineStage::options(),
             'archived' => $archived,
             'filters' => [
@@ -154,11 +190,23 @@ class CustomerController extends Controller
                 'listing' => $listingFilter,
             ],
             'urls' => [
-                'bookings' => route('bookings.index', ['current_team' => $team->slug]),
-                'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
-                'store' => route('bookings.customers.store', ['current_team' => $team->slug]),
-                'export' => route('bookings.customers.export', ['current_team' => $team->slug]),
-                'import' => route('bookings.customers.import', ['current_team' => $team->slug]),
+                'bookings' => $activeListing
+                    ? route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
+                    : route('bookings.index', ['current_team' => $team->slug]),
+                'index' => $activeListing
+                    ? route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
+                    : route('bookings.customers.index', ['current_team' => $team->slug]),
+                'store' => $activeListing
+                    ? route('bookings.listing.customers.store', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
+                    : route('bookings.customers.store', ['current_team' => $team->slug]),
+                'export' => route('bookings.customers.export', [
+                    'current_team' => $team->slug,
+                    ...($activeListing ? ['listing' => $activeListing->slug] : []),
+                ]),
+                'import' => route('bookings.customers.import', [
+                    'current_team' => $team->slug,
+                    ...($activeListing ? ['listing' => $activeListing->slug] : []),
+                ]),
             ],
         ]);
     }
@@ -169,13 +217,34 @@ class CustomerController extends Controller
     ): RedirectResponse {
         $team = $this->currentTeam($request);
 
+        return $this->storeFor($request, $team, $createCustomer);
+    }
+
+    public function storeForListing(
+        StoreCustomerRequest $request,
+        string $currentTeam,
+        Listing $listing,
+        CreateCustomer $createCustomer,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        abort_unless($listing->team_id === $team->id, 404);
+
+        return $this->storeFor($request, $team, $createCustomer, $listing);
+    }
+
+    private function storeFor(
+        StoreCustomerRequest $request,
+        Team $team,
+        CreateCustomer $createCustomer,
+        ?Listing $activeListing = null,
+    ): RedirectResponse {
         Gate::authorize('create', [Customer::class, $team]);
 
         if (! $this->entitlements->allows($team, 'customers')) {
             return $this->upgradeRedirect($team);
         }
 
-        $customer = $createCustomer->handle($team, $request->validated());
+        $customer = $createCustomer->handle($team, $request->validated(), $activeListing);
 
         $this->activityLogger->handle(
             $customer,
@@ -186,10 +255,16 @@ class CustomerController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Cliente creado.']);
 
-        return to_route('bookings.customers.show', [
-            'current_team' => $team->slug,
-            'customer' => $customer->id,
-        ]);
+        return $activeListing
+            ? to_route('bookings.listing.customers.show', [
+                'current_team' => $team->slug,
+                'listing' => $activeListing->slug,
+                'customer' => $customer->id,
+            ])
+            : to_route('bookings.customers.show', [
+                'current_team' => $team->slug,
+                'customer' => $customer->id,
+            ]);
     }
 
     public function export(
@@ -204,16 +279,58 @@ class CustomerController extends Controller
             return $this->upgradeRedirect($team);
         }
 
+        $listingSlug = trim($request->string('listing')->toString());
+        $listing = $listingSlug !== ''
+            ? Listing::query()
+                ->where('team_id', $team->id)
+                ->where('slug', $listingSlug)
+                ->first()
+            : null;
+
+        if ($listingSlug !== '' && $listing === null) {
+            abort(404);
+        }
+
         return $export->stream(
             $team,
             trim($request->string('search')->toString()),
+            $listing,
         );
     }
 
     public function show(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
     {
+        return $this->renderShow($request, $currentTeam, $customer);
+    }
+
+    public function showForListing(
+        Request $request,
+        string $currentTeam,
+        Listing $listing,
+        Customer $customer,
+    ): Response|RedirectResponse {
+        return $this->renderShow($request, $currentTeam, $customer, $listing);
+    }
+
+    private function renderShow(
+        Request $request,
+        string $currentTeam,
+        Customer $customer,
+        ?Listing $activeListing = null,
+    ): Response|RedirectResponse {
         $team = $this->currentTeam($request);
         $this->ensureOwned($customer, $team->id);
+
+        if ($activeListing !== null) {
+            abort_unless($activeListing->team_id === $team->id, 404);
+
+            $belongsToListing = $customer->listing_id === $activeListing->id
+                || $customer->inquiries()
+                    ->where('listing_id', $activeListing->id)
+                    ->exists();
+
+            abort_unless($belongsToListing, 404);
+        }
 
         Gate::authorize('view', $customer);
 
@@ -221,7 +338,13 @@ class CustomerController extends Controller
             return $this->upgradeRedirect($team);
         }
 
-        $customer->load(['inquiries.listing', 'inquiries.deposits', 'tags']);
+        $customer->load([
+            'tags',
+            'inquiries' => function ($query) use ($activeListing): void {
+                $query->with(['listing', 'deposits'])
+                    ->when($activeListing, fn ($inquiryQuery) => $inquiryQuery->where('listing_id', $activeListing->id));
+            },
+        ]);
         $customer->loadCount('inquiries');
 
         $canManageTags = Gate::allows('create', [CustomerTag::class, $team]);
@@ -263,7 +386,7 @@ class CustomerController extends Controller
             ])
             ->all();
 
-        $metrics = $this->metrics->for($customer);
+        $metrics = $this->metrics->for($customer, $activeListing);
 
         $mergeCandidates = Customer::query()
             ->where('team_id', $team->id)
@@ -293,7 +416,7 @@ class CustomerController extends Controller
 
         return Inertia::render('Bookings/Customers/Show', [
             'customer' => [
-                ...BookingPresenter::customerCard($customer, $team->slug),
+                ...BookingPresenter::customerCard($customer, $team->slug, $activeListing?->slug),
                 'inquiries' => $customer->inquiries
                     ->map(fn (BookingInquiry $inquiry): array => BookingPresenter::inquiryCard($inquiry, $team->slug))
                     ->all(),
@@ -320,6 +443,15 @@ class CustomerController extends Controller
             'teamMembers' => $teamMembers,
             'tags' => $tags,
             'canManageTags' => $canManageTags,
+            'activeListing' => $activeListing,
+            'management' => $activeListing ? [
+                'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'edit' => route('listings.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'bookings' => route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'customers' => route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'availability' => route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+                'listings' => route('listings.index', ['current_team' => $team->slug]),
+            ] : null,
             'pipelineStages' => CustomerPipelineStage::options(),
             'isArchived' => $customer->archived_at !== null,
             'isAnonymized' => $customer->anonymized_at !== null,
@@ -328,7 +460,9 @@ class CustomerController extends Controller
             'canAnonymize' => Gate::allows('anonymize', $customer),
             'mergeCandidates' => $mergeCandidates,
             'urls' => [
-                'index' => route('bookings.customers.index', ['current_team' => $team->slug]),
+                'index' => $activeListing
+                    ? route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $activeListing->slug])
+                    : route('bookings.customers.index', ['current_team' => $team->slug]),
                 'update' => route('bookings.customers.update', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,

@@ -98,7 +98,7 @@ class ManualBookingController extends Controller
             'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
             'edit' => route('listings.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
             'bookings' => route('bookings.listing', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
-            'customers' => route('bookings.customers.index', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
+            'customers' => route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
             'availability' => route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
             'listings' => route('listings.index', ['current_team' => $team->slug]),
         ] : null;

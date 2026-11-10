@@ -65,6 +65,7 @@ final class CreateManualBooking
                         'whatsapp_phone' => $data['whatsapp_phone'] ?? null,
                     ]);
                     $customer->team_id = $lockedListing->team_id;
+                    $customer->listing_id = $lockedListing->id;
                     $customer->save();
                 } else {
                     $fill = [];

@@ -44,6 +44,10 @@ final class MergeCustomers
                 $source->tags()->detach();
             }
 
+            if ($target->listing_id === null && $source->listing_id !== null) {
+                $target->listing_id = $source->listing_id;
+            }
+
             $target->fill(array_filter([
                 'name' => $target->name,
                 'email' => $target->email,

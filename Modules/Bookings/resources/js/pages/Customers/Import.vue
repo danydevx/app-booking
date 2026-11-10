@@ -13,6 +13,15 @@ type ImportResult = {
 
 const props = defineProps<{
     result: ImportResult | null;
+    activeListing: { id: number; name: string; slug: string } | null;
+    management: {
+        manage: string;
+        edit: string;
+        bookings: string;
+        customers: string;
+        availability: string;
+        listings: string;
+    } | null;
     urls: {
         index: string;
         store: string;
@@ -20,13 +29,50 @@ const props = defineProps<{
 }>();
 
 defineOptions({
-    layout: {
-        breadcrumbs: [
-            { title: 'Solicitudes', href: '/' },
-            { title: 'Clientes', href: '/' },
-            { title: 'Importar CSV' },
-        ],
-    },
+    layout: (props: {
+        activeListing: { name: string } | null;
+        management: {
+            manage: string;
+            edit: string;
+            bookings: string;
+            customers: string;
+            availability: string;
+            listings: string;
+        } | null;
+    }) => ({
+        breadcrumbs:
+            props.activeListing && props.management
+                ? [
+                      { title: 'Terrazas', href: props.management.listings },
+                      {
+                          title: props.activeListing.name,
+                          href: props.management.manage,
+                      },
+                      { title: 'Clientes', href: props.management.customers },
+                      { title: 'Importar CSV' },
+                  ]
+                : [
+                      { title: 'Solicitudes', href: '/' },
+                      { title: 'Clientes', href: '/' },
+                      { title: 'Importar CSV' },
+                  ],
+        submenu:
+            props.activeListing && props.management
+                ? [
+                      { title: 'Resumen', href: props.management.manage },
+                      {
+                          title: 'Reservaciones',
+                          href: props.management.bookings,
+                      },
+                      { title: 'Clientes', href: props.management.customers },
+                      {
+                          title: 'Disponibilidad',
+                          href: props.management.availability,
+                      },
+                      { title: 'Fotos y datos', href: props.management.edit },
+                  ]
+                : [],
+    }),
 });
 
 const form = useForm<{ file: File | null }>({
@@ -58,10 +104,20 @@ function submit(): void {
     <div class="flex w-full flex-col gap-6 p-4">
         <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
-                <h1 class="text-2xl font-semibold">Importar clientes</h1>
+                <h1 class="text-2xl font-semibold">
+                    {{
+                        activeListing
+                            ? `Importar clientes · ${activeListing.name}`
+                            : 'Importar clientes'
+                    }}
+                </h1>
                 <p class="text-sm text-muted-foreground">
                     Carga un CSV con tus clientes. Las direcciones de correo
                     duplicadas se omiten.
+                    <template v-if="activeListing">
+                        Los clientes nuevos quedarán vinculados a
+                        {{ activeListing.name }}.
+                    </template>
                 </p>
             </div>
             <Button variant="outline" as-child>
