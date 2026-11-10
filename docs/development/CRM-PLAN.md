@@ -15,7 +15,7 @@
 | 3. Etiquetas                        | Completado el 2026-11-10 |
 | 4. Métricas                         | Completado el 2026-11-10 |
 | 5. Pipeline                         | Completado el 2026-11-10 |
-| 6. Importación/fusión/ciclo de vida | Pendiente                |
+| 6. Importación/fusión/ciclo de vida | Completado el 2026-11-10 |
 | 7. Comunicaciones                   | Pendiente                |
 
 ## 1. Punto de partida
