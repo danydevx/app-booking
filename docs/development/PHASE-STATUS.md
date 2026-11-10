@@ -32,7 +32,7 @@ Last updated: 2026-11-10
 - PHP version: 8.3.6
 - Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
-- Test suite: 374 tests / 2,384 assertions (SQLite and MySQL 8.4)
+- Test suite: 382 tests / 2,510 assertions (SQLite and MySQL 8.4)
 - Architecture decisions: `docs/decisions/README.md` (ADR 0001–0004)
 - Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
 - CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
@@ -48,6 +48,7 @@ Last updated: 2026-11-10
 - CRM: timeline, notes, tasks, tags, metrics, pipeline, lifecycle, daily board, assignment, quotes, email templates, attribution, reports, in-app notifications, client portal, contracts and sectioned customer workspace are available (Pasos 1–14)
 - Availability: interactive calendar, manual blocks and recurring series (weekly/biweekly/monthly)
 - Admin prefix: public site remains at `/` and `/terrazas`; account administration lives under `/app/{team}` and platform under `/app/platform`
+- Listing features: config-driven catalog with 8 categories and 50 MVP amenities, grouped in admin and public detail
 - Full-flow smoke test covers landing → solicitud → CRM → cotización → contrato → portal → reserva → opinión → reportes
 - Terrace admin: `/app/{team}/listings/{listing}` hub with scoped reservations, new booking, customers, quotes, availability and media links
 - Local mailer: `log`; Mailpit optional via `MAIL_HOST`/`MAIL_PORT`
