@@ -95,6 +95,11 @@ export type InquiryDetail = InquiryCard & {
     utm_term: string | null;
     utm_content: string | null;
     referrer: string | null;
+    portal_url: string;
+    customer_confirmed_at: string | null;
+    feedback_rating: number | null;
+    feedback_comment: string | null;
+    feedback_at: string | null;
     consent_at: string | null;
     contacted_at: string | null;
     accepted_at: string | null;

@@ -19,6 +19,7 @@ use Modules\Bookings\Http\Controllers\CustomerTaskController;
 use Modules\Bookings\Http\Controllers\EmailTemplateController;
 use Modules\Bookings\Http\Controllers\ManualBookingController;
 use Modules\Bookings\Http\Controllers\PublicAvailabilityController;
+use Modules\Bookings\Http\Controllers\PublicBookingPortalController;
 use Modules\Bookings\Http\Controllers\PublicCustomerEmailController;
 use Modules\Bookings\Http\Controllers\PublicQuoteController;
 
@@ -41,6 +42,17 @@ Route::middleware('web')->group(function (): void {
     Route::get('baja/{customer}', [PublicCustomerEmailController::class, 'unsubscribe'])
         ->middleware('signed')
         ->name('public.customers.unsubscribe');
+
+    Route::get('reserva/{token}', [PublicBookingPortalController::class, 'show'])
+        ->name('public.bookings.portal');
+    Route::post('reserva/{token}/confirmar', [PublicBookingPortalController::class, 'confirm'])
+        ->middleware('throttle:10,1')
+        ->name('public.bookings.portal.confirm');
+    Route::post('reserva/{token}/opinion', [PublicBookingPortalController::class, 'feedback'])
+        ->middleware('throttle:5,1')
+        ->name('public.bookings.portal.feedback');
+    Route::get('reserva/{token}/calendario.ics', [PublicBookingPortalController::class, 'calendar'])
+        ->name('public.bookings.portal.calendar');
 });
 
 Route::get('{current_team}/listings/{listing}/bookings', [BookingInquiryController::class, 'listing'])

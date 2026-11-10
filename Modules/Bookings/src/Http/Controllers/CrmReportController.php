@@ -150,6 +150,15 @@ class CrmReportController extends Controller
         $quoteTotal = (clone $quotes)->count();
         $quoteAccepted = (clone $quotes)->where('status', QuoteStatus::Accepted)->count();
 
+        $feedback = BookingInquiry::query()
+            ->where('team_id', $team->id)
+            ->whereNotNull('feedback_rating')
+            ->get(['feedback_rating']);
+        $feedbackCount = $feedback->count();
+        $avgFeedback = $feedbackCount > 0
+            ? round((float) $feedback->avg('feedback_rating'), 1)
+            : null;
+
         return Inertia::render('Bookings/Reports/Index', [
             'team' => [
                 'name' => $team->name,
@@ -183,6 +192,8 @@ class CrmReportController extends Controller
                 'quote_conversion_percent' => $quoteTotal > 0
                     ? round(($quoteAccepted / $quoteTotal) * 100, 1)
                     : 0.0,
+                'feedback_count' => $feedbackCount,
+                'avg_feedback_rating' => $avgFeedback,
             ],
             'pipeline' => collect(CustomerPipelineStage::options())
                 ->map(fn (array $stage): array => [

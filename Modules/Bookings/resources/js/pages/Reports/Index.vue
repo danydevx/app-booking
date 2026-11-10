@@ -18,6 +18,8 @@ type Overview = {
     quotes: number;
     quotes_accepted: number;
     quote_conversion_percent: number;
+    feedback_count: number;
+    avg_feedback_rating: number | null;
 };
 
 type PipelineRow = {
@@ -135,7 +137,7 @@ function maxOf(values: number[]): number {
             <Button type="submit">Aplicar</Button>
         </form>
 
-        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <div class="rounded-xl border bg-card p-4">
                 <p class="text-xs text-muted-foreground">Solicitudes</p>
                 <p class="mt-1 text-3xl font-semibold">
@@ -172,6 +174,19 @@ function maxOf(values: number[]): number {
                 <p class="text-xs text-muted-foreground">
                     {{ overview.quotes_accepted }} aceptadas ·
                     {{ overview.quote_conversion_percent }}%
+                </p>
+            </div>
+            <div class="rounded-xl border bg-card p-4">
+                <p class="text-xs text-muted-foreground">Opinión</p>
+                <p class="mt-1 text-3xl font-semibold">
+                    {{
+                        overview.avg_feedback_rating !== null
+                            ? `${overview.avg_feedback_rating}/5`
+                            : '—'
+                    }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    {{ overview.feedback_count }} reseñas
                 </p>
             </div>
         </div>

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use Modules\Bookings\Database\Factories\BookingInquiryFactory;
 use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Listings\Models\Listing;
@@ -39,6 +40,11 @@ use Modules\Listings\Models\Listing;
  * @property string|null $referrer
  * @property CarbonImmutable|null $consent_at
  * @property string|null $ip_hash
+ * @property string|null $portal_token
+ * @property CarbonImmutable|null $customer_confirmed_at
+ * @property int|null $feedback_rating
+ * @property string|null $feedback_comment
+ * @property CarbonImmutable|null $feedback_at
  * @property CarbonImmutable|null $contacted_at
  * @property CarbonImmutable|null $accepted_at
  * @property CarbonImmutable|null $reminder_sent_at
@@ -70,6 +76,11 @@ use Modules\Listings\Models\Listing;
     'utm_term',
     'utm_content',
     'referrer',
+    'portal_token',
+    'customer_confirmed_at',
+    'feedback_rating',
+    'feedback_comment',
+    'feedback_at',
 ])]
 class BookingInquiry extends Model
 {
@@ -116,6 +127,38 @@ class BookingInquiry extends Model
         return $this->hasMany(ListingUnavailability::class);
     }
 
+    public function portalUrl(): string
+    {
+        if (blank($this->portal_token)) {
+            $this->forceFill(['portal_token' => Str::random(56)])->save();
+        }
+
+        return route('public.bookings.portal', ['token' => $this->portal_token]);
+    }
+
+    public function canBeConfirmedByCustomer(): bool
+    {
+        return in_array($this->status, [
+            InquiryStatus::New,
+            InquiryStatus::Contacted,
+            InquiryStatus::Accepted,
+        ], true);
+    }
+
+    public function canReceiveFeedback(): bool
+    {
+        return $this->status === InquiryStatus::Accepted
+            && $this->end_date->toDateString() < now($this->listing->timezone)->toDateString()
+            && $this->feedback_at === null;
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (BookingInquiry $inquiry): void {
+            $inquiry->portal_token ??= Str::random(56);
+        });
+    }
+
     /**
      * @return array<string, string>
      */
@@ -130,6 +173,8 @@ class BookingInquiry extends Model
             'contacted_at' => 'datetime',
             'accepted_at' => 'datetime',
             'reminder_sent_at' => 'datetime',
+            'customer_confirmed_at' => 'datetime',
+            'feedback_at' => 'datetime',
             'declined_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'expired_at' => 'datetime',

@@ -135,6 +135,15 @@ function formatActivityDate(value: string | null): string {
 
             <div class="flex flex-wrap gap-2">
                 <Button variant="outline" as-child>
+                    <a
+                        :href="inquiry.portal_url"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Portal del cliente
+                    </a>
+                </Button>
+                <Button variant="outline" as-child>
                     <Link :href="urls.index">Volver</Link>
                 </Button>
                 <Button
@@ -243,6 +252,49 @@ function formatActivityDate(value: string | null): string {
                         class="mt-4 border-t pt-4 text-sm whitespace-pre-line text-muted-foreground"
                     >
                         {{ inquiry.message }}
+                    </p>
+                </section>
+
+                <section
+                    v-if="
+                        inquiry.customer_confirmed_at || inquiry.feedback_rating
+                    "
+                    class="rounded-xl border bg-card p-5"
+                >
+                    <h2 class="mb-4 text-lg font-semibold">
+                        Confirmación del cliente
+                    </h2>
+                    <dl class="grid gap-4 text-sm sm:grid-cols-2">
+                        <div v-if="inquiry.customer_confirmed_at">
+                            <dt class="text-muted-foreground">
+                                Datos confirmados
+                            </dt>
+                            <dd class="font-medium">
+                                {{
+                                    formatActivityDate(
+                                        inquiry.customer_confirmed_at,
+                                    )
+                                }}
+                            </dd>
+                        </div>
+                        <div v-if="inquiry.feedback_rating">
+                            <dt class="text-muted-foreground">Opinión</dt>
+                            <dd class="font-medium">
+                                {{ inquiry.feedback_rating }}/5
+                                <span v-if="inquiry.feedback_at">
+                                    ·
+                                    {{
+                                        formatActivityDate(inquiry.feedback_at)
+                                    }}
+                                </span>
+                            </dd>
+                        </div>
+                    </dl>
+                    <p
+                        v-if="inquiry.feedback_comment"
+                        class="mt-3 text-sm whitespace-pre-line text-muted-foreground"
+                    >
+                        {{ inquiry.feedback_comment }}
                     </p>
                 </section>
 
