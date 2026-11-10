@@ -83,6 +83,21 @@ Route::get('{current_team}/listings/{listing}/customers/{customer}', [CustomerCo
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('bookings.listing.customers.show');
 
+foreach ([
+    'tasks' => 'tasksForListing',
+    'timeline' => 'timelineForListing',
+    'emails' => 'emailsForListing',
+    'quotes' => 'quotesForListing',
+    'inquiries' => 'inquiriesForListing',
+    'data' => 'dataForListing',
+    'tags' => 'tagsForListing',
+    'lifecycle' => 'lifecycleForListing',
+] as $path => $method) {
+    Route::get("{current_team}/listings/{listing}/customers/{customer}/{$path}", [CustomerController::class, $method])
+        ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
+        ->name("bookings.listing.customers.{$path}");
+}
+
 Route::prefix('{current_team}/bookings')
     ->middleware(['web', 'auth', 'verified', EnsureTeamMembership::class])
     ->name('bookings.')
@@ -106,6 +121,21 @@ Route::prefix('{current_team}/bookings')
         Route::delete('/customers/tags/{tag}', [CustomerTagController::class, 'destroy'])
             ->name('customers.tags.destroy');
         Route::get('/customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+
+        foreach ([
+            'tasks' => 'tasks',
+            'timeline' => 'timeline',
+            'emails' => 'emails',
+            'quotes' => 'quotes',
+            'inquiries' => 'inquiries',
+            'data' => 'data',
+            'tags' => 'tags',
+            'lifecycle' => 'lifecycle',
+        ] as $path => $method) {
+            Route::get("/customers/{customer}/{$path}", [CustomerController::class, $method])
+                ->name("customers.{$path}");
+        }
+
         Route::post('/customers/{customer}/emails', [CustomerEmailController::class, 'send'])
             ->name('customers.emails.send');
         Route::patch('/customers/{customer}/email-opt-in', [CustomerEmailController::class, 'optIn'])

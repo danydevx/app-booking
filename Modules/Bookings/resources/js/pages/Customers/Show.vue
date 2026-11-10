@@ -52,7 +52,6 @@ const props = defineProps<{
     canManageLifecycle: boolean;
     canMerge: boolean;
     canAnonymize: boolean;
-    mergeCandidates: Array<{ id: number; name: string; email: string }>;
     duplicateCandidates: Array<{
         id: number;
         name: string;
@@ -60,6 +59,9 @@ const props = defineProps<{
         phone: string | null;
         show_url: string;
     }>;
+    section: string;
+    sectionUrls: Record<string, string>;
+    mergeCandidates: Array<{ id: number; name: string; email: string }>;
     metrics: {
         total_inquiries: number;
         accepted_inquiries: number;
@@ -95,6 +97,9 @@ const props = defineProps<{
 
 defineOptions({
     layout: (props: {
+        customer: { name: string };
+        section: string;
+        sectionUrls: Record<string, string>;
         activeListing: { name: string } | null;
         management: {
             manage: string;
@@ -104,8 +109,22 @@ defineOptions({
             availability: string;
             listings: string;
         } | null;
-    }) => ({
-        breadcrumbs:
+    }) => {
+        const labels: Record<string, string> = {
+            summary: 'Resumen',
+            tasks: 'Tareas',
+            timeline: 'Timeline',
+            emails: 'Correo',
+            quotes: 'Cotizaciones',
+            inquiries: 'Solicitudes',
+            data: 'Datos',
+            tags: 'Etiquetas',
+            lifecycle: 'Ciclo de vida',
+        };
+        const sectionTitle = labels[props.section] ?? 'Ficha';
+        const summaryUrl = props.sectionUrls.summary ?? '#';
+
+        const breadcrumbs =
             props.activeListing && props.management
                 ? [
                       { title: 'Terrazas', href: props.management.listings },
@@ -114,30 +133,24 @@ defineOptions({
                           href: props.management.manage,
                       },
                       { title: 'Clientes', href: props.management.customers },
-                      { title: 'Ficha' },
+                      { title: props.customer.name, href: summaryUrl },
+                      { title: sectionTitle },
                   ]
                 : [
                       { title: 'Solicitudes', href: '/' },
                       { title: 'Clientes' },
-                      { title: 'Ficha' },
-                  ],
-        submenu:
-            props.activeListing && props.management
-                ? [
-                      { title: 'Resumen', href: props.management.manage },
-                      {
-                          title: 'Reservaciones',
-                          href: props.management.bookings,
-                      },
-                      { title: 'Clientes', href: props.management.customers },
-                      {
-                          title: 'Disponibilidad',
-                          href: props.management.availability,
-                      },
-                      { title: 'Fotos y datos', href: props.management.edit },
-                  ]
-                : [],
-    }),
+                      { title: props.customer.name, href: summaryUrl },
+                      { title: sectionTitle },
+                  ];
+
+        return {
+            breadcrumbs,
+            submenu: Object.entries(labels).map(([key, title]) => ({
+                title,
+                href: props.sectionUrls[key] ?? '#',
+            })),
+        };
+    },
 });
 
 const form = useForm({
@@ -582,7 +595,10 @@ function statusVariant(
             </div>
         </header>
 
-        <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div
+            v-if="section === 'summary'"
+            class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+        >
             <div class="rounded-xl border bg-card p-4">
                 <p class="text-xs text-muted-foreground">Solicitudes</p>
                 <p class="mt-1 text-2xl font-semibold">
@@ -621,9 +637,12 @@ function statusVariant(
             </div>
         </div>
 
-        <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_23rem]">
+        <div class="grid items-start gap-6">
             <div class="space-y-6">
-                <section class="rounded-xl border bg-card p-5">
+                <section
+                    v-if="section === 'tasks'"
+                    class="rounded-xl border bg-card p-5"
+                >
                     <div class="mb-4">
                         <h2 class="text-lg font-semibold">Tareas</h2>
                         <p class="text-sm text-muted-foreground">
@@ -855,7 +874,11 @@ function statusVariant(
                     </p>
                 </section>
 
-                <section id="timeline" class="rounded-xl border bg-card p-5">
+                <section
+                    v-if="section === 'timeline'"
+                    id="timeline"
+                    class="rounded-xl border bg-card p-5"
+                >
                     <div class="mb-4">
                         <h2 class="text-lg font-semibold">Timeline</h2>
                         <p class="text-sm text-muted-foreground">
@@ -1001,7 +1024,10 @@ function statusVariant(
                     </p>
                 </section>
 
-                <section class="rounded-xl border bg-card p-5">
+                <section
+                    v-if="section === 'emails'"
+                    class="rounded-xl border bg-card p-5"
+                >
                     <div
                         class="mb-4 flex flex-wrap items-start justify-between gap-3"
                     >
@@ -1121,7 +1147,10 @@ function statusVariant(
                     </form>
                 </section>
 
-                <section class="rounded-xl border bg-card p-5">
+                <section
+                    v-if="section === 'quotes'"
+                    class="rounded-xl border bg-card p-5"
+                >
                     <div
                         class="mb-4 flex flex-wrap items-start justify-between gap-3"
                     >
@@ -1333,7 +1362,10 @@ function statusVariant(
                     </details>
                 </section>
 
-                <section class="rounded-xl border bg-card p-5">
+                <section
+                    v-if="section === 'inquiries' || section === 'summary'"
+                    class="rounded-xl border bg-card p-5"
+                >
                     <h2 class="mb-4 text-lg font-semibold">Solicitudes</h2>
                     <div v-if="customer.inquiries.length > 0" class="space-y-3">
                         <article
@@ -1367,7 +1399,10 @@ function statusVariant(
             </div>
 
             <aside class="order-first space-y-6 xl:order-last">
-                <section class="rounded-xl border bg-card p-5">
+                <section
+                    v-if="section === 'data'"
+                    class="rounded-xl border bg-card p-5"
+                >
                     <div class="mb-4">
                         <h2 class="text-lg font-semibold">Pipeline</h2>
                         <p class="text-sm text-muted-foreground">
@@ -1404,7 +1439,10 @@ function statusVariant(
                 </section>
 
                 <section
-                    v-if="duplicateCandidates.length > 0"
+                    v-if="
+                        (section === 'data' || section === 'lifecycle') &&
+                        duplicateCandidates.length > 0
+                    "
                     class="rounded-xl border border-amber-300 bg-amber-50/50 p-5 dark:border-amber-900 dark:bg-amber-950/20"
                 >
                     <h2 class="text-lg font-semibold">Posibles duplicados</h2>
@@ -1433,7 +1471,7 @@ function statusVariant(
                 </section>
 
                 <section
-                    v-if="canManageLifecycle"
+                    v-if="canManageLifecycle && section === 'lifecycle'"
                     class="rounded-xl border bg-card p-5"
                 >
                     <h2 class="text-lg font-semibold">Ciclo de vida</h2>
@@ -1552,6 +1590,7 @@ function statusVariant(
                 </section>
 
                 <form
+                    v-if="section === 'data'"
                     class="rounded-xl border bg-card p-5"
                     @submit.prevent="submit"
                 >
@@ -1625,7 +1664,10 @@ function statusVariant(
                     </Button>
                 </form>
 
-                <section class="rounded-xl border bg-card p-5">
+                <section
+                    v-if="section === 'tags'"
+                    class="rounded-xl border bg-card p-5"
+                >
                     <div class="mb-4">
                         <h2 class="text-lg font-semibold">Etiquetas</h2>
                         <p class="text-sm text-muted-foreground">

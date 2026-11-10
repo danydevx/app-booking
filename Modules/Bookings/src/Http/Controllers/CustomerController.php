@@ -334,16 +334,92 @@ class CustomerController extends Controller
 
     public function show(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
     {
-        return $this->renderShow($request, $currentTeam, $customer);
+        return $this->renderShow($request, $currentTeam, $customer, null, 'summary');
     }
 
-    public function showForListing(
-        Request $request,
-        string $currentTeam,
-        Listing $listing,
-        Customer $customer,
-    ): Response|RedirectResponse {
-        return $this->renderShow($request, $currentTeam, $customer, $listing);
+    public function tasks(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, null, 'tasks');
+    }
+
+    public function timeline(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, null, 'timeline');
+    }
+
+    public function emails(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, null, 'emails');
+    }
+
+    public function quotes(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, null, 'quotes');
+    }
+
+    public function inquiries(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, null, 'inquiries');
+    }
+
+    public function data(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, null, 'data');
+    }
+
+    public function tags(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, null, 'tags');
+    }
+
+    public function lifecycle(Request $request, string $currentTeam, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, null, 'lifecycle');
+    }
+
+    public function showForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'summary');
+    }
+
+    public function tasksForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'tasks');
+    }
+
+    public function timelineForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'timeline');
+    }
+
+    public function emailsForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'emails');
+    }
+
+    public function quotesForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'quotes');
+    }
+
+    public function inquiriesForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'inquiries');
+    }
+
+    public function dataForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'data');
+    }
+
+    public function tagsForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'tags');
+    }
+
+    public function lifecycleForListing(Request $request, string $currentTeam, Listing $listing, Customer $customer): Response|RedirectResponse
+    {
+        return $this->renderShow($request, $currentTeam, $customer, $listing, 'lifecycle');
     }
 
     private function renderShow(
@@ -351,6 +427,7 @@ class CustomerController extends Controller
         string $currentTeam,
         Customer $customer,
         ?Listing $activeListing = null,
+        string $section = 'summary',
     ): Response|RedirectResponse {
         $team = $this->currentTeam($request);
         $this->ensureOwned($customer, $team->id);
@@ -522,6 +599,32 @@ class CustomerController extends Controller
             ])
             ->all();
 
+        $sectionUrls = [];
+        $sections = [
+            'summary' => 'show',
+            'tasks' => 'tasks',
+            'timeline' => 'timeline',
+            'emails' => 'emails',
+            'quotes' => 'quotes',
+            'inquiries' => 'inquiries',
+            'data' => 'data',
+            'tags' => 'tags',
+            'lifecycle' => 'lifecycle',
+        ];
+
+        foreach ($sections as $key => $routeName) {
+            $sectionUrls[$key] = $activeListing
+                ? route("bookings.listing.customers.{$routeName}", [
+                    'current_team' => $team->slug,
+                    'listing' => $activeListing->slug,
+                    'customer' => $customer->id,
+                ])
+                : route("bookings.customers.{$routeName}", [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]);
+        }
+
         return Inertia::render('Bookings/Customers/Show', [
             'customer' => [
                 ...BookingPresenter::customerCard($customer, $team->slug, $activeListing?->slug),
@@ -554,6 +657,8 @@ class CustomerController extends Controller
             'quotes' => $quotes,
             'quoteListings' => $quoteListings,
             'emailTemplates' => $emailTemplates,
+            'section' => $section,
+            'sectionUrls' => $sectionUrls,
             'activeListing' => $activeListing,
             'management' => $activeListing ? [
                 'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $activeListing->slug]),
