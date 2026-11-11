@@ -6,6 +6,7 @@ use App\Models\Team;
 use App\Support\Branding;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Modules\Bookings\Models\BookingInquiry;
 use Modules\Listings\Models\Listing;
 use Modules\Platform\Support\PlatformAccess;
 
@@ -89,24 +90,36 @@ class HandleInertiaRequests extends Middleware
         }
 
         if (! $listing instanceof Listing) {
-            if (! is_string($listing)) {
-                return null;
-            }
-
             $team = Team::query()->where('slug', $teamSlug)->first();
 
             if ($team === null) {
                 return null;
             }
 
-            $listing = Listing::query()
-                ->where('team_id', $team->id)
-                ->where('slug', $listing)
-                ->first();
+            if (is_string($listing)) {
+                $listing = Listing::query()
+                    ->where('team_id', $team->id)
+                    ->where('slug', $listing)
+                    ->first();
+            } else {
+                $inquiry = $route->parameter('inquiry');
 
-            if ($listing === null) {
-                return null;
+                if (is_string($inquiry)) {
+                    $inquiry = BookingInquiry::query()->find($inquiry);
+                }
+
+                if (
+                    $inquiry instanceof BookingInquiry
+                    && $inquiry->team_id === $team->id
+                ) {
+                    $listing = $inquiry->listing;
+                }
             }
+
+        }
+
+        if (! $listing instanceof Listing) {
+            return null;
         }
 
         return [

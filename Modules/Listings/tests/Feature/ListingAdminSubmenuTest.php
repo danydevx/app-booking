@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Cashier\Subscription;
+use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Listings\Models\Listing;
 use Tests\TestCase;
@@ -23,6 +24,7 @@ class ListingAdminSubmenuTest extends TestCase
             'team_id' => $team->id,
             'listing_id' => $listing->id,
         ]);
+        $inquiry = BookingInquiry::factory()->forListing($listing)->create();
 
         $pages = [
             route('listings.manage', ['current_team' => $team->slug, 'listing' => $listing->slug]),
@@ -35,6 +37,7 @@ class ListingAdminSubmenuTest extends TestCase
             route('listings.promotions.index', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             route('listings.edit', ['current_team' => $team->slug, 'listing' => $listing->slug]),
+            route('bookings.show', ['current_team' => $team->slug, 'inquiry' => $inquiry->id]),
         ];
 
         $titles = [
