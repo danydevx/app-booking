@@ -631,7 +631,7 @@ function destroy(item: ListingPackage): void {
         </section>
 
         <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
-            <DialogScrollContent class="sm:max-w-3xl">
+            <DialogScrollContent class="sm:max-w-5xl">
                 <form class="grid gap-5" @submit.prevent="submit" novalidate>
                     <DialogHeader>
                         <DialogTitle>
@@ -645,211 +645,238 @@ function destroy(item: ListingPackage): void {
                             }}
                         </DialogDescription>
                     </DialogHeader>
-                    <section class="grid gap-4">
-                        <div class="flex items-center gap-2">
-                            <Package class="size-4 text-primary" />
-                            <h3 class="text-sm font-semibold">
-                                Datos del paquete
-                            </h3>
-                        </div>
-                        <div class="grid gap-2">
-                            <Label for="package-name">Nombre</Label>
-                            <Input
-                                id="package-name"
-                                v-model="form.name"
-                                maxlength="120"
-                                required
-                                placeholder="Paquete Familiar"
-                            />
-                            <p
-                                v-if="form.errors.name"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.name }}
-                            </p>
-                        </div>
-                        <div class="grid gap-2">
-                            <Label for="package-description">Descripción</Label>
-                            <textarea
-                                id="package-description"
-                                v-model="form.description"
-                                rows="3"
-                                maxlength="2000"
-                                class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                placeholder="Describe qué incluye el paquete."
-                            />
-                            <p
-                                v-if="form.errors.description"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.description }}
-                            </p>
-                        </div>
-                    </section>
 
-                    <section class="grid gap-4 border-t pt-5">
-                        <div class="flex items-center gap-2">
-                            <BadgeDollarSign class="size-4 text-primary" />
-                            <h3 class="text-sm font-semibold">
-                                Precio y capacidad
-                            </h3>
-                        </div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div class="grid gap-2">
-                                <Label for="package-price">Precio (MXN)</Label>
-                                <div class="relative">
-                                    <span
-                                        class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground"
-                                    >
-                                        $
-                                    </span>
-                                    <Input
-                                        id="package-price"
-                                        v-model="form.price"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        required
-                                        placeholder="0.00"
-                                        class="pl-7"
-                                    />
-                                </div>
-                                <p
-                                    v-if="form.errors.price"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.price }}
-                                </p>
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="package-hours">
-                                    Duración (horas)
-                                </Label>
-                                <Input
-                                    id="package-hours"
-                                    v-model.number="form.duration_hours"
-                                    type="number"
-                                    min="1"
-                                    max="168"
-                                    required
-                                />
-                                <p
-                                    v-if="form.errors.duration_hours"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.duration_hours }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div class="grid gap-2">
-                                <Label for="package-people">
-                                    Personas incluidas
-                                </Label>
-                                <Input
-                                    id="package-people"
-                                    v-model.number="form.included_people"
-                                    type="number"
-                                    min="1"
-                                    required
-                                />
-                                <p
-                                    v-if="form.errors.included_people"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.included_people }}
-                                </p>
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="package-order">Orden</Label>
-                                <Input
-                                    id="package-order"
-                                    v-model="form.sort_order"
-                                    type="number"
-                                    min="0"
-                                    placeholder="Automático"
-                                />
-                                <p
-                                    v-if="form.errors.sort_order"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.sort_order }}
-                                </p>
-                            </div>
-                        </div>
-                    </section>
+                    <RequiredFieldsHint />
 
-                    <section class="grid gap-3 border-t pt-5">
-                        <div
-                            class="flex flex-wrap items-start justify-between gap-2"
-                        >
-                            <div>
+                    <div class="grid gap-5 lg:grid-cols-2">
+                        <div class="grid content-start gap-5">
+                            <section class="grid gap-4">
                                 <div class="flex items-center gap-2">
-                                    <Sparkles class="size-4 text-primary" />
+                                    <Package class="size-4 text-primary" />
                                     <h3 class="text-sm font-semibold">
-                                        Servicios incluidos
+                                        Datos del paquete
                                     </h3>
                                 </div>
-                                <p class="mt-1 text-xs text-muted-foreground">
-                                    Elige servicios del catálogo comercial. Las
-                                    características del lugar ya se incluyen en
-                                    todos los paquetes.
-                                </p>
-                            </div>
-                            <Badge variant="secondary">
-                                {{ selectedServiceCount }} seleccionados
-                            </Badge>
+                                <div class="grid gap-2">
+                                    <Label for="package-name">Nombre</Label>
+                                    <Input
+                                        id="package-name"
+                                        v-model="form.name"
+                                        maxlength="120"
+                                        required
+                                        placeholder="Paquete Familiar"
+                                    />
+                                    <p
+                                        v-if="form.errors.name"
+                                        class="text-sm text-destructive"
+                                    >
+                                        {{ form.errors.name }}
+                                    </p>
+                                </div>
+                                <div class="grid gap-2">
+                                    <Label for="package-description"
+                                        >Descripción</Label
+                                    >
+                                    <textarea
+                                        id="package-description"
+                                        v-model="form.description"
+                                        rows="3"
+                                        maxlength="2000"
+                                        class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                        placeholder="Describe qué incluye el paquete."
+                                    />
+                                    <p
+                                        v-if="form.errors.description"
+                                        class="text-sm text-destructive"
+                                    >
+                                        {{ form.errors.description }}
+                                    </p>
+                                </div>
+                            </section>
+
+                            <section class="grid gap-4 border-t pt-5">
+                                <div class="flex items-center gap-2">
+                                    <BadgeDollarSign
+                                        class="size-4 text-primary"
+                                    />
+                                    <h3 class="text-sm font-semibold">
+                                        Precio y capacidad
+                                    </h3>
+                                </div>
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <div class="grid gap-2">
+                                        <Label for="package-price"
+                                            >Precio (MXN)</Label
+                                        >
+                                        <div class="relative">
+                                            <span
+                                                class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground"
+                                            >
+                                                $
+                                            </span>
+                                            <Input
+                                                id="package-price"
+                                                v-model="form.price"
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                required
+                                                placeholder="0.00"
+                                                class="pl-7"
+                                            />
+                                        </div>
+                                        <p
+                                            v-if="form.errors.price"
+                                            class="text-sm text-destructive"
+                                        >
+                                            {{ form.errors.price }}
+                                        </p>
+                                    </div>
+                                    <div class="grid gap-2">
+                                        <Label for="package-hours">
+                                            Duración (horas)
+                                        </Label>
+                                        <Input
+                                            id="package-hours"
+                                            v-model.number="form.duration_hours"
+                                            type="number"
+                                            min="1"
+                                            max="168"
+                                            required
+                                        />
+                                        <p
+                                            v-if="form.errors.duration_hours"
+                                            class="text-sm text-destructive"
+                                        >
+                                            {{ form.errors.duration_hours }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <div class="grid gap-2">
+                                        <Label for="package-people">
+                                            Personas incluidas
+                                        </Label>
+                                        <Input
+                                            id="package-people"
+                                            v-model.number="
+                                                form.included_people
+                                            "
+                                            type="number"
+                                            min="1"
+                                            required
+                                        />
+                                        <p
+                                            v-if="form.errors.included_people"
+                                            class="text-sm text-destructive"
+                                        >
+                                            {{ form.errors.included_people }}
+                                        </p>
+                                    </div>
+                                    <div class="grid gap-2">
+                                        <Label for="package-order">Orden</Label>
+                                        <Input
+                                            id="package-order"
+                                            v-model="form.sort_order"
+                                            type="number"
+                                            min="0"
+                                            placeholder="Automático"
+                                        />
+                                        <p
+                                            v-if="form.errors.sort_order"
+                                            class="text-sm text-destructive"
+                                        >
+                                            {{ form.errors.sort_order }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
 
-                        <div
-                            v-if="serviceGroups.length === 0"
-                            class="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground"
-                        >
-                            No hay servicios comerciales disponibles.
-                            <Link
-                                :href="urls.services"
-                                class="font-medium underline underline-offset-2"
-                                >Créalos en Servicios</Link
-                            >.
-                        </div>
-                        <div v-else class="space-y-3 rounded-lg border p-3">
-                            <div
-                                v-for="group in serviceGroups"
-                                :key="group.key"
-                            >
-                                <p
-                                    class="mb-1 text-xs font-medium text-muted-foreground"
+                        <div class="grid content-start gap-5">
+                            <section class="grid gap-3 border-t pt-5">
+                                <div
+                                    class="flex flex-wrap items-start justify-between gap-2"
                                 >
-                                    {{ group.label }}
-                                </p>
-                                <div class="grid gap-1 sm:grid-cols-2">
-                                    <label
-                                        v-for="service in group.services"
-                                        :key="service.value"
-                                        class="flex cursor-pointer items-center gap-2 text-sm"
-                                    >
-                                        <Checkbox
-                                            :checked="
-                                                form.included_services.includes(
-                                                    service.value,
-                                                )
-                                            "
-                                            @update:checked="
-                                                toggleService(service.value)
-                                            "
-                                        />
-                                        {{ service.label }}
-                                    </label>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <Sparkles
+                                                class="size-4 text-primary"
+                                            />
+                                            <h3 class="text-sm font-semibold">
+                                                Servicios incluidos
+                                            </h3>
+                                        </div>
+                                        <p
+                                            class="mt-1 text-xs text-muted-foreground"
+                                        >
+                                            Elige servicios del catálogo
+                                            comercial. Las características del
+                                            lugar ya se incluyen en todos los
+                                            paquetes.
+                                        </p>
+                                    </div>
+                                    <Badge variant="secondary">
+                                        {{ selectedServiceCount }} seleccionados
+                                    </Badge>
                                 </div>
-                            </div>
+
+                                <div
+                                    v-if="serviceGroups.length === 0"
+                                    class="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground"
+                                >
+                                    No hay servicios comerciales disponibles.
+                                    <Link
+                                        :href="urls.services"
+                                        class="font-medium underline underline-offset-2"
+                                        >Créalos en Servicios</Link
+                                    >.
+                                </div>
+                                <div
+                                    v-else
+                                    class="space-y-3 rounded-lg border p-3"
+                                >
+                                    <div
+                                        v-for="group in serviceGroups"
+                                        :key="group.key"
+                                    >
+                                        <p
+                                            class="mb-1 text-xs font-medium text-muted-foreground"
+                                        >
+                                            {{ group.label }}
+                                        </p>
+                                        <div class="grid gap-1 sm:grid-cols-2">
+                                            <label
+                                                v-for="service in group.services"
+                                                :key="service.value"
+                                                class="flex cursor-pointer items-center gap-2 text-sm"
+                                            >
+                                                <Checkbox
+                                                    :checked="
+                                                        form.included_services.includes(
+                                                            service.value,
+                                                        )
+                                                    "
+                                                    @update:checked="
+                                                        toggleService(
+                                                            service.value,
+                                                        )
+                                                    "
+                                                />
+                                                {{ service.label }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <p
+                                    v-if="form.errors.included_services"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.included_services }}
+                                </p>
+                            </section>
                         </div>
-                        <p
-                            v-if="form.errors.included_services"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.included_services }}
-                        </p>
-                    </section>
+                    </div>
 
                     <section class="grid gap-4 border-t pt-5">
                         <div class="flex items-center gap-2">

@@ -459,7 +459,7 @@ function intervalLabel(interval: string): string {
         </section>
 
         <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
-            <DialogScrollContent class="sm:max-w-3xl">
+            <DialogScrollContent class="sm:max-w-5xl">
                 <form class="grid gap-5" @submit.prevent="submit" novalidate>
                     <DialogHeader>
                         <DialogTitle>
@@ -476,227 +476,265 @@ function intervalLabel(interval: string): string {
 
                     <RequiredFieldsHint />
 
-                    <section class="grid gap-4">
-                        <div class="flex items-center gap-2">
-                            <Layers class="size-4 text-primary" />
-                            <h3 class="text-sm font-semibold">Identidad</h3>
-                        </div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div class="grid gap-2">
-                                <Label for="plan-slug">Slug</Label>
-                                <Input
-                                    id="plan-slug"
-                                    v-model="form.slug"
-                                    :disabled="editing !== null"
-                                    maxlength="40"
-                                    required
-                                    placeholder="premium"
-                                />
-                                <p class="text-xs text-muted-foreground">
-                                    No se puede cambiar después de crear el
-                                    plan.
-                                </p>
-                                <p
-                                    v-if="form.errors.slug"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.slug }}
-                                </p>
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="plan-name">Nombre</Label>
-                                <Input
-                                    id="plan-name"
-                                    v-model="form.name"
-                                    maxlength="80"
-                                    required
-                                    placeholder="Premium"
-                                />
-                                <p
-                                    v-if="form.errors.name"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.name }}
-                                </p>
-                            </div>
-                        </div>
-                        <div class="grid gap-2">
-                            <Label for="plan-description">Descripción</Label>
-                            <textarea
-                                id="plan-description"
-                                v-model="form.description"
-                                rows="3"
-                                maxlength="500"
-                                class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                placeholder="Para anfitriones con mayor operación."
-                            />
-                            <p
-                                v-if="form.errors.description"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.description }}
-                            </p>
-                        </div>
-                    </section>
-
-                    <section class="grid gap-4 border-t pt-5">
-                        <div class="flex items-center gap-2">
-                            <CreditCard class="size-4 text-primary" />
-                            <h3 class="text-sm font-semibold">
-                                Cobro y disponibilidad
-                            </h3>
-                        </div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div class="grid gap-2">
-                                <Label for="plan-stripe-price">
-                                    Precio de Stripe
-                                </Label>
-                                <Input
-                                    id="plan-stripe-price"
-                                    v-model="form.stripe_price_id"
-                                    maxlength="255"
-                                    placeholder="price_..."
-                                />
-                                <p class="text-xs text-muted-foreground">
-                                    ID de un precio existente en Stripe. Si se
-                                    deja vacío, el plan no podrá contratarse.
-                                </p>
-                                <p
-                                    v-if="form.errors.stripe_price_id"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.stripe_price_id }}
-                                </p>
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="plan-interval">Intervalo</Label>
-                                <select
-                                    id="plan-interval"
-                                    v-model="form.interval"
-                                    required
-                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                >
-                                    <option value="month">Mensual</option>
-                                    <option value="year">Anual</option>
-                                </select>
-                                <p
-                                    v-if="form.errors.interval"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.interval }}
-                                </p>
-                            </div>
-                        </div>
-                        <label
-                            class="flex items-center gap-3 rounded-lg border px-3 py-2 text-sm"
-                        >
-                            <Checkbox
-                                v-model:checked="form.active"
-                                :disabled="editing?.is_free === true"
-                            />
-                            {{
-                                editing?.is_free
-                                    ? 'El plan Gratis siempre está activo'
-                                    : 'Plan activo y disponible para contratación'
-                            }}
-                        </label>
-                        <p
-                            v-if="form.errors.active"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.active }}
-                        </p>
-                        <p
-                            v-if="editing && !form.active && !editing.is_free"
-                            class="rounded-lg bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
-                        >
-                            Los equipos actuales conservan su plan. Desactivarlo
-                            solo impide nuevas contrataciones.
-                        </p>
-                    </section>
-
-                    <section class="grid gap-3 border-t pt-5">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <Layers class="size-4 text-primary" />
-                                <h3 class="text-sm font-semibold">Límites</h3>
-                            </div>
-                            <p class="mt-1 text-xs text-muted-foreground">
-                                0 significa que la función no está disponible.
-                            </p>
-                        </div>
-                        <div class="grid gap-3 sm:grid-cols-3">
-                            <div
-                                v-for="(label, key) in limitLabels"
-                                :key="key"
-                                class="grid gap-2"
-                            >
-                                <Label :for="`limit-${key}`">
-                                    {{ label }}
-                                </Label>
-                                <Input
-                                    :id="`limit-${key}`"
-                                    v-model.number="form.limits[key]"
-                                    type="number"
-                                    min="0"
-                                    max="1000000"
-                                    required
-                                />
-                                <p
-                                    v-if="fieldError(`limits.${key}`)"
-                                    class="text-xs text-destructive"
-                                >
-                                    {{ fieldError(`limits.${key}`) }}
-                                </p>
-                            </div>
-                        </div>
-                        <p
-                            v-if="form.errors.limits"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.limits }}
-                        </p>
-                    </section>
-
-                    <section class="grid gap-3 border-t pt-5">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <Sparkles class="size-4 text-primary" />
-                                <h3 class="text-sm font-semibold">Features</h3>
-                            </div>
-                            <p class="mt-1 text-xs text-muted-foreground">
-                                Funciones que se habilitan con este plan.
-                            </p>
-                        </div>
-                        <div
-                            class="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2"
-                        >
-                            <div
-                                v-for="(label, key) in featureLabels"
-                                :key="key"
-                                class="grid gap-1"
-                            >
-                                <label class="flex items-center gap-3 text-sm">
-                                    <Checkbox
-                                        v-model:checked="form.features[key]"
+                    <div class="grid gap-5 lg:grid-cols-2">
+                        <div class="grid content-start gap-5">
+                            <section class="grid gap-4">
+                                <div class="flex items-center gap-2">
+                                    <Layers class="size-4 text-primary" />
+                                    <h3 class="text-sm font-semibold">
+                                        Identidad
+                                    </h3>
+                                </div>
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <div class="grid gap-2">
+                                        <Label for="plan-slug">Slug</Label>
+                                        <Input
+                                            id="plan-slug"
+                                            v-model="form.slug"
+                                            :disabled="editing !== null"
+                                            maxlength="40"
+                                            required
+                                            placeholder="premium"
+                                        />
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            No se puede cambiar después de crear
+                                            el plan.
+                                        </p>
+                                        <p
+                                            v-if="form.errors.slug"
+                                            class="text-sm text-destructive"
+                                        >
+                                            {{ form.errors.slug }}
+                                        </p>
+                                    </div>
+                                    <div class="grid gap-2">
+                                        <Label for="plan-name">Nombre</Label>
+                                        <Input
+                                            id="plan-name"
+                                            v-model="form.name"
+                                            maxlength="80"
+                                            required
+                                            placeholder="Premium"
+                                        />
+                                        <p
+                                            v-if="form.errors.name"
+                                            class="text-sm text-destructive"
+                                        >
+                                            {{ form.errors.name }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="grid gap-2">
+                                    <Label for="plan-description"
+                                        >Descripción</Label
+                                    >
+                                    <textarea
+                                        id="plan-description"
+                                        v-model="form.description"
+                                        rows="3"
+                                        maxlength="500"
+                                        class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                        placeholder="Para anfitriones con mayor operación."
                                     />
-                                    {{ label }}
+                                    <p
+                                        v-if="form.errors.description"
+                                        class="text-sm text-destructive"
+                                    >
+                                        {{ form.errors.description }}
+                                    </p>
+                                </div>
+                            </section>
+
+                            <section class="grid gap-4 border-t pt-5">
+                                <div class="flex items-center gap-2">
+                                    <CreditCard class="size-4 text-primary" />
+                                    <h3 class="text-sm font-semibold">
+                                        Cobro y disponibilidad
+                                    </h3>
+                                </div>
+                                <div class="grid gap-4 sm:grid-cols-2">
+                                    <div class="grid gap-2">
+                                        <Label for="plan-stripe-price">
+                                            Precio de Stripe
+                                        </Label>
+                                        <Input
+                                            id="plan-stripe-price"
+                                            v-model="form.stripe_price_id"
+                                            maxlength="255"
+                                            placeholder="price_..."
+                                        />
+                                        <p
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            ID de un precio existente en Stripe.
+                                            Si se deja vacío, el plan no podrá
+                                            contratarse.
+                                        </p>
+                                        <p
+                                            v-if="form.errors.stripe_price_id"
+                                            class="text-sm text-destructive"
+                                        >
+                                            {{ form.errors.stripe_price_id }}
+                                        </p>
+                                    </div>
+                                    <div class="grid gap-2">
+                                        <Label for="plan-interval"
+                                            >Intervalo</Label
+                                        >
+                                        <select
+                                            id="plan-interval"
+                                            v-model="form.interval"
+                                            required
+                                            class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                        >
+                                            <option value="month">
+                                                Mensual
+                                            </option>
+                                            <option value="year">Anual</option>
+                                        </select>
+                                        <p
+                                            v-if="form.errors.interval"
+                                            class="text-sm text-destructive"
+                                        >
+                                            {{ form.errors.interval }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <label
+                                    class="flex items-center gap-3 rounded-lg border px-3 py-2 text-sm"
+                                >
+                                    <Checkbox
+                                        v-model:checked="form.active"
+                                        :disabled="editing?.is_free === true"
+                                    />
+                                    {{
+                                        editing?.is_free
+                                            ? 'El plan Gratis siempre está activo'
+                                            : 'Plan activo y disponible para contratación'
+                                    }}
                                 </label>
                                 <p
-                                    v-if="fieldError(`features.${key}`)"
-                                    class="text-xs text-destructive"
+                                    v-if="form.errors.active"
+                                    class="text-sm text-destructive"
                                 >
-                                    {{ fieldError(`features.${key}`) }}
+                                    {{ form.errors.active }}
                                 </p>
-                            </div>
+                                <p
+                                    v-if="
+                                        editing &&
+                                        !form.active &&
+                                        !editing.is_free
+                                    "
+                                    class="rounded-lg bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+                                >
+                                    Los equipos actuales conservan su plan.
+                                    Desactivarlo solo impide nuevas
+                                    contrataciones.
+                                </p>
+                            </section>
                         </div>
-                        <p
-                            v-if="form.errors.features"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.features }}
-                        </p>
-                    </section>
+
+                        <div class="grid content-start gap-5">
+                            <section class="grid gap-3 border-t pt-5">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <Layers class="size-4 text-primary" />
+                                        <h3 class="text-sm font-semibold">
+                                            Límites
+                                        </h3>
+                                    </div>
+                                    <p
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        0 significa que la función no está
+                                        disponible.
+                                    </p>
+                                </div>
+                                <div class="grid gap-3 sm:grid-cols-3">
+                                    <div
+                                        v-for="(label, key) in limitLabels"
+                                        :key="key"
+                                        class="grid gap-2"
+                                    >
+                                        <Label :for="`limit-${key}`">
+                                            {{ label }}
+                                        </Label>
+                                        <Input
+                                            :id="`limit-${key}`"
+                                            v-model.number="form.limits[key]"
+                                            type="number"
+                                            min="0"
+                                            max="1000000"
+                                            required
+                                        />
+                                        <p
+                                            v-if="fieldError(`limits.${key}`)"
+                                            class="text-xs text-destructive"
+                                        >
+                                            {{ fieldError(`limits.${key}`) }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <p
+                                    v-if="form.errors.limits"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.limits }}
+                                </p>
+                            </section>
+
+                            <section class="grid gap-3 border-t pt-5">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <Sparkles class="size-4 text-primary" />
+                                        <h3 class="text-sm font-semibold">
+                                            Features
+                                        </h3>
+                                    </div>
+                                    <p
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        Funciones que se habilitan con este
+                                        plan.
+                                    </p>
+                                </div>
+                                <div
+                                    class="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2"
+                                >
+                                    <div
+                                        v-for="(label, key) in featureLabels"
+                                        :key="key"
+                                        class="grid gap-1"
+                                    >
+                                        <label
+                                            class="flex items-center gap-3 text-sm"
+                                        >
+                                            <Checkbox
+                                                v-model:checked="
+                                                    form.features[key]
+                                                "
+                                            />
+                                            {{ label }}
+                                        </label>
+                                        <p
+                                            v-if="fieldError(`features.${key}`)"
+                                            class="text-xs text-destructive"
+                                        >
+                                            {{ fieldError(`features.${key}`) }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <p
+                                    v-if="form.errors.features"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.features }}
+                                </p>
+                            </section>
+                        </div>
+                    </div>
 
                     <DialogFooter class="gap-2">
                         <DialogClose as-child>

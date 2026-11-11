@@ -547,7 +547,7 @@ function destroy(item: CommercialService): void {
         </section>
 
         <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
-            <DialogScrollContent class="sm:max-w-3xl">
+            <DialogScrollContent class="sm:max-w-4xl">
                 <form class="grid gap-5" @submit.prevent="submit" novalidate>
                     <DialogHeader>
                         <DialogTitle>
@@ -561,185 +561,195 @@ function destroy(item: CommercialService): void {
                             }}
                         </DialogDescription>
                     </DialogHeader>
-                    <section class="grid gap-4">
-                        <div class="flex items-center gap-2">
-                            <Sparkles class="size-4 text-primary" />
-                            <h3 class="text-sm font-semibold">
-                                Datos del servicio
-                            </h3>
-                        </div>
-                        <div class="grid gap-2">
-                            <Label for="service-key">Servicio</Label>
-                            <select
-                                id="service-key"
-                                v-model="form.service_key"
-                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                required
-                            >
-                                <option value="">Selecciona un servicio</option>
-                                <optgroup
-                                    v-for="group in formServiceGroups"
-                                    :key="group.key"
-                                    :label="group.label"
-                                >
-                                    <option
-                                        v-for="service in group.services"
-                                        :key="service.value"
-                                        :value="service.value"
-                                    >
-                                        {{ service.label }}
-                                    </option>
-                                </optgroup>
-                            </select>
-                            <p
-                                v-if="form.errors.service_key"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.service_key }}
-                            </p>
-                        </div>
-                        <div class="grid gap-2">
-                            <Label for="service-description">
-                                Descripción
-                            </Label>
-                            <textarea
-                                id="service-description"
-                                v-model="form.description"
-                                rows="3"
-                                maxlength="2000"
-                                class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                placeholder="Detalla qué incluye o cómo se cobra."
-                            />
-                            <p
-                                v-if="form.errors.description"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors.description }}
-                            </p>
-                        </div>
-                    </section>
 
-                    <section class="grid gap-4 border-t pt-5">
-                        <div class="flex items-center gap-2">
-                            <BadgeDollarSign class="size-4 text-primary" />
-                            <h3 class="text-sm font-semibold">
-                                Modalidad y proveedor
-                            </h3>
-                        </div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <div class="grid gap-2">
-                                <Label for="service-pricing-mode">
-                                    Modalidad de precio
-                                </Label>
-                                <select
-                                    id="service-pricing-mode"
-                                    v-model="form.pricing_mode"
-                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                >
-                                    <option
-                                        v-for="mode in pricingModes"
-                                        :key="mode.value"
-                                        :value="mode.value"
-                                    >
-                                        {{ mode.label }}
-                                    </option>
-                                </select>
-                                <p
-                                    v-if="form.errors.pricing_mode"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.pricing_mode }}
-                                </p>
+                    <RequiredFieldsHint />
+
+                    <div class="grid gap-5 lg:grid-cols-2">
+                        <section class="grid gap-4">
+                            <div class="flex items-center gap-2">
+                                <Sparkles class="size-4 text-primary" />
+                                <h3 class="text-sm font-semibold">
+                                    Datos del servicio
+                                </h3>
                             </div>
                             <div class="grid gap-2">
-                                <Label for="service-provider">
-                                    Proveedor
-                                </Label>
+                                <Label for="service-key">Servicio</Label>
                                 <select
-                                    id="service-provider"
-                                    v-model="form.provider"
+                                    id="service-key"
+                                    v-model="form.service_key"
+                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                     required
-                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
-                                    <option
-                                        v-for="provider in providers"
-                                        :key="provider.value"
-                                        :value="provider.value"
-                                    >
-                                        {{ provider.label }}
+                                    <option value="">
+                                        Selecciona un servicio
                                     </option>
+                                    <optgroup
+                                        v-for="group in formServiceGroups"
+                                        :key="group.key"
+                                        :label="group.label"
+                                    >
+                                        <option
+                                            v-for="service in group.services"
+                                            :key="service.value"
+                                            :value="service.value"
+                                        >
+                                            {{ service.label }}
+                                        </option>
+                                    </optgroup>
                                 </select>
                                 <p
-                                    v-if="form.errors.provider"
+                                    v-if="form.errors.service_key"
                                     class="text-sm text-destructive"
                                 >
-                                    {{ form.errors.provider }}
+                                    {{ form.errors.service_key }}
                                 </p>
                             </div>
-                        </div>
-                        <div
-                            v-if="form.pricing_mode === 'additional'"
-                            class="grid gap-4 sm:grid-cols-2"
-                        >
                             <div class="grid gap-2">
-                                <Label for="service-price">Precio (MXN)</Label>
-                                <div class="relative">
-                                    <span
-                                        class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground"
+                                <Label for="service-description">
+                                    Descripción
+                                </Label>
+                                <textarea
+                                    id="service-description"
+                                    v-model="form.description"
+                                    rows="3"
+                                    maxlength="2000"
+                                    class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                    placeholder="Detalla qué incluye o cómo se cobra."
+                                />
+                                <p
+                                    v-if="form.errors.description"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.description }}
+                                </p>
+                            </div>
+                        </section>
+
+                        <section class="grid gap-4 border-t pt-5">
+                            <div class="flex items-center gap-2">
+                                <BadgeDollarSign class="size-4 text-primary" />
+                                <h3 class="text-sm font-semibold">
+                                    Modalidad y proveedor
+                                </h3>
+                            </div>
+                            <div class="grid gap-4 sm:grid-cols-2">
+                                <div class="grid gap-2">
+                                    <Label for="service-pricing-mode">
+                                        Modalidad de precio
+                                    </Label>
+                                    <select
+                                        id="service-pricing-mode"
+                                        v-model="form.pricing_mode"
+                                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                     >
-                                        $
-                                    </span>
-                                    <Input
-                                        id="service-price"
-                                        v-model="form.price"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        placeholder="0.00"
-                                        class="pl-7"
-                                        :required="
-                                            form.pricing_mode === 'additional'
-                                        "
-                                    />
+                                        <option
+                                            v-for="mode in pricingModes"
+                                            :key="mode.value"
+                                            :value="mode.value"
+                                        >
+                                            {{ mode.label }}
+                                        </option>
+                                    </select>
+                                    <p
+                                        v-if="form.errors.pricing_mode"
+                                        class="text-sm text-destructive"
+                                    >
+                                        {{ form.errors.pricing_mode }}
+                                    </p>
                                 </div>
-                                <p
-                                    v-if="form.errors.price"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.price }}
-                                </p>
-                            </div>
-                            <div class="grid gap-2">
-                                <Label for="service-unit">
-                                    Unidad de cobro
-                                </Label>
-                                <select
-                                    id="service-unit"
-                                    v-model="form.price_unit"
-                                    required
-                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                                >
-                                    <option
-                                        v-for="unit in priceUnits"
-                                        :key="unit.value"
-                                        :value="unit.value"
+                                <div class="grid gap-2">
+                                    <Label for="service-provider">
+                                        Proveedor
+                                    </Label>
+                                    <select
+                                        id="service-provider"
+                                        v-model="form.provider"
+                                        required
+                                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                     >
-                                        {{ unit.label }}
-                                    </option>
-                                </select>
-                                <p
-                                    v-if="form.errors.price_unit"
-                                    class="text-sm text-destructive"
-                                >
-                                    {{ form.errors.price_unit }}
-                                </p>
+                                        <option
+                                            v-for="provider in providers"
+                                            :key="provider.value"
+                                            :value="provider.value"
+                                        >
+                                            {{ provider.label }}
+                                        </option>
+                                    </select>
+                                    <p
+                                        v-if="form.errors.provider"
+                                        class="text-sm text-destructive"
+                                    >
+                                        {{ form.errors.provider }}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                        <p class="text-xs text-muted-foreground">
-                            El precio solo es obligatorio para servicios con
-                            costo adicional.
-                        </p>
-                    </section>
+                            <div
+                                v-if="form.pricing_mode === 'additional'"
+                                class="grid gap-4 sm:grid-cols-2"
+                            >
+                                <div class="grid gap-2">
+                                    <Label for="service-price"
+                                        >Precio (MXN)</Label
+                                    >
+                                    <div class="relative">
+                                        <span
+                                            class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground"
+                                        >
+                                            $
+                                        </span>
+                                        <Input
+                                            id="service-price"
+                                            v-model="form.price"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            class="pl-7"
+                                            :required="
+                                                form.pricing_mode ===
+                                                'additional'
+                                            "
+                                        />
+                                    </div>
+                                    <p
+                                        v-if="form.errors.price"
+                                        class="text-sm text-destructive"
+                                    >
+                                        {{ form.errors.price }}
+                                    </p>
+                                </div>
+                                <div class="grid gap-2">
+                                    <Label for="service-unit">
+                                        Unidad de cobro
+                                    </Label>
+                                    <select
+                                        id="service-unit"
+                                        v-model="form.price_unit"
+                                        required
+                                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                    >
+                                        <option
+                                            v-for="unit in priceUnits"
+                                            :key="unit.value"
+                                            :value="unit.value"
+                                        >
+                                            {{ unit.label }}
+                                        </option>
+                                    </select>
+                                    <p
+                                        v-if="form.errors.price_unit"
+                                        class="text-sm text-destructive"
+                                    >
+                                        {{ form.errors.price_unit }}
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="text-xs text-muted-foreground">
+                                El precio solo es obligatorio para servicios con
+                                costo adicional.
+                            </p>
+                        </section>
+                    </div>
 
                     <section class="grid gap-4 border-t pt-5">
                         <div class="flex items-center gap-2">

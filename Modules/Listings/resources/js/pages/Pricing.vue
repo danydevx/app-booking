@@ -1480,13 +1480,13 @@ function formatRangePrice(value: string | null): string {
         </section>
 
         <Dialog :open="rangeDialogOpen" @update:open="handleRangeDialogOpen">
-            <DialogScrollContent class="sm:max-w-4xl">
+            <DialogScrollContent class="sm:max-w-6xl">
                 <form
-                    class="grid gap-5"
+                    class="grid gap-5 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
                     @submit.prevent="submitRange"
                     novalidate
                 >
-                    <DialogHeader>
+                    <DialogHeader class="lg:col-span-2">
                         <DialogTitle>
                             {{
                                 editingRange ? 'Editar tarifa' : 'Nueva tarifa'
@@ -1501,30 +1501,7 @@ function formatRangePrice(value: string | null): string {
                         </DialogDescription>
                     </DialogHeader>
 
-                    <RequiredFieldsHint />
-                    <div
-                        class="flex flex-wrap items-start justify-between gap-2 xl:col-span-2"
-                    >
-                        <div>
-                            <h3 class="font-semibold">
-                                {{
-                                    editingRange
-                                        ? 'Editar tarifa'
-                                        : 'Nueva tarifa'
-                                }}
-                            </h3>
-                            <p class="text-xs text-muted-foreground">
-                                {{
-                                    editingRange
-                                        ? 'Modifica los datos y guarda los cambios.'
-                                        : 'Define el rango de fechas y el precio de cada día.'
-                                }}
-                            </p>
-                        </div>
-                        <Badge v-if="editingRange" variant="outline">
-                            Editando
-                        </Badge>
-                    </div>
+                    <RequiredFieldsHint class="lg:col-span-2" />
 
                     <div class="grid content-start gap-4">
                         <div class="grid gap-2">

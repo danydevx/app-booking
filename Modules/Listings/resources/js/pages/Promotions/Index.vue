@@ -424,7 +424,7 @@ function statusVariant(
         </section>
 
         <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
-            <DialogScrollContent class="sm:max-w-2xl">
+            <DialogScrollContent class="sm:max-w-4xl">
                 <form class="grid gap-5" @submit.prevent="submit" novalidate>
                     <DialogHeader>
                         <DialogTitle>
@@ -443,7 +443,7 @@ function statusVariant(
 
                     <RequiredFieldsHint />
 
-                    <div class="grid gap-4">
+                    <div class="grid gap-4 lg:grid-cols-2">
                         <div class="grid gap-2">
                             <Label for="promotion-title">Título</Label>
                             <Input
@@ -460,7 +460,7 @@ function statusVariant(
                                 {{ form.errors.title }}
                             </p>
                         </div>
-                        <div class="grid gap-2">
+                        <div class="grid gap-2 lg:col-span-2">
                             <Label for="promotion-description">
                                 Descripción
                             </Label>
@@ -560,7 +560,7 @@ function statusVariant(
                                 </label>
                             </div>
                         </div>
-                        <div class="grid gap-2">
+                        <div class="grid gap-2 lg:col-span-2">
                             <Label for="promotion-conditions">
                                 Condiciones
                             </Label>
