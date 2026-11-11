@@ -17,6 +17,13 @@ import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogDescription,
+    DialogHeader,
+    DialogScrollContent,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ServiceGroup } from '../../types';
@@ -101,6 +108,7 @@ const form = useForm({
 });
 
 const editing = ref<ListingPackage | null>(null);
+const dialogOpen = ref(false);
 
 function formatCurrency(
     value: string | number | null | undefined,
@@ -160,20 +168,27 @@ function toggleService(key: string): void {
         : [...form.included_services, key];
 }
 
+function openCreate(): void {
+    reset();
+    dialogOpen.value = true;
+}
+
 function submit(): void {
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            dialogOpen.value = false;
+            reset();
+        },
+    };
+
     if (editing.value) {
-        form.patch(editing.value.update_url, {
-            preserveScroll: true,
-            onSuccess: reset,
-        });
+        form.patch(editing.value.update_url, options);
 
         return;
     }
 
-    form.post(props.urls.store, {
-        preserveScroll: true,
-        onSuccess: reset,
-    });
+    form.post(props.urls.store, options);
 }
 
 function edit(item: ListingPackage): void {
@@ -188,25 +203,24 @@ function edit(item: ListingPackage): void {
     form.active = item.active;
     form.sort_order = String(item.sort_order);
     form.clearErrors();
+    dialogOpen.value = true;
+}
 
-    document
-        .getElementById('package-form')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+function handleDialogOpen(open: boolean): void {
+    dialogOpen.value = open;
+
+    if (!open) {
+        reset();
+    }
 }
 
 function reset(): void {
     editing.value = null;
     form.reset();
+    form.clearErrors();
     form.active = true;
     form.duration_hours = 8;
     form.included_people = 50;
-}
-
-function focusForm(): void {
-    document
-        .getElementById('package-form')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    document.getElementById('package-name')?.focus({ preventScroll: true });
 }
 
 function destroy(item: ListingPackage): void {
@@ -254,6 +268,10 @@ function destroy(item: ListingPackage): void {
                     >
                         Ver pública
                     </a>
+                </Button>
+                <Button type="button" @click="openCreate">
+                    <Plus class="size-4" />
+                    Nuevo paquete
                 </Button>
             </div>
         </header>
@@ -388,42 +406,179 @@ function destroy(item: ListingPackage): void {
             </p>
         </section>
 
-        <div
-            class="grid items-start gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]"
-        >
-            <section class="overflow-hidden rounded-xl border bg-card">
-                <div
-                    class="flex flex-wrap items-start justify-between gap-3 border-b p-5"
-                >
-                    <div class="flex items-start gap-3">
-                        <div
-                            class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                        >
-                            <Plus class="size-4" />
-                        </div>
-                        <div>
-                            <h2 class="text-lg font-semibold">
-                                {{
-                                    editing ? 'Editar paquete' : 'Nuevo paquete'
-                                }}
-                            </h2>
-                            <p class="text-xs text-muted-foreground">
-                                {{
-                                    editing
-                                        ? 'Modifica los datos y guarda los cambios.'
-                                        : 'Crea una opción comercial con precio, capacidad y servicios.'
-                                }}
-                            </p>
-                        </div>
-                    </div>
-                    <Badge v-if="editing" variant="outline">Editando</Badge>
+        <section class="space-y-4">
+            <div class="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                    <h2 class="text-lg font-semibold">Paquetes configurados</h2>
+                    <p class="text-sm text-muted-foreground">
+                        Opciones que se muestran en la ficha pública. Todos
+                        incluyen las características del lugar.
+                    </p>
                 </div>
+                <Badge variant="secondary">
+                    {{ packages.length }}
+                    {{ packages.length === 1 ? 'paquete' : 'paquetes' }}
+                </Badge>
+            </div>
 
-                <form
-                    id="package-form"
-                    class="grid gap-5 p-5"
-                    @submit.prevent="submit"
+            <div
+                v-if="packages.length === 0"
+                class="rounded-xl border border-dashed p-10 text-center"
+            >
+                <div
+                    class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
                 >
+                    <Package class="size-6" />
+                </div>
+                <p class="mt-3 font-medium">Sin paquetes configurados</p>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Crea un paquete para ofrecer una opción cerrada de renta.
+                </p>
+                <Button
+                    type="button"
+                    class="mt-4"
+                    variant="outline"
+                    @click="openCreate"
+                >
+                    <Plus class="size-4" />
+                    Crear primer paquete
+                </Button>
+            </div>
+
+            <div v-else class="grid items-start gap-4 lg:grid-cols-2">
+                <article
+                    v-for="item in packages"
+                    :key="item.id"
+                    class="flex flex-col overflow-hidden rounded-xl border bg-card"
+                >
+                    <div
+                        class="flex flex-wrap items-start justify-between gap-3 border-b p-4"
+                    >
+                        <div class="flex items-start gap-3">
+                            <div
+                                class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                            >
+                                <Package class="size-4" />
+                            </div>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="font-semibold">
+                                        {{ item.name }}
+                                    </h3>
+                                    <Badge
+                                        :variant="
+                                            item.active
+                                                ? 'default'
+                                                : 'secondary'
+                                        "
+                                    >
+                                        {{
+                                            item.active ? 'Activo' : 'Inactivo'
+                                        }}
+                                    </Badge>
+                                </div>
+                                <p class="mt-1 text-xs text-muted-foreground">
+                                    Orden {{ item.sort_order }}
+                                </p>
+                            </div>
+                        </div>
+                        <p class="text-right">
+                            <span
+                                class="block text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase"
+                            >
+                                Precio
+                            </span>
+                            <span class="text-lg font-semibold">
+                                {{ item.price_formatted }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="flex-1 space-y-3 p-4">
+                        <div class="flex flex-wrap gap-2 text-xs">
+                            <span
+                                class="inline-flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1"
+                            >
+                                <Clock class="size-3" />
+                                {{ item.duration_hours }} horas
+                            </span>
+                            <span
+                                class="inline-flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1"
+                            >
+                                <Users class="size-3" />
+                                {{ item.included_people }} personas
+                            </span>
+                        </div>
+
+                        <p
+                            v-if="item.description"
+                            class="text-sm whitespace-pre-line text-muted-foreground"
+                        >
+                            {{ item.description }}
+                        </p>
+
+                        <div v-if="item.services.length > 0" class="space-y-1">
+                            <p
+                                class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                            >
+                                Servicios incluidos
+                            </p>
+                            <div class="flex flex-wrap gap-1">
+                                <Badge
+                                    v-for="service in item.services"
+                                    :key="service.key"
+                                    variant="outline"
+                                >
+                                    {{ service.label }}
+                                </Badge>
+                            </div>
+                        </div>
+                        <p v-else class="text-xs text-muted-foreground">
+                            Sin servicios adicionales incluidos.
+                        </p>
+
+                        <p
+                            v-if="item.conditions"
+                            class="rounded-lg bg-muted/30 p-2 text-xs text-muted-foreground"
+                        >
+                            {{ item.conditions }}
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end gap-2 border-t p-3">
+                        <Button size="sm" variant="outline" @click="edit(item)">
+                            <Pencil class="size-4" />
+                            Editar
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            class="text-destructive hover:text-destructive"
+                            @click="destroy(item)"
+                        >
+                            <Trash2 class="size-4" />
+                            Eliminar
+                        </Button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
+            <DialogScrollContent class="sm:max-w-3xl">
+                <form class="grid gap-5" @submit.prevent="submit">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {{ editing ? 'Editar paquete' : 'Nuevo paquete' }}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {{
+                                editing
+                                    ? 'Modifica los datos y guarda los cambios.'
+                                    : 'Crea una opción comercial con precio, capacidad y servicios.'
+                            }}
+                        </DialogDescription>
+                    </DialogHeader>
                     <section class="grid gap-4">
                         <div class="flex items-center gap-2">
                             <Package class="size-4 text-primary" />
@@ -681,181 +836,7 @@ function destroy(item: ListingPackage): void {
                         </Button>
                     </div>
                 </form>
-            </section>
-
-            <section class="space-y-4">
-                <div class="flex flex-wrap items-end justify-between gap-2">
-                    <div>
-                        <h2 class="text-lg font-semibold">
-                            Paquetes configurados
-                        </h2>
-                        <p class="text-sm text-muted-foreground">
-                            Opciones que se muestran en la ficha pública. Todos
-                            incluyen las características del lugar.
-                        </p>
-                    </div>
-                    <Badge variant="secondary">
-                        {{ packages.length }}
-                        {{ packages.length === 1 ? 'paquete' : 'paquetes' }}
-                    </Badge>
-                </div>
-
-                <div
-                    v-if="packages.length === 0"
-                    class="rounded-xl border border-dashed p-10 text-center"
-                >
-                    <div
-                        class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
-                    >
-                        <Package class="size-6" />
-                    </div>
-                    <p class="mt-3 font-medium">Sin paquetes configurados</p>
-                    <p class="mt-1 text-sm text-muted-foreground">
-                        Crea un paquete para ofrecer una opción cerrada de
-                        renta.
-                    </p>
-                    <Button
-                        type="button"
-                        class="mt-4"
-                        variant="outline"
-                        @click="focusForm"
-                    >
-                        <Plus class="size-4" />
-                        Crear primer paquete
-                    </Button>
-                </div>
-
-                <div v-else class="grid items-start gap-4 lg:grid-cols-2">
-                    <article
-                        v-for="item in packages"
-                        :key="item.id"
-                        class="flex flex-col overflow-hidden rounded-xl border bg-card"
-                    >
-                        <div
-                            class="flex flex-wrap items-start justify-between gap-3 border-b p-4"
-                        >
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                                >
-                                    <Package class="size-4" />
-                                </div>
-                                <div>
-                                    <div
-                                        class="flex flex-wrap items-center gap-2"
-                                    >
-                                        <h3 class="font-semibold">
-                                            {{ item.name }}
-                                        </h3>
-                                        <Badge
-                                            :variant="
-                                                item.active
-                                                    ? 'default'
-                                                    : 'secondary'
-                                            "
-                                        >
-                                            {{
-                                                item.active
-                                                    ? 'Activo'
-                                                    : 'Inactivo'
-                                            }}
-                                        </Badge>
-                                    </div>
-                                    <p
-                                        class="mt-1 text-xs text-muted-foreground"
-                                    >
-                                        Orden {{ item.sort_order }}
-                                    </p>
-                                </div>
-                            </div>
-                            <p class="text-right">
-                                <span
-                                    class="block text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase"
-                                >
-                                    Precio
-                                </span>
-                                <span class="text-lg font-semibold">
-                                    {{ item.price_formatted }}
-                                </span>
-                            </p>
-                        </div>
-
-                        <div class="flex-1 space-y-3 p-4">
-                            <div class="flex flex-wrap gap-2 text-xs">
-                                <span
-                                    class="inline-flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1"
-                                >
-                                    <Clock class="size-3" />
-                                    {{ item.duration_hours }} horas
-                                </span>
-                                <span
-                                    class="inline-flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1"
-                                >
-                                    <Users class="size-3" />
-                                    {{ item.included_people }} personas
-                                </span>
-                            </div>
-
-                            <p
-                                v-if="item.description"
-                                class="text-sm whitespace-pre-line text-muted-foreground"
-                            >
-                                {{ item.description }}
-                            </p>
-
-                            <div
-                                v-if="item.services.length > 0"
-                                class="space-y-1"
-                            >
-                                <p
-                                    class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
-                                >
-                                    Servicios incluidos
-                                </p>
-                                <div class="flex flex-wrap gap-1">
-                                    <Badge
-                                        v-for="service in item.services"
-                                        :key="service.key"
-                                        variant="outline"
-                                    >
-                                        {{ service.label }}
-                                    </Badge>
-                                </div>
-                            </div>
-                            <p v-else class="text-xs text-muted-foreground">
-                                Sin servicios adicionales incluidos.
-                            </p>
-
-                            <p
-                                v-if="item.conditions"
-                                class="rounded-lg bg-muted/30 p-2 text-xs text-muted-foreground"
-                            >
-                                {{ item.conditions }}
-                            </p>
-                        </div>
-
-                        <div class="flex justify-end gap-2 border-t p-3">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                @click="edit(item)"
-                            >
-                                <Pencil class="size-4" />
-                                Editar
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                class="text-destructive hover:text-destructive"
-                                @click="destroy(item)"
-                            >
-                                <Trash2 class="size-4" />
-                                Eliminar
-                            </Button>
-                        </div>
-                    </article>
-                </div>
-            </section>
-        </div>
+            </DialogScrollContent>
+        </Dialog>
     </div>
 </template>

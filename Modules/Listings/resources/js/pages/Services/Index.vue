@@ -13,6 +13,13 @@ import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogDescription,
+    DialogHeader,
+    DialogScrollContent,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { ServiceGroup, ServiceOption } from '../../types';
@@ -100,6 +107,7 @@ const form = useForm({
 });
 
 const editing = ref<CommercialService | null>(null);
+const dialogOpen = ref(false);
 
 const includedCount = computed(
     () =>
@@ -184,20 +192,27 @@ function serviceGroupLabel(key: string): string | null {
     );
 }
 
+function openCreate(): void {
+    reset();
+    dialogOpen.value = true;
+}
+
 function submit(): void {
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            dialogOpen.value = false;
+            reset();
+        },
+    };
+
     if (editing.value) {
-        form.patch(editing.value.update_url, {
-            preserveScroll: true,
-            onSuccess: reset,
-        });
+        form.patch(editing.value.update_url, options);
 
         return;
     }
 
-    form.post(props.urls.store, {
-        preserveScroll: true,
-        onSuccess: reset,
-    });
+    form.post(props.urls.store, options);
 }
 
 function edit(item: CommercialService): void {
@@ -210,26 +225,25 @@ function edit(item: CommercialService): void {
     form.price_unit = item.price_unit;
     form.active = item.active;
     form.clearErrors();
+    dialogOpen.value = true;
+}
 
-    document
-        .getElementById('service-form')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+function handleDialogOpen(open: boolean): void {
+    dialogOpen.value = open;
+
+    if (!open) {
+        reset();
+    }
 }
 
 function reset(): void {
     editing.value = null;
     form.reset();
+    form.clearErrors();
     form.pricing_mode = 'additional';
     form.provider = 'own';
     form.price_unit = 'event';
     form.active = true;
-}
-
-function focusForm(): void {
-    document
-        .getElementById('service-form')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    document.getElementById('service-key')?.focus({ preventScroll: true });
 }
 
 function destroy(item: CommercialService): void {
@@ -277,6 +291,10 @@ function destroy(item: CommercialService): void {
                     >
                         Ver pública
                     </a>
+                </Button>
+                <Button type="button" @click="openCreate">
+                    <Plus class="size-4" />
+                    Nuevo servicio
                 </Button>
             </div>
         </header>
@@ -340,44 +358,158 @@ function destroy(item: CommercialService): void {
             </div>
         </section>
 
-        <div
-            class="grid items-start gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]"
-        >
-            <section class="overflow-hidden rounded-xl border bg-card">
-                <div
-                    class="flex flex-wrap items-start justify-between gap-3 border-b p-5"
-                >
-                    <div class="flex items-start gap-3">
-                        <div
-                            class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                        >
-                            <Plus class="size-4" />
-                        </div>
-                        <div>
-                            <h2 class="text-lg font-semibold">
-                                {{
-                                    editing
-                                        ? 'Editar servicio'
-                                        : 'Nuevo servicio'
-                                }}
-                            </h2>
-                            <p class="text-xs text-muted-foreground">
-                                {{
-                                    editing
-                                        ? 'Modifica los datos y guarda los cambios.'
-                                        : 'Agrega un servicio a la oferta de la terraza.'
-                                }}
-                            </p>
-                        </div>
-                    </div>
-                    <Badge v-if="editing" variant="outline">Editando</Badge>
+        <section class="space-y-4">
+            <div class="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                    <h2 class="text-lg font-semibold">
+                        Servicios configurados
+                    </h2>
+                    <p class="text-sm text-muted-foreground">
+                        Servicios que se muestran en la ficha pública.
+                    </p>
                 </div>
+                <Badge variant="secondary">
+                    {{ services.length }}
+                    {{ services.length === 1 ? 'servicio' : 'servicios' }}
+                </Badge>
+            </div>
 
-                <form
-                    id="service-form"
-                    class="grid gap-5 p-5"
-                    @submit.prevent="submit"
+            <div
+                v-if="services.length === 0"
+                class="rounded-xl border border-dashed p-10 text-center"
+            >
+                <div
+                    class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
                 >
+                    <Sparkles class="size-6" />
+                </div>
+                <p class="mt-3 font-medium">Sin servicios configurados</p>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Agrega servicios como DJ, banquetes o mobiliario adicional.
+                </p>
+                <Button
+                    type="button"
+                    class="mt-4"
+                    variant="outline"
+                    @click="openCreate"
+                >
+                    <Plus class="size-4" />
+                    Crear primer servicio
+                </Button>
+            </div>
+
+            <div v-else class="grid items-start gap-4 lg:grid-cols-2">
+                <article
+                    v-for="item in services"
+                    :key="item.id"
+                    class="flex flex-col overflow-hidden rounded-xl border bg-card"
+                >
+                    <div
+                        class="flex flex-wrap items-start justify-between gap-3 border-b p-4"
+                    >
+                        <div class="flex items-start gap-3">
+                            <div
+                                class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                            >
+                                <Sparkles class="size-4" />
+                            </div>
+                            <div>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="font-semibold">
+                                        {{ item.label }}
+                                    </h3>
+                                    <Badge
+                                        :variant="
+                                            pricingModeVariant(
+                                                item.pricing_mode,
+                                            )
+                                        "
+                                    >
+                                        {{ item.pricing_mode_label }}
+                                    </Badge>
+                                    <Badge
+                                        v-if="!item.active"
+                                        variant="outline"
+                                    >
+                                        Inactivo
+                                    </Badge>
+                                </div>
+                                <p class="mt-1 text-xs text-muted-foreground">
+                                    {{
+                                        serviceGroupLabel(item.service_key) ??
+                                        'Otros servicios'
+                                    }}
+                                    · {{ item.provider_label }}
+                                </p>
+                            </div>
+                        </div>
+                        <p class="text-right">
+                            <span
+                                class="block text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase"
+                            >
+                                Precio
+                            </span>
+                            <span class="font-semibold">
+                                {{ servicePriceLabel(item) }}
+                            </span>
+                            <span
+                                v-if="
+                                    item.pricing_mode === 'additional' &&
+                                    item.has_price
+                                "
+                                class="block text-xs text-muted-foreground"
+                            >
+                                {{ item.price_unit_label }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="flex-1 space-y-3 p-4">
+                        <p
+                            v-if="item.description"
+                            class="text-sm whitespace-pre-line text-muted-foreground"
+                        >
+                            {{ item.description }}
+                        </p>
+                        <p v-else class="text-xs text-muted-foreground">
+                            Sin descripción adicional.
+                        </p>
+                    </div>
+
+                    <div class="flex justify-end gap-2 border-t p-3">
+                        <Button size="sm" variant="outline" @click="edit(item)">
+                            <Pencil class="size-4" />
+                            Editar
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            class="text-destructive hover:text-destructive"
+                            @click="destroy(item)"
+                        >
+                            <Trash2 class="size-4" />
+                            Eliminar
+                        </Button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
+            <DialogScrollContent class="sm:max-w-3xl">
+                <form class="grid gap-5" @submit.prevent="submit">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {{ editing ? 'Editar servicio' : 'Nuevo servicio' }}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {{
+                                editing
+                                    ? 'Modifica los datos y guarda los cambios.'
+                                    : 'Agrega un servicio a la oferta de la terraza.'
+                            }}
+                        </DialogDescription>
+                    </DialogHeader>
                     <section class="grid gap-4">
                         <div class="flex items-center gap-2">
                             <Sparkles class="size-4 text-primary" />
@@ -587,154 +719,7 @@ function destroy(item: CommercialService): void {
                         </Button>
                     </div>
                 </form>
-            </section>
-
-            <section class="space-y-4">
-                <div class="flex flex-wrap items-end justify-between gap-2">
-                    <div>
-                        <h2 class="text-lg font-semibold">
-                            Servicios configurados
-                        </h2>
-                        <p class="text-sm text-muted-foreground">
-                            Servicios que se muestran en la ficha pública.
-                        </p>
-                    </div>
-                    <Badge variant="secondary">
-                        {{ services.length }}
-                        {{ services.length === 1 ? 'servicio' : 'servicios' }}
-                    </Badge>
-                </div>
-
-                <div
-                    v-if="services.length === 0"
-                    class="rounded-xl border border-dashed p-10 text-center"
-                >
-                    <div
-                        class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
-                    >
-                        <Sparkles class="size-6" />
-                    </div>
-                    <p class="mt-3 font-medium">Sin servicios configurados</p>
-                    <p class="mt-1 text-sm text-muted-foreground">
-                        Agrega servicios como DJ, banquetes o mobiliario
-                        adicional.
-                    </p>
-                    <Button
-                        type="button"
-                        class="mt-4"
-                        variant="outline"
-                        @click="focusForm"
-                    >
-                        <Plus class="size-4" />
-                        Crear primer servicio
-                    </Button>
-                </div>
-
-                <div v-else class="grid items-start gap-4 lg:grid-cols-2">
-                    <article
-                        v-for="item in services"
-                        :key="item.id"
-                        class="flex flex-col overflow-hidden rounded-xl border bg-card"
-                    >
-                        <div
-                            class="flex flex-wrap items-start justify-between gap-3 border-b p-4"
-                        >
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                                >
-                                    <Sparkles class="size-4" />
-                                </div>
-                                <div>
-                                    <div
-                                        class="flex flex-wrap items-center gap-2"
-                                    >
-                                        <h3 class="font-semibold">
-                                            {{ item.label }}
-                                        </h3>
-                                        <Badge
-                                            :variant="
-                                                pricingModeVariant(
-                                                    item.pricing_mode,
-                                                )
-                                            "
-                                        >
-                                            {{ item.pricing_mode_label }}
-                                        </Badge>
-                                        <Badge
-                                            v-if="!item.active"
-                                            variant="outline"
-                                        >
-                                            Inactivo
-                                        </Badge>
-                                    </div>
-                                    <p
-                                        class="mt-1 text-xs text-muted-foreground"
-                                    >
-                                        {{
-                                            serviceGroupLabel(
-                                                item.service_key,
-                                            ) ?? 'Otros servicios'
-                                        }}
-                                        · {{ item.provider_label }}
-                                    </p>
-                                </div>
-                            </div>
-                            <p class="text-right">
-                                <span
-                                    class="block text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase"
-                                >
-                                    Precio
-                                </span>
-                                <span class="font-semibold">
-                                    {{ servicePriceLabel(item) }}
-                                </span>
-                                <span
-                                    v-if="
-                                        item.pricing_mode === 'additional' &&
-                                        item.has_price
-                                    "
-                                    class="block text-xs text-muted-foreground"
-                                >
-                                    {{ item.price_unit_label }}
-                                </span>
-                            </p>
-                        </div>
-
-                        <div class="flex-1 space-y-3 p-4">
-                            <p
-                                v-if="item.description"
-                                class="text-sm whitespace-pre-line text-muted-foreground"
-                            >
-                                {{ item.description }}
-                            </p>
-                            <p v-else class="text-xs text-muted-foreground">
-                                Sin descripción adicional.
-                            </p>
-                        </div>
-
-                        <div class="flex justify-end gap-2 border-t p-3">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                @click="edit(item)"
-                            >
-                                <Pencil class="size-4" />
-                                Editar
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                class="text-destructive hover:text-destructive"
-                                @click="destroy(item)"
-                            >
-                                <Trash2 class="size-4" />
-                                Eliminar
-                            </Button>
-                        </div>
-                    </article>
-                </div>
-            </section>
-        </div>
+            </DialogScrollContent>
+        </Dialog>
     </div>
 </template>

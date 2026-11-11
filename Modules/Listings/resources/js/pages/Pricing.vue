@@ -19,6 +19,13 @@ import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogDescription,
+    DialogHeader,
+    DialogScrollContent,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -342,21 +349,29 @@ function emptyDailyPricing(): Record<string, DailyFormRow> {
 }
 
 const editingRange = ref<PriceRange | null>(null);
+const rangeDialogOpen = ref(false);
+
+function openCreateRange(): void {
+    resetRange();
+    rangeDialogOpen.value = true;
+}
 
 function submitRange(): void {
+    const options = {
+        preserveScroll: true,
+        onSuccess: () => {
+            rangeDialogOpen.value = false;
+            resetRange();
+        },
+    };
+
     if (editingRange.value) {
-        rangeForm.patch(editingRange.value.update_url, {
-            preserveScroll: true,
-            onSuccess: resetRange,
-        });
+        rangeForm.patch(editingRange.value.update_url, options);
 
         return;
     }
 
-    rangeForm.post(props.urls.range_store, {
-        preserveScroll: true,
-        onSuccess: resetRange,
-    });
+    rangeForm.post(props.urls.range_store, options);
 }
 
 function editRange(range: PriceRange): void {
@@ -390,24 +405,23 @@ function editRange(range: PriceRange): void {
     rangeForm.conditions = range.conditions ?? '';
     rangeForm.active = range.active;
     rangeForm.clearErrors();
+    rangeDialogOpen.value = true;
+}
 
-    document
-        .getElementById('range-form')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+function handleRangeDialogOpen(open: boolean): void {
+    rangeDialogOpen.value = open;
+
+    if (!open) {
+        resetRange();
+    }
 }
 
 function resetRange(): void {
     editingRange.value = null;
     rangeForm.reset();
+    rangeForm.clearErrors();
     rangeForm.daily_pricing = emptyDailyPricing();
     rangeForm.active = true;
-}
-
-function focusRangeForm(): void {
-    document
-        .getElementById('range-form')
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    document.getElementById('range-name')?.focus({ preventScroll: true });
 }
 
 function destroyRange(range: PriceRange): void {
@@ -1105,23 +1119,277 @@ function formatRangePrice(value: string | null): string {
                         </p>
                     </div>
                 </div>
-                <Badge variant="secondary">
-                    {{ priceRanges.length }}
-                    {{ priceRanges.length === 1 ? 'tarifa' : 'tarifas' }}
-                </Badge>
+                <div class="flex flex-wrap items-center gap-2">
+                    <Badge variant="secondary">
+                        {{ priceRanges.length }}
+                        {{ priceRanges.length === 1 ? 'tarifa' : 'tarifas' }}
+                    </Badge>
+                    <Button type="button" size="sm" @click="openCreateRange">
+                        <Plus class="size-4" />
+                        Nueva tarifa
+                    </Button>
+                </div>
             </div>
 
             <div class="grid gap-5 p-5">
-                <form
-                    id="range-form"
-                    class="grid gap-5 rounded-xl border p-4 transition-colors xl:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]"
-                    :class="
-                        editingRange
-                            ? 'border-primary/40 bg-primary/5'
-                            : 'bg-muted/30'
-                    "
-                    @submit.prevent="submitRange"
+                <div
+                    v-if="priceRanges.length === 0"
+                    class="rounded-xl border border-dashed p-10 text-center"
                 >
+                    <div
+                        class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                    >
+                        <CalendarRange class="size-6" />
+                    </div>
+                    <p class="mt-3 font-medium">Sin tarifas por temporada</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Crea una tarifa para aplicar precios distintos en fechas
+                        especiales.
+                    </p>
+                    <Button
+                        type="button"
+                        class="mt-4"
+                        variant="outline"
+                        @click="openCreateRange"
+                    >
+                        <Plus class="size-4" />
+                        Crear primera tarifa
+                    </Button>
+                </div>
+
+                <div v-else class="grid items-start gap-4 xl:grid-cols-2">
+                    <article
+                        v-for="range in priceRanges"
+                        :key="range.id"
+                        class="flex flex-col overflow-hidden rounded-xl border bg-card"
+                    >
+                        <div
+                            class="flex flex-wrap items-start justify-between gap-3 border-b p-4"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                                >
+                                    <CalendarRange class="size-4" />
+                                </div>
+                                <div>
+                                    <div
+                                        class="flex flex-wrap items-center gap-2"
+                                    >
+                                        <h3 class="font-semibold">
+                                            {{ range.name }}
+                                        </h3>
+                                        <Badge
+                                            :variant="
+                                                rangeStatusVariant(
+                                                    range.status.value,
+                                                )
+                                            "
+                                        >
+                                            {{ range.status.label }}
+                                        </Badge>
+                                    </div>
+                                    <p
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        {{ range.starts_at_label }} —
+                                        {{ range.ends_at_label }}
+                                    </p>
+                                </div>
+                            </div>
+                            <p class="text-right">
+                                <span
+                                    class="block text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase"
+                                >
+                                    Desde
+                                </span>
+                                <span class="font-semibold">
+                                    {{ range.price_formatted }}
+                                </span>
+                            </p>
+                        </div>
+
+                        <div class="flex-1 space-y-3 p-4">
+                            <div
+                                v-if="
+                                    dayFields.some((day) =>
+                                        rangeHasData(range, day.key),
+                                    )
+                                "
+                                class="overflow-x-auto rounded-lg border"
+                            >
+                                <table class="w-full min-w-[32rem] text-sm">
+                                    <thead
+                                        class="bg-muted/40 text-left text-xs tracking-wide text-muted-foreground uppercase"
+                                    >
+                                        <tr>
+                                            <th class="px-3 py-2 font-medium">
+                                                Día
+                                            </th>
+                                            <th class="px-3 py-2 font-medium">
+                                                Horas
+                                            </th>
+                                            <th class="px-3 py-2 font-medium">
+                                                Entrada
+                                            </th>
+                                            <th class="px-3 py-2 font-medium">
+                                                Salida
+                                            </th>
+                                            <th
+                                                class="px-3 py-2 text-right font-medium"
+                                            >
+                                                Precio
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template
+                                            v-for="day in dayFields"
+                                            :key="day.key"
+                                        >
+                                            <tr
+                                                v-if="
+                                                    rangeHasData(range, day.key)
+                                                "
+                                                class="border-t"
+                                            >
+                                                <td
+                                                    class="px-3 py-2 font-medium"
+                                                >
+                                                    {{ day.label }}
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    {{
+                                                        range.daily_pricing[
+                                                            day.key
+                                                        ]?.hours ?? '—'
+                                                    }}
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    {{
+                                                        range.daily_pricing[
+                                                            day.key
+                                                        ]?.entry_time ?? '—'
+                                                    }}
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    {{
+                                                        range.daily_pricing[
+                                                            day.key
+                                                        ]?.exit_time ?? '—'
+                                                    }}
+                                                </td>
+                                                <td
+                                                    class="px-3 py-2 text-right font-medium"
+                                                >
+                                                    {{
+                                                        formatRangePrice(
+                                                            range.daily_pricing[
+                                                                day.key
+                                                            ]?.price ?? null,
+                                                        )
+                                                    }}
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p
+                                v-else
+                                class="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground"
+                            >
+                                Esta tarifa aún no tiene precios por día.
+                            </p>
+
+                            <div
+                                v-if="
+                                    range.included_people ||
+                                    range.extra_hour_formatted ||
+                                    range.extra_person_formatted ||
+                                    range.deposit_required_formatted
+                                "
+                                class="flex flex-wrap gap-2 text-xs"
+                            >
+                                <span
+                                    v-if="range.included_people"
+                                    class="inline-flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1"
+                                >
+                                    <Users class="size-3" />
+                                    {{ range.included_people }} personas
+                                </span>
+                                <span
+                                    v-if="range.extra_hour_formatted"
+                                    class="rounded-full border bg-muted/30 px-2 py-1"
+                                >
+                                    Hora adicional:
+                                    {{ range.extra_hour_formatted }}
+                                </span>
+                                <span
+                                    v-if="range.extra_person_formatted"
+                                    class="rounded-full border bg-muted/30 px-2 py-1"
+                                >
+                                    Persona adicional:
+                                    {{ range.extra_person_formatted }}
+                                </span>
+                                <span
+                                    v-if="range.deposit_required_formatted"
+                                    class="rounded-full border bg-muted/30 px-2 py-1"
+                                >
+                                    Anticipo:
+                                    {{ range.deposit_required_formatted }}
+                                </span>
+                            </div>
+
+                            <p
+                                v-if="range.conditions"
+                                class="rounded-lg bg-muted/30 p-2 text-xs text-muted-foreground"
+                            >
+                                {{ range.conditions }}
+                            </p>
+                        </div>
+
+                        <div class="flex justify-end gap-2 border-t p-3">
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                @click="editRange(range)"
+                            >
+                                <Pencil class="size-4" />
+                                Editar
+                            </Button>
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                class="text-destructive hover:text-destructive"
+                                @click="destroyRange(range)"
+                            >
+                                <Trash2 class="size-4" />
+                                Eliminar
+                            </Button>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <Dialog :open="rangeDialogOpen" @update:open="handleRangeDialogOpen">
+            <DialogScrollContent class="sm:max-w-4xl">
+                <form class="grid gap-5" @submit.prevent="submitRange">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {{
+                                editingRange ? 'Editar tarifa' : 'Nueva tarifa'
+                            }}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {{
+                                editingRange
+                                    ? 'Modifica el rango de fechas y los precios por día.'
+                                    : 'Define el rango de fechas y el precio de cada día.'
+                            }}
+                        </DialogDescription>
+                    </DialogHeader>
                     <div
                         class="flex flex-wrap items-start justify-between gap-2 xl:col-span-2"
                     >
@@ -1536,246 +1804,7 @@ function formatRangePrice(value: string | null): string {
                         </p>
                     </div>
                 </form>
-
-                <div
-                    v-if="priceRanges.length === 0"
-                    class="rounded-xl border border-dashed p-10 text-center"
-                >
-                    <div
-                        class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
-                    >
-                        <CalendarRange class="size-6" />
-                    </div>
-                    <p class="mt-3 font-medium">Sin tarifas por temporada</p>
-                    <p class="mt-1 text-sm text-muted-foreground">
-                        Crea una tarifa para aplicar precios distintos en fechas
-                        especiales.
-                    </p>
-                    <Button
-                        type="button"
-                        class="mt-4"
-                        variant="outline"
-                        @click="focusRangeForm"
-                    >
-                        <Plus class="size-4" />
-                        Crear primera tarifa
-                    </Button>
-                </div>
-
-                <div v-else class="grid items-start gap-4 xl:grid-cols-2">
-                    <article
-                        v-for="range in priceRanges"
-                        :key="range.id"
-                        class="flex flex-col overflow-hidden rounded-xl border bg-card"
-                    >
-                        <div
-                            class="flex flex-wrap items-start justify-between gap-3 border-b p-4"
-                        >
-                            <div class="flex items-start gap-3">
-                                <div
-                                    class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                                >
-                                    <CalendarRange class="size-4" />
-                                </div>
-                                <div>
-                                    <div
-                                        class="flex flex-wrap items-center gap-2"
-                                    >
-                                        <h3 class="font-semibold">
-                                            {{ range.name }}
-                                        </h3>
-                                        <Badge
-                                            :variant="
-                                                rangeStatusVariant(
-                                                    range.status.value,
-                                                )
-                                            "
-                                        >
-                                            {{ range.status.label }}
-                                        </Badge>
-                                    </div>
-                                    <p
-                                        class="mt-1 text-xs text-muted-foreground"
-                                    >
-                                        {{ range.starts_at_label }} —
-                                        {{ range.ends_at_label }}
-                                    </p>
-                                </div>
-                            </div>
-                            <p class="text-right">
-                                <span
-                                    class="block text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase"
-                                >
-                                    Desde
-                                </span>
-                                <span class="font-semibold">
-                                    {{ range.price_formatted }}
-                                </span>
-                            </p>
-                        </div>
-
-                        <div class="flex-1 space-y-3 p-4">
-                            <div
-                                v-if="
-                                    dayFields.some((day) =>
-                                        rangeHasData(range, day.key),
-                                    )
-                                "
-                                class="overflow-x-auto rounded-lg border"
-                            >
-                                <table class="w-full min-w-[32rem] text-sm">
-                                    <thead
-                                        class="bg-muted/40 text-left text-xs tracking-wide text-muted-foreground uppercase"
-                                    >
-                                        <tr>
-                                            <th class="px-3 py-2 font-medium">
-                                                Día
-                                            </th>
-                                            <th class="px-3 py-2 font-medium">
-                                                Horas
-                                            </th>
-                                            <th class="px-3 py-2 font-medium">
-                                                Entrada
-                                            </th>
-                                            <th class="px-3 py-2 font-medium">
-                                                Salida
-                                            </th>
-                                            <th
-                                                class="px-3 py-2 text-right font-medium"
-                                            >
-                                                Precio
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <template
-                                            v-for="day in dayFields"
-                                            :key="day.key"
-                                        >
-                                            <tr
-                                                v-if="
-                                                    rangeHasData(range, day.key)
-                                                "
-                                                class="border-t"
-                                            >
-                                                <td
-                                                    class="px-3 py-2 font-medium"
-                                                >
-                                                    {{ day.label }}
-                                                </td>
-                                                <td class="px-3 py-2">
-                                                    {{
-                                                        range.daily_pricing[
-                                                            day.key
-                                                        ]?.hours ?? '—'
-                                                    }}
-                                                </td>
-                                                <td class="px-3 py-2">
-                                                    {{
-                                                        range.daily_pricing[
-                                                            day.key
-                                                        ]?.entry_time ?? '—'
-                                                    }}
-                                                </td>
-                                                <td class="px-3 py-2">
-                                                    {{
-                                                        range.daily_pricing[
-                                                            day.key
-                                                        ]?.exit_time ?? '—'
-                                                    }}
-                                                </td>
-                                                <td
-                                                    class="px-3 py-2 text-right font-medium"
-                                                >
-                                                    {{
-                                                        formatRangePrice(
-                                                            range.daily_pricing[
-                                                                day.key
-                                                            ]?.price ?? null,
-                                                        )
-                                                    }}
-                                                </td>
-                                            </tr>
-                                        </template>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p
-                                v-else
-                                class="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground"
-                            >
-                                Esta tarifa aún no tiene precios por día.
-                            </p>
-
-                            <div
-                                v-if="
-                                    range.included_people ||
-                                    range.extra_hour_formatted ||
-                                    range.extra_person_formatted ||
-                                    range.deposit_required_formatted
-                                "
-                                class="flex flex-wrap gap-2 text-xs"
-                            >
-                                <span
-                                    v-if="range.included_people"
-                                    class="inline-flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1"
-                                >
-                                    <Users class="size-3" />
-                                    {{ range.included_people }} personas
-                                </span>
-                                <span
-                                    v-if="range.extra_hour_formatted"
-                                    class="rounded-full border bg-muted/30 px-2 py-1"
-                                >
-                                    Hora adicional:
-                                    {{ range.extra_hour_formatted }}
-                                </span>
-                                <span
-                                    v-if="range.extra_person_formatted"
-                                    class="rounded-full border bg-muted/30 px-2 py-1"
-                                >
-                                    Persona adicional:
-                                    {{ range.extra_person_formatted }}
-                                </span>
-                                <span
-                                    v-if="range.deposit_required_formatted"
-                                    class="rounded-full border bg-muted/30 px-2 py-1"
-                                >
-                                    Anticipo:
-                                    {{ range.deposit_required_formatted }}
-                                </span>
-                            </div>
-
-                            <p
-                                v-if="range.conditions"
-                                class="rounded-lg bg-muted/30 p-2 text-xs text-muted-foreground"
-                            >
-                                {{ range.conditions }}
-                            </p>
-                        </div>
-
-                        <div class="flex justify-end gap-2 border-t p-3">
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                @click="editRange(range)"
-                            >
-                                <Pencil class="size-4" />
-                                Editar
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="ghost"
-                                class="text-destructive hover:text-destructive"
-                                @click="destroyRange(range)"
-                            >
-                                <Trash2 class="size-4" />
-                                Eliminar
-                            </Button>
-                        </div>
-                    </article>
-                </div>
-            </div>
-        </section>
+            </DialogScrollContent>
+        </Dialog>
     </div>
 </template>
