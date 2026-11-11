@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Flag, ShieldAlert, Users } from '@lucide/vue';
+import {
+    ArrowRight,
+    Building2,
+    CreditCard,
+    Flag,
+    History,
+    Layers,
+    Palette,
+    Server,
+    ShieldAlert,
+    UserCog,
+    Users,
+} from '@lucide/vue';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -56,6 +68,73 @@ defineProps<{
     };
 }>();
 
+const navigationGroups = [
+    {
+        title: 'Operación',
+        items: [
+            {
+                title: 'Cuentas',
+                description: 'Altas, miembros y estado',
+                href: '/app/platform/accounts',
+                icon: Users,
+            },
+            {
+                title: 'Usuarios',
+                description: 'Accesos y roles',
+                href: '/app/platform/users',
+                icon: UserCog,
+            },
+            {
+                title: 'Terrazas',
+                description: 'Publicaciones y moderación',
+                href: '/app/platform/listings',
+                icon: Building2,
+            },
+            {
+                title: 'Suscripciones',
+                description: 'Estado de cobros',
+                href: '/app/platform/subscriptions',
+                icon: CreditCard,
+            },
+            {
+                title: 'Reportes',
+                description: 'Cola de revisión',
+                href: '/app/platform/reports',
+                icon: Flag,
+            },
+            {
+                title: 'Auditoría',
+                description: 'Actividad de superadmins',
+                href: '/app/platform/activity',
+                icon: History,
+            },
+        ],
+    },
+    {
+        title: 'Configuración',
+        items: [
+            {
+                title: 'Planes',
+                description: 'Límites y features',
+                href: '/app/platform/plans',
+                icon: Layers,
+            },
+            {
+                title: 'Marca',
+                description: 'Logo, remitente y legal',
+                href: '/app/platform/branding',
+                icon: Palette,
+            },
+            {
+                title: 'Sistema',
+                description: 'Colas y trabajos fallidos',
+                href: '/app/platform/system',
+                icon: Server,
+            },
+        ],
+    },
+];
+
 function formatDate(value: string | null): string {
     if (!value) {
         return '—';
@@ -79,6 +158,58 @@ function formatDate(value: string | null): string {
                 reportes.
             </p>
         </div>
+
+        <section class="space-y-3">
+            <div class="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                    <h2 class="text-lg font-semibold">Accesos rápidos</h2>
+                    <p class="text-sm text-muted-foreground">
+                        Entra directamente a cada área de la plataforma.
+                    </p>
+                </div>
+            </div>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div
+                    v-for="group in navigationGroups"
+                    :key="group.title"
+                    class="rounded-xl border bg-card p-4"
+                >
+                    <p
+                        class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                    >
+                        {{ group.title }}
+                    </p>
+                    <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                        <Link
+                            v-for="item in group.items"
+                            :key="item.href"
+                            :href="item.href"
+                            class="group flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-accent/50"
+                        >
+                            <span
+                                class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                            >
+                                <component :is="item.icon" class="size-4" />
+                            </span>
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-sm font-medium">
+                                    {{ item.title }}
+                                </span>
+                                <span
+                                    class="block truncate text-xs text-muted-foreground"
+                                >
+                                    {{ item.description }}
+                                </span>
+                            </span>
+                            <ArrowRight
+                                class="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                            />
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <Card>

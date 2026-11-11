@@ -66,7 +66,9 @@ function isActive(href: string): boolean {
 
 <template>
     <div class="min-h-screen bg-background text-foreground">
-        <header class="border-b border-border/60 bg-background/95">
+        <header
+            class="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur"
+        >
             <div
                 class="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6"
             >
@@ -108,17 +110,21 @@ function isActive(href: string): boolean {
                     </div>
                 </div>
 
-                <nav class="flex flex-wrap items-center gap-1 text-sm">
+                <nav
+                    class="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 text-sm"
+                    aria-label="Navegación de plataforma"
+                >
                     <Link
                         v-for="item in navigation"
                         :key="item.href"
                         :href="item.href"
-                        class="flex items-center gap-2 rounded-md px-3 py-2 transition-colors"
+                        class="flex shrink-0 items-center gap-2 rounded-md px-3 py-2 transition-colors"
                         :class="
                             isActive(item.href)
-                                ? 'bg-primary/10 text-primary'
+                                ? 'bg-primary/10 font-medium text-primary'
                                 : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                         "
+                        :aria-current="isActive(item.href) ? 'page' : undefined"
                     >
                         <component :is="item.icon" class="size-4" />
                         {{ item.title }}
