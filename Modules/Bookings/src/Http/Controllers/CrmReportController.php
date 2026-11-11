@@ -47,8 +47,8 @@ class CrmReportController extends Controller
             [$from, $to] = [$to, $from];
         }
 
-        $fromStart = $from->startOfDay();
-        $toEnd = $to->endOfDay();
+        $fromStart = $from->startOfDay()->utc();
+        $toEnd = $to->endOfDay()->utc();
 
         $inquiryQuery = BookingInquiry::query()
             ->where('team_id', $team->id)
