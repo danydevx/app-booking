@@ -83,17 +83,6 @@ const planSchema = z.object({
     features: z.record(z.boolean()),
 });
 
-const { validate } = useFrontValidation(planSchema, () => ({
-    slug: form.slug,
-    name: form.name,
-    description: form.description,
-    stripe_price_id: form.stripe_price_id,
-    interval: form.interval,
-    active: form.active,
-    limits: { ...form.limits },
-    features: { ...form.features },
-}));
-
 function blankLimits(): Record<string, number> {
     return Object.fromEntries(
         Object.keys(props.limitLabels).map((key) => [key, 0]),
@@ -116,6 +105,17 @@ const form = useForm({
     limits: blankLimits(),
     features: blankFeatures(),
 });
+
+const { validate } = useFrontValidation(planSchema, () => ({
+    slug: form.slug,
+    name: form.name,
+    description: form.description,
+    stripe_price_id: form.stripe_price_id,
+    interval: form.interval,
+    active: form.active,
+    limits: { ...form.limits },
+    features: { ...form.features },
+}));
 
 const activeCount = computed(
     () => props.plans.filter((plan) => plan.active).length,
