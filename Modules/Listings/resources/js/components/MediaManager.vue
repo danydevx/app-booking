@@ -5,9 +5,11 @@ import {
     ArrowUp,
     GripVertical,
     ImagePlus,
+    LoaderCircle,
     Trash2,
+    X,
 } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,6 +38,21 @@ const items = ref<ListingMedia[]>([...props.media]);
 const fileInput = ref<HTMLInputElement | null>(null);
 const draggedIndex = ref<number | null>(null);
 const dragOverIndex = ref<number | null>(null);
+const selectedPreview = ref<string | null>(null);
+
+const uploadPercentage = computed(() => form.progress?.percentage ?? 0);
+const hasUploadProgress = computed(
+    () => form.progress?.percentage !== undefined,
+);
+const selectedFileSize = computed(() => {
+    const bytes = form.file?.size ?? 0;
+
+    if (bytes < 1024 * 1024) {
+        return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+    }
+
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+});
 
 const hasVideos = computed(() =>
     items.value.some((item) => item.type === 'video'),
@@ -49,9 +66,34 @@ watch(
     { deep: true },
 );
 
+function releasePreview(): void {
+    if (selectedPreview.value) {
+        URL.revokeObjectURL(selectedPreview.value);
+        selectedPreview.value = null;
+    }
+}
+
 function onFileChange(event: Event): void {
     const target = event.target as HTMLInputElement;
-    form.file = target.files?.[0] ?? null;
+    const file = target.files?.[0] ?? null;
+
+    form.file = file;
+    form.clearErrors('file');
+    releasePreview();
+
+    if (file) {
+        selectedPreview.value = URL.createObjectURL(file);
+    }
+}
+
+function clearSelectedFile(): void {
+    form.file = null;
+    form.clearErrors('file');
+    releasePreview();
+
+    if (fileInput.value) {
+        fileInput.value.value = '';
+    }
 }
 
 function upload(): void {
@@ -60,13 +102,12 @@ function upload(): void {
         preserveScroll: true,
         onSuccess: () => {
             form.reset('file', 'alt_text');
-
-            if (fileInput.value) {
-                fileInput.value.value = '';
-            }
+            clearSelectedFile();
         },
     });
 }
+
+onBeforeUnmount(releasePreview);
 
 function move(index: number, direction: -1 | 1): void {
     const target = index + direction;
@@ -168,8 +209,9 @@ function remove(media: ListingMedia): void {
         </div>
 
         <form
-            class="grid gap-4 rounded-xl border bg-muted/20 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+            class="grid gap-4 rounded-xl border bg-muted/20 p-4"
             @submit.prevent="upload"
+            :aria-busy="form.processing"
         >
             <div class="grid gap-2">
                 <Label for="media-file">Agregar imagen</Label>
@@ -178,30 +220,99 @@ function remove(media: ListingMedia): void {
                     ref="fileInput"
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
-                    class="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-sm file:font-medium focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    :disabled="form.processing"
+                    class="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-1 file:text-sm file:font-medium focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
                     @change="onFileChange"
                 />
+                <p class="text-xs text-muted-foreground">
+                    JPG, PNG o WebP. Máximo
+                    {{ Math.round(limits.max_image_kb / 1024) }} MB.
+                </p>
                 <InputError :message="form.errors.file" />
             </div>
 
-            <div class="grid gap-2">
-                <Label for="media-alt">Texto alternativo (opcional)</Label>
-                <div class="flex flex-col gap-2 sm:flex-row">
+            <div
+                v-if="selectedPreview && form.file"
+                class="flex flex-wrap items-center gap-3 rounded-lg border bg-background p-3"
+            >
+                <img
+                    :src="selectedPreview"
+                    :alt="form.file.name"
+                    class="size-16 rounded-md object-cover"
+                />
+                <div class="min-w-0 flex-1">
+                    <p class="truncate text-sm font-medium">
+                        {{ form.file.name }}
+                    </p>
+                    <p class="text-xs text-muted-foreground">
+                        {{ selectedFileSize }} · Lista para subir
+                    </p>
+                </div>
+                <Button
+                    type="button"
+                    size="icon-sm"
+                    variant="ghost"
+                    :disabled="form.processing"
+                    title="Quitar imagen"
+                    @click="clearSelectedFile"
+                >
+                    <X class="size-4" />
+                </Button>
+            </div>
+
+            <div
+                class="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+            >
+                <div class="grid gap-2">
+                    <Label for="media-alt">Texto alternativo (opcional)</Label>
                     <Input
                         id="media-alt"
                         v-model="form.alt_text"
                         maxlength="150"
+                        :disabled="form.processing"
                         placeholder="Terraza con mesas y luces"
                     />
-                    <Button
-                        type="submit"
-                        :disabled="form.processing || !form.file"
-                    >
-                        <ImagePlus class="size-4" />
-                        Subir
-                    </Button>
+                    <InputError :message="form.errors.alt_text" />
                 </div>
-                <InputError :message="form.errors.alt_text" />
+                <Button type="submit" :disabled="form.processing || !form.file">
+                    <LoaderCircle
+                        v-if="form.processing"
+                        class="size-4 animate-spin"
+                    />
+                    <ImagePlus v-else class="size-4" />
+                    {{
+                        form.processing
+                            ? 'Subiendo…'
+                            : form.file
+                              ? 'Subir imagen'
+                              : 'Selecciona una imagen'
+                    }}
+                </Button>
+            </div>
+
+            <div v-if="form.processing" class="space-y-1" aria-live="polite">
+                <div
+                    class="flex items-center justify-between gap-2 text-xs text-muted-foreground"
+                >
+                    <span class="flex items-center gap-1.5">
+                        <LoaderCircle class="size-3.5 animate-spin" />
+                        Subiendo imagen…
+                    </span>
+                    <span class="tabular-nums">
+                        {{ hasUploadProgress ? `${uploadPercentage}%` : '' }}
+                    </span>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                        class="h-full rounded-full bg-primary transition-all duration-300"
+                        :class="{ 'animate-pulse': !hasUploadProgress }"
+                        :style="{
+                            width: hasUploadProgress
+                                ? `${Math.max(5, uploadPercentage)}%`
+                                : '100%',
+                        }"
+                    />
+                </div>
             </div>
         </form>
 
