@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import RequiredFieldsHint from '@/components/RequiredFieldsHint.vue';
 import type { ServiceGroup, ServiceOption } from '../../types';
 
 type CommercialService = {
@@ -607,6 +608,7 @@ function destroy(item: CommercialService): void {
                                 <select
                                     id="service-provider"
                                     v-model="form.provider"
+                                    required
                                     class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     <option
@@ -645,6 +647,9 @@ function destroy(item: CommercialService): void {
                                         step="0.01"
                                         placeholder="0.00"
                                         class="pl-7"
+                                        :required="
+                                            form.pricing_mode === 'additional'
+                                        "
                                     />
                                 </div>
                                 <p
@@ -661,6 +666,7 @@ function destroy(item: CommercialService): void {
                                 <select
                                     id="service-unit"
                                     v-model="form.price_unit"
+                                    required
                                     class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     <option

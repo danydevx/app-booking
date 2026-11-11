@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import RequiredFieldsHint from '@/components/RequiredFieldsHint.vue';
 import LocationPickerMap from './LocationPickerMap.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -176,6 +177,8 @@ function submit(): void {
 
 <template>
     <form class="space-y-8" @submit.prevent="submit">
+        <RequiredFieldsHint />
+
         <section class="space-y-5">
             <div>
                 <h2 class="text-lg font-semibold">Información principal</h2>

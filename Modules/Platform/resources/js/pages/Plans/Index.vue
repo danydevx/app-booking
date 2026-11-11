@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import RequiredFieldsHint from '@/components/RequiredFieldsHint.vue';
 
 type PlanRow = {
     slug: string;
@@ -422,6 +423,8 @@ function intervalLabel(interval: string): string {
                         </DialogDescription>
                     </DialogHeader>
 
+                    <RequiredFieldsHint />
+
                     <section class="grid gap-4">
                         <div class="flex items-center gap-2">
                             <Layers class="size-4 text-primary" />
@@ -519,6 +522,7 @@ function intervalLabel(interval: string): string {
                                 <select
                                     id="plan-interval"
                                     v-model="form.interval"
+                                    required
                                     class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                                 >
                                     <option value="month">Mensual</option>
@@ -585,6 +589,7 @@ function intervalLabel(interval: string): string {
                                     type="number"
                                     min="0"
                                     max="1000000"
+                                    required
                                 />
                                 <p
                                     v-if="fieldError(`limits.${key}`)"

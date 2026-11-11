@@ -15,7 +15,7 @@ import {
     Users,
     Wallet,
 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import RequiredFieldsHint from '@/components/RequiredFieldsHint.vue';
 
 type PricingDailyRow = {
     hours: number | null;
@@ -356,7 +357,33 @@ function openCreateRange(): void {
     rangeDialogOpen.value = true;
 }
 
+const hasRangePrice = computed(() =>
+    dayFields.some(
+        (day) =>
+            String(rangeForm.daily_pricing[day.key]?.price ?? '').trim() !== '',
+    ),
+);
+
+watch(
+    () => rangeForm.daily_pricing,
+    () => {
+        if (hasRangePrice.value && rangeForm.errors.daily_pricing) {
+            rangeForm.clearErrors('daily_pricing');
+        }
+    },
+    { deep: true },
+);
+
 function submitRange(): void {
+    if (!hasRangePrice.value) {
+        rangeForm.setError(
+            'daily_pricing',
+            'Define el precio de al menos un día.',
+        );
+
+        return;
+    }
+
     const options = {
         preserveScroll: true,
         onSuccess: () => {
@@ -1390,6 +1417,8 @@ function formatRangePrice(value: string | null): string {
                             }}
                         </DialogDescription>
                     </DialogHeader>
+
+                    <RequiredFieldsHint />
                     <div
                         class="flex flex-wrap items-start justify-between gap-2 xl:col-span-2"
                     >

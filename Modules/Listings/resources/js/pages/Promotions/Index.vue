@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import RequiredFieldsHint from '@/components/RequiredFieldsHint.vue';
 import type { ServiceOption } from '../../types';
 
 type Promotion = {
@@ -369,6 +370,8 @@ function statusVariant(
                             }}
                         </DialogDescription>
                     </DialogHeader>
+
+                    <RequiredFieldsHint />
 
                     <div class="grid gap-4">
                         <div class="grid gap-2">

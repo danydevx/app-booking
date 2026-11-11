@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import RequiredFieldsHint from '@/components/RequiredFieldsHint.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -47,6 +48,7 @@ function submit(): void {
 
 <template>
     <form class="space-y-5" @submit.prevent="submit">
+        <RequiredFieldsHint />
         <div class="space-y-1">
             <h2 class="text-lg font-semibold">Me interesa rentarla</h2>
             <p class="text-sm text-muted-foreground">

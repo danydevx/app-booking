@@ -170,3 +170,17 @@
         @apply bg-background text-foreground;
     }
 }
+
+/*
+ * Marca visualmente los campos obligatorios sin duplicar lógica en cada formulario.
+ * Cubre controles directos y controles dentro de un wrapper (por ejemplo, inputs con prefijo).
+ */
+@layer base {
+    [data-slot='label']:has(+ :required)::after,
+    [data-slot='label']:has(+ div :required)::after {
+        content: '*';
+        color: var(--color-destructive);
+        font-weight: 600;
+        margin-inline-start: -0.125rem;
+    }
+}

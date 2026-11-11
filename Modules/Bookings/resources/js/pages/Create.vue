@@ -2,6 +2,7 @@
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
 import InputError from '@/components/InputError.vue';
+import RequiredFieldsHint from '@/components/RequiredFieldsHint.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -143,6 +144,7 @@ function submit(): void {
             class="grid w-full gap-4 rounded-xl border bg-card p-5"
             @submit.prevent="submit"
         >
+            <RequiredFieldsHint />
             <div v-if="activeListing" class="grid gap-2">
                 <Label>Terraza</Label>
                 <p class="text-sm font-medium">{{ activeListing.name }}</p>
