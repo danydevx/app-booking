@@ -102,6 +102,7 @@ function edit(plan: PlanRow): void {
 function reset(): void {
     editing.value = null;
     form.reset();
+    form.clearErrors();
     form.slug = '';
     form.name = '';
     form.description = '';
@@ -110,6 +111,22 @@ function reset(): void {
     form.active = true;
     form.limits = blankLimits();
     form.features = blankFeatures();
+}
+
+function focusForm(): void {
+    document
+        .getElementById('plan-form')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('plan-name')?.focus({ preventScroll: true });
+}
+
+function startNew(): void {
+    reset();
+    focusForm();
+}
+
+function fieldError(key: string): string | undefined {
+    return (form.errors as Record<string, string | undefined>)[key];
 }
 
 function submit(): void {
@@ -153,8 +170,9 @@ function intervalLabel(interval: string): string {
                 <Button variant="outline" as-child>
                     <Link :href="urls.dashboard">Resumen</Link>
                 </Button>
-                <Button variant="outline" as-child>
-                    <Link :href="urls.index">Actualizar</Link>
+                <Button type="button" @click="startNew">
+                    <Plus class="size-4" />
+                    Nuevo plan
                 </Button>
             </div>
         </div>
@@ -240,7 +258,22 @@ function intervalLabel(interval: string): string {
                             </p>
                         </div>
                     </div>
-                    <Badge v-if="editing" variant="outline">Editando</Badge>
+                    <div class="flex items-center gap-2">
+                        <Badge v-if="editing" variant="outline">
+                            Editando
+                        </Badge>
+                        <Badge v-else variant="secondary">Nuevo</Badge>
+                        <Button
+                            v-if="editing"
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            @click="reset"
+                        >
+                            <X class="size-4" />
+                            Cancelar
+                        </Button>
+                    </div>
                 </div>
 
                 <form
@@ -378,6 +411,13 @@ function intervalLabel(interval: string): string {
                                 </p>
                             </div>
                         </div>
+                        <p
+                            v-if="editing && !form.active && !editing.is_free"
+                            class="rounded-lg bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-200"
+                        >
+                            Los equipos actuales conservan su plan. Desactivarlo
+                            solo impide nuevas contrataciones.
+                        </p>
                     </section>
 
                     <section class="grid gap-3 border-t pt-5">
@@ -406,6 +446,12 @@ function intervalLabel(interval: string): string {
                                     min="0"
                                     max="1000000"
                                 />
+                                <p
+                                    v-if="fieldError(`limits.${key}`)"
+                                    class="text-xs text-destructive"
+                                >
+                                    {{ fieldError(`limits.${key}`) }}
+                                </p>
                             </div>
                         </div>
                         <p
@@ -429,16 +475,24 @@ function intervalLabel(interval: string): string {
                         <div
                             class="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2"
                         >
-                            <label
+                            <div
                                 v-for="(label, key) in featureLabels"
                                 :key="key"
-                                class="flex items-center gap-3 text-sm"
+                                class="grid gap-1"
                             >
-                                <Checkbox
-                                    v-model:checked="form.features[key]"
-                                />
-                                {{ label }}
-                            </label>
+                                <label class="flex items-center gap-3 text-sm">
+                                    <Checkbox
+                                        v-model:checked="form.features[key]"
+                                    />
+                                    {{ label }}
+                                </label>
+                                <p
+                                    v-if="fieldError(`features.${key}`)"
+                                    class="text-xs text-destructive"
+                                >
+                                    {{ fieldError(`features.${key}`) }}
+                                </p>
+                            </div>
                         </div>
                         <p
                             v-if="form.errors.features"
@@ -475,13 +529,48 @@ function intervalLabel(interval: string): string {
                             Los planes inactivos no se pueden contratar.
                         </p>
                     </div>
-                    <Badge variant="secondary">
-                        {{ plans.length }}
-                        {{ plans.length === 1 ? 'plan' : 'planes' }}
-                    </Badge>
+                    <div class="flex items-center gap-2">
+                        <Badge variant="secondary">
+                            {{ plans.length }}
+                            {{ plans.length === 1 ? 'plan' : 'planes' }}
+                        </Badge>
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            @click="startNew"
+                        >
+                            <Plus class="size-4" />
+                            Nuevo plan
+                        </Button>
+                    </div>
                 </div>
 
-                <div class="grid items-start gap-4 lg:grid-cols-2">
+                <div
+                    v-if="plans.length === 0"
+                    class="rounded-xl border border-dashed p-10 text-center"
+                >
+                    <div
+                        class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                    >
+                        <Layers class="size-6" />
+                    </div>
+                    <p class="mt-3 font-medium">Sin planes configurados</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Crea el primer plan para definir límites y features.
+                    </p>
+                    <Button
+                        type="button"
+                        class="mt-4"
+                        variant="outline"
+                        @click="startNew"
+                    >
+                        <Plus class="size-4" />
+                        Crear primer plan
+                    </Button>
+                </div>
+
+                <div v-else class="grid items-start gap-4 lg:grid-cols-2">
                     <article
                         v-for="plan in plans"
                         :key="plan.slug"
@@ -549,19 +638,23 @@ function intervalLabel(interval: string): string {
                                 {{ plan.description }}
                             </p>
 
-                            <div
-                                class="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2 text-xs"
-                            >
+                            <div class="flex items-center gap-2">
                                 <CreditCard
                                     class="size-4 text-muted-foreground"
                                 />
-                                <span class="text-muted-foreground">
+                                <Badge
+                                    :variant="
+                                        plan.price_configured
+                                            ? 'default'
+                                            : 'outline'
+                                    "
+                                >
                                     {{
                                         plan.price_configured
-                                            ? 'Precio de Stripe configurado'
+                                            ? 'Stripe configurado'
                                             : 'Sin precio de Stripe'
                                     }}
-                                </span>
+                                </Badge>
                             </div>
 
                             <div>
