@@ -101,7 +101,7 @@
     --secondary: oklch(0.967 0.001 286.375);
     --secondary-foreground: oklch(0.21 0.006 285.885);
     --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.5 0 0);
+    --muted-foreground: oklch(0.44 0 0);
     --accent: oklch(0.955 0.025 264);
     --accent-foreground: oklch(0.35 0.17 264);
     --destructive: oklch(0.52 0.245 27.325);
@@ -124,6 +124,32 @@
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.708 0 0);
     --sidebar: oklch(0.985 0 0);
+}
+
+/*
+ * Escala tipográfica para monitores grandes.
+ * Aumenta textos pequeños sin escalar espaciados ni títulos.
+ */
+@media (min-width: 1536px) {
+    :root {
+        --text-xs: 0.8125rem;
+        --text-xs--line-height: 1.125rem;
+        --text-sm: 0.9375rem;
+        --text-sm--line-height: 1.375rem;
+        --text-base: 1.0625rem;
+        --text-base--line-height: 1.625rem;
+    }
+}
+
+@media (min-width: 1800px) {
+    :root {
+        --text-xs: 0.9375rem;
+        --text-xs--line-height: 1.375rem;
+        --text-sm: 1.0625rem;
+        --text-sm--line-height: 1.625rem;
+        --text-base: 1.125rem;
+        --text-base--line-height: 1.75rem;
+    }
 }
 
 .dark {
