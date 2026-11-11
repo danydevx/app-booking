@@ -139,7 +139,7 @@ class ListingCommercialTest extends TestCase
         $this->assertNotNull($inactive);
     }
 
-    public function test_package_validation_rejects_unknown_services(): void
+    public function test_package_validation_rejects_characteristics_and_unknown_services(): void
     {
         [$owner, $team, $listing] = $this->ownerListing();
 
@@ -153,6 +153,20 @@ class ListingCommercialTest extends TestCase
                 'duration_hours' => 8,
                 'included_people' => 20,
                 'included_services' => ['inventada'],
+                'active' => true,
+            ])
+            ->assertSessionHasErrors('included_services.0');
+
+        $this->actingAs($owner)
+            ->post(route('listings.packages.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'name' => 'Paquete con característica',
+                'price' => '1000',
+                'duration_hours' => 8,
+                'included_people' => 20,
+                'included_services' => ['wifi'],
                 'active' => true,
             ])
             ->assertSessionHasErrors('included_services.0');
@@ -444,7 +458,10 @@ class ListingCommercialTest extends TestCase
                 ->component('Listings/Packages/Index')
                 ->has('packages', 1)
                 ->missing('amenityGroups')
-                ->has('serviceGroups'));
+                ->has('serviceGroups')
+                ->has('characteristics')
+                ->where('characteristics.0.key', 'spaces')
+                ->where('characteristics.0.services.0.value', 'wifi'));
 
         $this->actingAs($owner)
             ->get(route('listings.services.index', [

@@ -35,7 +35,7 @@ Fecha: 2026-11-10
 
 - La página de servicios muestra las tres modalidades, proveedor, precio y unidad de cobro.
 - La selección de servicios se agrupa por las nuevas categorías.
-- La página de paquetes conserva su formulario y ahora usa el catálogo comercial correcto.
+- La página de paquetes muestra las características del lugar como información incluida de solo lectura y usa únicamente el catálogo comercial para los servicios seleccionables.
 - El formulario de características usa solo el catálogo físico del lugar.
 
 ### Ficha pública
@@ -48,9 +48,9 @@ Fecha: 2026-11-10
 ## Migraciones
 
 - `2026_11_10_000025_add_pricing_mode_and_provider_to_listing_services_table`
-  - Agrega `pricing_mode` y `provider` con valores seguros.
-  - Rellena registros existentes: incluido, costo adicional o precio a consultar según `is_included` y `price_cents`.
-  - No elimina columnas ni datos.
+    - Agrega `pricing_mode` y `provider` con valores seguros.
+    - Rellena registros existentes: incluido, costo adicional o precio a consultar según `is_included` y `price_cents`.
+    - No elimina columnas ni datos.
 
 ## Tratamiento de datos existentes
 
@@ -61,8 +61,8 @@ Fecha: 2026-11-10
 
 ## Pruebas
 
-- SQLite: 399 tests / 3,122 assertions.
-- MySQL 8.4: 399 tests / 3,122 assertions.
+- SQLite: 399 tests / 3,129 assertions.
+- MySQL 8.4: 399 tests / 3,129 assertions.
 - `composer ci:check`: PASS (Pint, PHPStan, Vue/TS, PHPUnit).
 - `npm run build` y `npm run build:ssr`: PASS.
 

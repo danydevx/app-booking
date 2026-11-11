@@ -4,6 +4,7 @@ import {
     BadgeDollarSign,
     Check,
     Clock,
+    Home,
     Info,
     Package,
     Pencil,
@@ -41,6 +42,7 @@ const props = defineProps<{
     listing: { id: number; name: string; slug: string };
     packages: ListingPackage[];
     serviceGroups: ServiceGroup[];
+    characteristics: ServiceGroup[];
     urls: {
         index: string;
         manage: string;
@@ -388,6 +390,55 @@ function destroy(item: ListingPackage): void {
                         </div>
                     </section>
 
+                    <section class="grid gap-3 border-t pt-5">
+                        <div class="flex items-center gap-2">
+                            <Home class="size-4 text-primary" />
+                            <h3 class="text-sm font-semibold">
+                                Características del lugar
+                            </h3>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Pertenecen a la terraza y se incluyen en la renta;
+                            no se configuran por paquete.
+                        </p>
+                        <div
+                            v-if="characteristics.length > 0"
+                            class="space-y-3 rounded-lg border bg-muted/20 p-3"
+                        >
+                            <div
+                                v-for="group in characteristics"
+                                :key="group.key"
+                            >
+                                <p
+                                    class="mb-1 text-xs font-medium text-muted-foreground"
+                                >
+                                    {{ group.label }}
+                                </p>
+                                <div class="flex flex-wrap gap-1">
+                                    <Badge
+                                        v-for="service in group.services"
+                                        :key="service.value"
+                                        variant="secondary"
+                                    >
+                                        {{ service.label }}
+                                    </Badge>
+                                </div>
+                            </div>
+                        </div>
+                        <p
+                            v-else
+                            class="rounded-lg border border-dashed p-3 text-xs text-muted-foreground"
+                        >
+                            La terraza aún no tiene características
+                            configuradas.
+                            <Link
+                                :href="urls.edit"
+                                class="font-medium underline underline-offset-2"
+                                >Configúralas en Fotos y datos</Link
+                            >.
+                        </p>
+                    </section>
+
                     <section class="grid gap-4 border-t pt-5">
                         <div class="flex items-center gap-2">
                             <BadgeDollarSign class="size-4 text-primary" />
@@ -617,7 +668,8 @@ function destroy(item: ListingPackage): void {
                             Paquetes configurados
                         </h2>
                         <p class="text-sm text-muted-foreground">
-                            Opciones que se muestran en la ficha pública.
+                            Opciones que se muestran en la ficha pública. Todos
+                            incluyen las características del lugar.
                         </p>
                     </div>
                     <Badge variant="secondary">

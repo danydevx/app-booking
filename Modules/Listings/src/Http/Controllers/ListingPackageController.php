@@ -16,6 +16,7 @@ use Modules\Listings\Models\ListingPackage;
 use Modules\Listings\Support\CommercialServiceCatalog;
 use Modules\Listings\Support\ListingCommercialPresenter;
 use Modules\Listings\Support\ListingFormData;
+use Modules\Listings\Support\TerraceServiceCatalog;
 
 class ListingPackageController extends Controller
 {
@@ -45,6 +46,7 @@ class ListingPackageController extends Controller
             ],
             'packages' => $packages,
             'serviceGroups' => CommercialServiceCatalog::groups(),
+            'characteristics' => TerraceServiceCatalog::groupsFor($listing->services ?? []),
             'urls' => [
                 ...$this->formData->ownerUrls($team, $listing),
                 'store' => route('listings.packages.store', [
