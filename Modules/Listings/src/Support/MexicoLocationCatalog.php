@@ -5,6 +5,54 @@ namespace Modules\Listings\Support;
 final class MexicoLocationCatalog
 {
     /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    public static function countries(): array
+    {
+        $configured = config('locations.countries', []);
+
+        if (! is_array($configured)) {
+            return [];
+        }
+
+        $countries = [];
+
+        foreach ($configured as $value => $label) {
+            if (
+                is_string($value)
+                && $value !== ''
+                && is_string($label)
+                && $label !== ''
+            ) {
+                $countries[] = [
+                    'value' => $value,
+                    'label' => $label,
+                ];
+            }
+        }
+
+        return $countries;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function countryValues(): array
+    {
+        return array_column(self::countries(), 'value');
+    }
+
+    /**
+     * Return the states available for the given country.
+     *
+     * @return array<string, array{label: string, municipalities: array<int, string>}>
+     */
+    public static function statesFor(string $country): array
+    {
+        return in_array($country, self::countryValues(), true) ? self::all() : [];
+    }
+
+    /**
      * @return array<string, array{label: string, municipalities: array<int, string>}>
      */
     public static function all(): array

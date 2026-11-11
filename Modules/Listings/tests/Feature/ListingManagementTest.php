@@ -85,6 +85,39 @@ class ListingManagementTest extends TestCase
         $this->assertDatabaseCount('listings', 0);
     }
 
+    public function test_state_and_municipality_follow_the_location_hierarchy(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)
+            ->post(route('listings.store', ['current_team' => $team->slug]), $this->payload([
+                'country' => null,
+                'state' => 'CDMX',
+                'city' => 'Cuauhtémoc',
+            ]))
+            ->assertSessionHasErrors('country');
+
+        $this->actingAs($owner)
+            ->post(route('listings.store', ['current_team' => $team->slug]), $this->payload([
+                'state' => '',
+                'city' => 'Guadalajara',
+            ]))
+            ->assertSessionHasErrors('state');
+    }
+
+    public function test_only_supported_countries_are_accepted(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)
+            ->post(route('listings.store', ['current_team' => $team->slug]), $this->payload([
+                'country' => 'España',
+            ]))
+            ->assertSessionHasErrors('country');
+
+        $this->assertDatabaseCount('listings', 0);
+    }
+
     public function test_only_supported_states_are_accepted(): void
     {
         [$owner, $team] = $this->ownerWithTeam();

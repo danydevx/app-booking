@@ -5,6 +5,7 @@ namespace Modules\Listings\Http\Requests;
 use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 use Modules\Listings\Support\MexicoLocationCatalog;
 use Modules\Listings\Support\TerraceDetailCatalog;
 use Modules\Listings\Support\TerraceServiceCatalog;
@@ -59,7 +60,7 @@ class SaveListingRequest extends FormRequest
                 },
             ],
             'state' => ['nullable', 'string', Rule::in(MexicoLocationCatalog::stateValues())],
-            'country' => ['nullable', 'string', 'max:120'],
+            'country' => ['nullable', 'string', Rule::in(MexicoLocationCatalog::countryValues())],
             'postal_code' => ['nullable', 'string', 'max:20'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
@@ -88,6 +89,36 @@ class SaveListingRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $country = trim((string) $this->input('country'));
+            $state = trim((string) $this->input('state'));
+            $city = trim((string) $this->input('city'));
+
+            if (
+                $state !== ''
+                && ! in_array($country, MexicoLocationCatalog::countryValues(), true)
+            ) {
+                $validator->errors()->add(
+                    'country',
+                    'Selecciona un país compatible con el estado.',
+                );
+            }
+
+            if ($city !== '' && $state === '') {
+                $validator->errors()->add(
+                    'state',
+                    'Selecciona un estado antes del municipio.',
+                );
+            }
+        });
     }
 
     protected function prepareForValidation(): void

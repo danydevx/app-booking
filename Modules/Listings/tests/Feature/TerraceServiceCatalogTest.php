@@ -131,6 +131,8 @@ class TerraceServiceCatalogTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Listings/Create')
+                ->has('countries', 1)
+                ->where('countries.0.value', 'México')
                 ->has('serviceGroups', 7)
                 ->where('serviceGroups.0.key', 'spaces')
                 ->where('serviceGroups.0.label', 'Instalaciones y espacios')

@@ -1,6 +1,9 @@
 <?php
 
 return [
+    'countries' => [
+        'México' => 'México',
+    ],
     'states' => [
         'CDMX' => [
             'label' => 'Ciudad de México',

@@ -29,6 +29,14 @@ final class ListingFormData
     }
 
     /**
+     * @return array<int, array{value: string, label: string}>
+     */
+    public function countries(): array
+    {
+        return MexicoLocationCatalog::countries();
+    }
+
+    /**
      * @return array<string, array{label: string, municipalities: array<int, string>}>
      */
     public function locations(): array

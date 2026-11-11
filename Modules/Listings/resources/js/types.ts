@@ -131,6 +131,11 @@ export type ListingLimits = {
     max_video_kb: number;
 };
 
+export type LocationCountry = {
+    value: string;
+    label: string;
+};
+
 export type ListingLocations = Record<
     string,
     {

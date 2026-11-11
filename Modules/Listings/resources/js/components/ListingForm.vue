@@ -17,6 +17,7 @@ import type {
     ListingDetailField,
     ListingFormData,
     ListingLocations,
+    LocationCountry,
     ServiceGroup,
 } from '../types';
 
@@ -25,6 +26,7 @@ const props = defineProps<{
     listing?: ListingFormData | null;
     serviceGroups: ServiceGroup[];
     detailFields: Record<string, ListingDetailField>;
+    countries: LocationCountry[];
     locations: ListingLocations;
     urls: {
         store?: string;
@@ -46,7 +48,7 @@ const form = useForm({
     address: props.listing?.address ?? '',
     city: props.listing?.city ?? '',
     state: props.listing?.state ?? '',
-    country: props.listing?.country ?? 'México',
+    country: props.listing?.country || 'México',
     postal_code: props.listing?.postal_code ?? '',
     latitude: props.listing?.latitude ?? '',
     longitude: props.listing?.longitude ?? '',
@@ -60,7 +62,17 @@ const form = useForm({
     whatsapp_phone: props.listing?.whatsapp_phone ?? '',
 });
 
+const countryOptions = computed(() => props.countries);
+
+const hasCountry = computed(() =>
+    props.countries.some((country) => country.value === form.country),
+);
+
 const stateOptions = computed(() => {
+    if (!hasCountry.value) {
+        return [];
+    }
+
     const options = Object.entries(props.locations).map(([value, state]) => ({
         value,
         label: state.label,
@@ -77,6 +89,10 @@ const stateOptions = computed(() => {
 });
 
 const municipalityOptions = computed(() => {
+    if (!hasCountry.value) {
+        return [];
+    }
+
     const municipalities = props.locations[form.state]?.municipalities ?? [];
     const options = municipalities.map((municipality) => ({
         value: municipality,
@@ -92,6 +108,24 @@ const municipalityOptions = computed(() => {
 
     return options;
 });
+
+watch(
+    () => form.country,
+    (country, previousCountry) => {
+        if (country === previousCountry) {
+            return;
+        }
+
+        const available = props.countries.some(
+            (option) => option.value === country,
+        );
+
+        if (!available) {
+            form.state = '';
+            form.city = '';
+        }
+    },
+);
 
 watch(
     () => form.state,
@@ -206,10 +240,34 @@ function submit(): void {
 
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div class="grid gap-2">
+                    <Label for="country">País</Label>
+                    <Select v-model="form.country">
+                        <SelectTrigger id="country" class="w-full">
+                            <SelectValue placeholder="Selecciona país" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="country in countryOptions"
+                                :key="country.value"
+                                :value="country.value"
+                            >
+                                {{ country.label }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <InputError :message="form.errors.country" />
+                </div>
+                <div class="grid gap-2">
                     <Label for="state">Estado</Label>
-                    <Select v-model="form.state">
+                    <Select v-model="form.state" :disabled="!hasCountry">
                         <SelectTrigger id="state" class="w-full">
-                            <SelectValue placeholder="Selecciona estado" />
+                            <SelectValue
+                                :placeholder="
+                                    hasCountry
+                                        ? 'Selecciona estado'
+                                        : 'Selecciona país primero'
+                                "
+                            />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem
@@ -249,15 +307,6 @@ function submit(): void {
                         </SelectContent>
                     </Select>
                     <InputError :message="form.errors.city" />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="country">País</Label>
-                    <Input
-                        id="country"
-                        v-model="form.country"
-                        maxlength="120"
-                    />
-                    <InputError :message="form.errors.country" />
                 </div>
                 <div class="grid gap-2">
                     <Label for="postal_code">Código postal</Label>

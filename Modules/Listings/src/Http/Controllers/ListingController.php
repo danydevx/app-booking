@@ -88,6 +88,7 @@ class ListingController extends Controller
         return Inertia::render('Listings/Create', [
             'serviceGroups' => $this->formData->serviceGroups(),
             'detailFields' => $this->formData->detailFields(),
+            'countries' => $this->formData->countries(),
             'locations' => $this->formData->locations(),
             'limits' => $this->formData->mediaLimits($team),
             'urls' => [
@@ -206,6 +207,7 @@ class ListingController extends Controller
             'listing' => ListingPresenter::ownerForm($listing, $team->slug),
             'serviceGroups' => $this->formData->serviceGroups(),
             'detailFields' => $this->formData->detailFields(),
+            'countries' => $this->formData->countries(),
             'locations' => $this->formData->locations(),
             'limits' => $this->formData->mediaLimits($team),
             'canPublish' => Gate::allows('publish', $listing),

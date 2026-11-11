@@ -5,12 +5,14 @@ import type {
     ListingDetailField,
     ListingLimits,
     ListingLocations,
+    LocationCountry,
     ServiceGroup,
 } from '../types';
 
 defineProps<{
     serviceGroups: ServiceGroup[];
     detailFields: Record<string, ListingDetailField>;
+    countries: LocationCountry[];
     locations: ListingLocations;
     limits: ListingLimits;
     urls: {
@@ -51,6 +53,7 @@ defineOptions({
                 mode="create"
                 :service-groups="serviceGroups"
                 :detail-fields="detailFields"
+                :countries="countries"
                 :locations="locations"
                 :urls="urls"
             />
