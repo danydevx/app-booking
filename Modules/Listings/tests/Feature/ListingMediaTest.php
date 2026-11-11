@@ -28,7 +28,6 @@ class ListingMediaTest extends TestCase
                 'listing' => $listing->slug,
             ]),
             [
-                'type' => 'image',
                 'alt_text' => 'Terraza con vista',
                 'file' => UploadedFile::fake()->image('terraza.jpg', 1200, 800),
             ],
@@ -122,13 +121,11 @@ class ListingMediaTest extends TestCase
         Storage::disk('public')->assertMissing($second->path);
     }
 
-    public function test_video_limit_is_enforced(): void
+    public function test_video_uploads_are_not_allowed(): void
     {
         Storage::fake('public');
 
         [$owner, $team, $listing] = $this->ownedListing();
-
-        ListingMedia::factory()->for($listing)->count(3)->video()->create();
 
         $this->actingAs($owner)->post(
             route('listings.media.store', [
@@ -141,7 +138,7 @@ class ListingMediaTest extends TestCase
             ],
         )->assertSessionHasErrors('file');
 
-        $this->assertDatabaseCount('listing_media', 3);
+        $this->assertDatabaseCount('listing_media', 0);
     }
 
     /**

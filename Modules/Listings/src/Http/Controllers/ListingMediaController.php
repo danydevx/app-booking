@@ -74,21 +74,16 @@ class ListingMediaController extends Controller
 
         Gate::authorize('update', $listing);
 
-        $type = ListingMediaType::from((string) $request->validated('type'));
-        $currentCount = $type === ListingMediaType::Image
-            ? $listing->images()->count()
-            : $listing->videos()->count();
+        $type = ListingMediaType::Image;
+        $currentCount = $listing->images()->count();
 
         if (! $this->entitlements->canUpload($team, $type->value, $currentCount)) {
-            $key = $type === ListingMediaType::Image
-                ? 'photos_per_listing'
-                : 'videos_per_listing';
-            $limit = $this->entitlements->limit($team, $key);
+            $limit = $this->entitlements->limit($team, 'photos_per_listing');
 
             throw ValidationException::withMessages([
                 'file' => $limit === 0
-                    ? 'Tu plan actual no incluye este tipo de archivo.'
-                    : "Tu plan actual permite máximo {$limit} archivos de este tipo por terraza.",
+                    ? 'Tu plan actual no incluye fotos.'
+                    : "Tu plan actual permite máximo {$limit} fotos por terraza.",
             ]);
         }
 
