@@ -68,6 +68,7 @@ const props = defineProps<{
         index: string;
         manage: string;
         edit: string;
+        photos: string;
         pricing: string;
         packages: string;
         services: string;
@@ -86,6 +87,7 @@ defineOptions({
             index: string;
             manage: string;
             edit: string;
+            photos: string;
             pricing: string;
             packages: string;
             services: string;
@@ -109,7 +111,8 @@ defineOptions({
             { title: 'Servicios', href: props.urls.services },
             { title: 'Promociones', href: props.urls.promotions },
             { title: 'Disponibilidad', href: props.urls.availability },
-            { title: 'Fotos y datos', href: props.urls.edit },
+            { title: 'Datos', href: props.urls.edit },
+            { title: 'Fotos', href: props.urls.photos },
         ],
     }),
 });
@@ -472,7 +475,10 @@ function statusVariant(
                     <h2 class="font-semibold">Acciones rápidas</h2>
                     <div class="mt-3 flex flex-col gap-2">
                         <Button variant="outline" as-child>
-                            <Link :href="urls.edit">Fotos y datos</Link>
+                            <Link :href="urls.edit">Datos</Link>
+                        </Button>
+                        <Button variant="outline" as-child>
+                            <Link :href="urls.photos">Fotos y videos</Link>
                         </Button>
                         <Button variant="outline" as-child>
                             <Link :href="urls.bookings">Reservaciones</Link>

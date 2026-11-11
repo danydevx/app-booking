@@ -43,6 +43,7 @@ const props = defineProps<{
     management: {
         manage: string;
         edit: string;
+        photos: string;
         bookings: string;
         customers: string;
         availability: string;
@@ -64,6 +65,7 @@ defineOptions({
         management: {
             manage: string;
             edit: string;
+            photos: string;
             bookings: string;
             customers: string;
             availability: string;
@@ -97,7 +99,8 @@ defineOptions({
                           title: 'Disponibilidad',
                           href: props.management.availability,
                       },
-                      { title: 'Fotos y datos', href: props.management.edit },
+                      { title: 'Datos', href: props.management.edit },
+                      { title: 'Fotos', href: props.management.photos },
                   ]
                 : [],
     }),

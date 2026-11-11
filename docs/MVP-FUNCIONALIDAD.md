@@ -138,7 +138,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Reservas y solicitudes scoped.
 - Clientes de esa terraza.
 - Disponibilidad.
-- Fotos y datos.
+- Datos de la terraza y, en una sección independiente, fotos y videos.
 - Nueva reserva dentro de la terraza.
 
 ### 5.4 Disponibilidad

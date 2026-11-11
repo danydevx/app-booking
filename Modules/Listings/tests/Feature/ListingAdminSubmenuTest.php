@@ -37,6 +37,7 @@ class ListingAdminSubmenuTest extends TestCase
             route('listings.promotions.index', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             route('listings.edit', ['current_team' => $team->slug, 'listing' => $listing->slug]),
+            route('listings.photos.index', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             route('bookings.show', ['current_team' => $team->slug, 'inquiry' => $inquiry->id]),
         ];
 
@@ -49,7 +50,8 @@ class ListingAdminSubmenuTest extends TestCase
             'Servicios',
             'Promociones',
             'Disponibilidad',
-            'Fotos y datos',
+            'Datos',
+            'Fotos',
         ];
 
         foreach ($pages as $url) {
@@ -57,7 +59,7 @@ class ListingAdminSubmenuTest extends TestCase
                 ->get($url)
                 ->assertOk()
                 ->assertInertia(fn (Assert $page) => $page
-                    ->has('listingAdmin.submenu', 9)
+                    ->has('listingAdmin.submenu', 10)
                     ->where('listingAdmin.submenu.0.title', 'Resumen')
                     ->where('listingAdmin.submenu.1.title', 'Reservaciones')
                     ->where('listingAdmin.submenu.2.title', 'Clientes')
@@ -66,7 +68,8 @@ class ListingAdminSubmenuTest extends TestCase
                     ->where('listingAdmin.submenu.5.title', 'Servicios')
                     ->where('listingAdmin.submenu.6.title', 'Promociones')
                     ->where('listingAdmin.submenu.7.title', 'Disponibilidad')
-                    ->where('listingAdmin.submenu.8.title', 'Fotos y datos'));
+                    ->where('listingAdmin.submenu.8.title', 'Datos')
+                    ->where('listingAdmin.submenu.9.title', 'Fotos'));
         }
 
         // Customer workspace keeps its own customer submenu instead of the terrace submenu.

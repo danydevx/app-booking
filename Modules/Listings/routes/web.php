@@ -52,6 +52,7 @@ Route::prefix('app/{current_team}/listings')
         Route::patch('/{listing}/publish', [ListingController::class, 'publish'])->name('publish');
         Route::patch('/{listing}/unpublish', [ListingController::class, 'unpublish'])->name('unpublish');
 
+        Route::get('/{listing}/photos', [ListingMediaController::class, 'index'])->name('photos.index');
         Route::post('/{listing}/media', [ListingMediaController::class, 'store'])->name('media.store');
         Route::patch('/{listing}/media/reorder', [ListingMediaController::class, 'reorder'])->name('media.reorder');
         Route::delete('/{listing}/media/{media}', [ListingMediaController::class, 'destroy'])->name('media.destroy');

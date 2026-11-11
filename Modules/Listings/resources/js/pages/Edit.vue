@@ -3,11 +3,9 @@ import { Head, Link, router } from '@inertiajs/vue3';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ListingForm from '../components/ListingForm.vue';
-import MediaManager from '../components/MediaManager.vue';
 import type {
     ListingDetailField,
     ListingFormData,
-    ListingLimits,
     ListingLocations,
     LocationCountry,
     ServiceGroup,
@@ -19,13 +17,13 @@ const props = defineProps<{
     detailFields: Record<string, ListingDetailField>;
     countries: LocationCountry[];
     locations: ListingLocations;
-    limits: ListingLimits;
     canPublish: boolean;
     canDelete: boolean;
     urls: {
         index: string;
         manage: string;
         edit: string;
+        photos: string;
         pricing: string;
         packages: string;
         services: string;
@@ -37,8 +35,6 @@ const props = defineProps<{
         publish: string;
         unpublish: string;
         destroy: string;
-        media_store: string;
-        media_reorder: string;
     };
 }>();
 
@@ -49,6 +45,7 @@ defineOptions({
             index: string;
             manage: string;
             edit: string;
+            photos: string;
             pricing: string;
             packages: string;
             services: string;
@@ -62,7 +59,7 @@ defineOptions({
         breadcrumbs: [
             { title: 'Terrazas', href: props.urls.index },
             { title: props.listing.name, href: props.urls.manage },
-            { title: 'Fotos y datos' },
+            { title: 'Datos' },
         ],
         submenu: [
             { title: 'Resumen', href: props.urls.manage },
@@ -73,7 +70,8 @@ defineOptions({
             { title: 'Servicios', href: props.urls.services },
             { title: 'Promociones', href: props.urls.promotions },
             { title: 'Disponibilidad', href: props.urls.availability },
-            { title: 'Fotos y datos', href: props.urls.edit },
+            { title: 'Datos', href: props.urls.edit },
+            { title: 'Fotos', href: props.urls.photos },
         ],
     }),
 });
@@ -96,7 +94,7 @@ function destroy(): void {
 </script>
 
 <template>
-    <Head :title="`Editar ${listing.name}`" />
+    <Head :title="`Datos · ${listing.name}`" />
 
     <div class="flex w-full flex-col gap-6 p-4">
         <div class="flex flex-wrap items-start justify-between gap-4">
@@ -116,14 +114,19 @@ function destroy(): void {
                     </Badge>
                 </div>
                 <p class="text-sm text-muted-foreground">
-                    Edita la información, administra los archivos y publica
-                    cuando esté lista.
+                    Edita la información de la terraza. Las fotos y videos se
+                    administran en su propia sección.
                 </p>
             </div>
 
-            <Button variant="outline" as-child>
-                <Link :href="urls.index">Volver</Link>
-            </Button>
+            <div class="flex flex-wrap gap-2">
+                <Button variant="outline" as-child>
+                    <Link :href="urls.photos">Gestionar fotos</Link>
+                </Button>
+                <Button variant="outline" as-child>
+                    <Link :href="urls.index">Volver</Link>
+                </Button>
+            </div>
         </div>
 
         <div class="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
@@ -136,14 +139,6 @@ function destroy(): void {
                         :detail-fields="detailFields"
                         :countries="countries"
                         :locations="locations"
-                        :urls="urls"
-                    />
-                </div>
-
-                <div class="rounded-xl border bg-card p-5 sm:p-6">
-                    <MediaManager
-                        :media="listing.media"
-                        :limits="limits"
                         :urls="urls"
                     />
                 </div>

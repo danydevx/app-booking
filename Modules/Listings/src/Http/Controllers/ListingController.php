@@ -161,6 +161,10 @@ class ListingController extends Controller
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                 ]),
+                'photos' => route('listings.photos.index', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
                 'pricing' => route('listings.pricing.edit', [
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
@@ -209,7 +213,6 @@ class ListingController extends Controller
             'detailFields' => $this->formData->detailFields(),
             'countries' => $this->formData->countries(),
             'locations' => $this->formData->locations(),
-            'limits' => $this->formData->mediaLimits($team),
             'canPublish' => Gate::allows('publish', $listing),
             'canDelete' => Gate::allows('delete', $listing),
             'urls' => $this->formData->ownerUrls($team, $listing),

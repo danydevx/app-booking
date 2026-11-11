@@ -58,6 +58,7 @@ const props = defineProps<{
         index: string;
         manage: string;
         edit: string;
+        photos: string;
         pricing: string;
         packages: string;
         services: string;
@@ -75,6 +76,7 @@ defineOptions({
             index: string;
             manage: string;
             edit: string;
+            photos: string;
             pricing: string;
             packages: string;
             services: string;
@@ -94,7 +96,8 @@ defineOptions({
             { title: 'Servicios', href: props.urls.services },
             { title: 'Promociones', href: props.urls.promotions },
             { title: 'Disponibilidad', href: props.urls.availability },
-            { title: 'Fotos y datos', href: props.urls.edit },
+            { title: 'Datos', href: props.urls.edit },
+            { title: 'Fotos', href: props.urls.photos },
         ],
     }),
 });

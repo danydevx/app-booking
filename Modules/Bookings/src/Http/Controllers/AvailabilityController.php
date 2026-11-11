@@ -94,6 +94,10 @@ class AvailabilityController extends Controller
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,
                 ]),
+                'photos' => route('listings.photos.index', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]),
                 'customers' => route('bookings.listing.customers', [
                     'current_team' => $team->slug,
                     'listing' => $listing->slug,

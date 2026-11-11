@@ -157,8 +157,12 @@ class HandleInertiaRequests extends Middleware
                     'href' => route('bookings.availability.edit', ['current_team' => $teamSlug, 'listing' => $listing->slug]),
                 ],
                 [
-                    'title' => 'Fotos y datos',
+                    'title' => 'Datos',
                     'href' => route('listings.edit', ['current_team' => $teamSlug, 'listing' => $listing->slug]),
+                ],
+                [
+                    'title' => 'Fotos',
+                    'href' => route('listings.photos.index', ['current_team' => $teamSlug, 'listing' => $listing->slug]),
                 ],
             ],
         ];

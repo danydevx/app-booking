@@ -50,6 +50,7 @@ const props = defineProps<{
         bookings: string;
         manage: string;
         edit: string;
+        photos: string;
         customers: string;
         availability: string;
         block_range: string;
@@ -91,6 +92,7 @@ defineOptions({
             index: string;
             manage: string;
             edit: string;
+            photos: string;
             bookings: string;
             customers: string;
             availability: string;
@@ -106,7 +108,8 @@ defineOptions({
             { title: 'Reservaciones', href: props.urls.bookings },
             { title: 'Clientes', href: props.urls.customers },
             { title: 'Disponibilidad', href: props.urls.availability },
-            { title: 'Fotos y datos', href: props.urls.edit },
+            { title: 'Datos', href: props.urls.edit },
+            { title: 'Fotos', href: props.urls.photos },
         ],
     }),
 });

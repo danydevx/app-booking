@@ -269,6 +269,33 @@ class ListingManagementTest extends TestCase
         Model::preventLazyLoading(false);
     }
 
+    public function test_photos_are_managed_from_their_own_page(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->create();
+        $media = ListingMedia::factory()->for($listing)->create();
+
+        $this->actingAs($owner)
+            ->get(route('listings.photos.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertOk()
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->component('Listings/Photos')
+                ->has('media', 1)
+                ->where('media.0.id', $media->id)
+                ->has('limits')
+                ->where('urls.photos', route('listings.photos.index', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ]))
+                ->where('urls.edit', route('listings.edit', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                ])));
+    }
+
     public function test_deleting_a_listing_removes_its_media_files(): void
     {
         Storage::fake('public');

@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
+use Inertia\Response;
 use Modules\Billing\Support\Entitlements;
 use Modules\Listings\Actions\AddListingMedia;
 use Modules\Listings\Actions\DeleteListingMedia;
@@ -19,6 +20,8 @@ use Modules\Listings\Http\Requests\ReorderListingMediaRequest;
 use Modules\Listings\Http\Requests\StoreListingMediaRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingMedia;
+use Modules\Listings\Support\ListingFormData;
+use Modules\Listings\Support\ListingPresenter;
 
 class ListingMediaController extends Controller
 {
@@ -26,7 +29,39 @@ class ListingMediaController extends Controller
 
     public function __construct(
         private readonly Entitlements $entitlements,
+        private readonly ListingFormData $formData,
     ) {}
+
+    public function index(
+        Request $request,
+        string $currentTeam,
+        Listing $listing,
+    ): Response {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($listing, $team);
+
+        Gate::authorize('update', $listing);
+
+        $listing->load('media');
+
+        return Inertia::render('Listings/Photos', [
+            'listing' => [
+                'id' => $listing->id,
+                'name' => $listing->name,
+                'slug' => $listing->slug,
+                'status' => $listing->status->value,
+                'status_label' => $listing->status->label(),
+                'public_url' => $listing->isPublished()
+                    ? route('public.listings.show', ['listing' => $listing->slug])
+                    : null,
+            ],
+            'media' => $listing->media
+                ->map(fn (ListingMedia $media): array => ListingPresenter::ownerMedia($media, $listing, $team->slug))
+                ->all(),
+            'limits' => $this->formData->mediaLimits($team),
+            'urls' => $this->formData->ownerUrls($team, $listing),
+        ]);
+    }
 
     public function store(
         StoreListingMediaRequest $request,

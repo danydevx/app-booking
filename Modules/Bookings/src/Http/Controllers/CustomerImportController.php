@@ -111,6 +111,7 @@ class CustomerImportController extends Controller
         return [
             'manage' => route('listings.manage', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             'edit' => route('listings.edit', ['current_team' => $team->slug, 'listing' => $listing->slug]),
+            'photos' => route('listings.photos.index', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             'bookings' => route('bookings.listing', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             'customers' => route('bookings.listing.customers', ['current_team' => $team->slug, 'listing' => $listing->slug]),
             'availability' => route('bookings.availability.edit', ['current_team' => $team->slug, 'listing' => $listing->slug]),

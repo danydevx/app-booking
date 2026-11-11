@@ -78,6 +78,10 @@ final class ListingFormData
                 'current_team' => $team->slug,
                 'listing' => $listing->slug,
             ]),
+            'photos' => route('listings.photos.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]),
             'bookings' => route('bookings.listing', [
                 'current_team' => $team->slug,
                 'listing' => $listing->slug,
