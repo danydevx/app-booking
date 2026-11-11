@@ -147,6 +147,13 @@ const distinctServiceCount = computed(() => {
 
 const selectedServiceCount = computed(() => form.included_services.length);
 
+const characteristicCount = computed(() =>
+    props.characteristics.reduce(
+        (total, group) => total + group.services.length,
+        0,
+    ),
+);
+
 function toggleService(key: string): void {
     form.included_services = form.included_services.includes(key)
         ? form.included_services.filter((item) => item !== key)
@@ -312,6 +319,75 @@ function destroy(item: ListingPackage): void {
             </div>
         </section>
 
+        <section class="overflow-hidden rounded-xl border bg-card">
+            <div
+                class="flex flex-wrap items-start justify-between gap-3 border-b p-4 sm:p-5"
+            >
+                <div class="flex items-start gap-3">
+                    <div
+                        class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                    >
+                        <Home class="size-4" />
+                    </div>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h2 class="text-lg font-semibold">
+                                Características incluidas
+                            </h2>
+                            <Badge variant="secondary">
+                                {{ characteristicCount }}
+                                {{
+                                    characteristicCount === 1
+                                        ? 'característica'
+                                        : 'características'
+                                }}
+                            </Badge>
+                        </div>
+                        <p class="mt-1 text-sm text-muted-foreground">
+                            Pertenecen a la terraza y aplican a todos los
+                            paquetes; no se configuran por paquete.
+                        </p>
+                    </div>
+                </div>
+                <Button size="sm" variant="outline" as-child>
+                    <Link :href="urls.edit">
+                        <Pencil class="size-4" />
+                        Editar en Fotos y datos
+                    </Link>
+                </Button>
+            </div>
+
+            <div
+                v-if="characteristics.length > 0"
+                class="grid gap-4 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4"
+            >
+                <div v-for="group in characteristics" :key="group.key">
+                    <p
+                        class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                    >
+                        {{ group.label }}
+                    </p>
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        <Badge
+                            v-for="service in group.services"
+                            :key="service.value"
+                            variant="secondary"
+                        >
+                            {{ service.label }}
+                        </Badge>
+                    </div>
+                </div>
+            </div>
+            <p v-else class="p-4 text-sm text-muted-foreground sm:p-5">
+                La terraza aún no tiene características configuradas.
+                <Link
+                    :href="urls.edit"
+                    class="font-medium underline underline-offset-2"
+                    >Configúralas en Fotos y datos</Link
+                >.
+            </p>
+        </section>
+
         <div
             class="grid items-start gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]"
         >
@@ -335,7 +411,7 @@ function destroy(item: ListingPackage): void {
                                 {{
                                     editing
                                         ? 'Modifica los datos y guarda los cambios.'
-                                        : 'Crea una opción comercial para la terraza.'
+                                        : 'Crea una opción comercial con precio, capacidad y servicios.'
                                 }}
                             </p>
                         </div>
@@ -388,55 +464,6 @@ function destroy(item: ListingPackage): void {
                                 {{ form.errors.description }}
                             </p>
                         </div>
-                    </section>
-
-                    <section class="grid gap-3 border-t pt-5">
-                        <div class="flex items-center gap-2">
-                            <Home class="size-4 text-primary" />
-                            <h3 class="text-sm font-semibold">
-                                Características del lugar
-                            </h3>
-                        </div>
-                        <p class="text-xs text-muted-foreground">
-                            Pertenecen a la terraza y se incluyen en la renta;
-                            no se configuran por paquete.
-                        </p>
-                        <div
-                            v-if="characteristics.length > 0"
-                            class="space-y-3 rounded-lg border bg-muted/20 p-3"
-                        >
-                            <div
-                                v-for="group in characteristics"
-                                :key="group.key"
-                            >
-                                <p
-                                    class="mb-1 text-xs font-medium text-muted-foreground"
-                                >
-                                    {{ group.label }}
-                                </p>
-                                <div class="flex flex-wrap gap-1">
-                                    <Badge
-                                        v-for="service in group.services"
-                                        :key="service.value"
-                                        variant="secondary"
-                                    >
-                                        {{ service.label }}
-                                    </Badge>
-                                </div>
-                            </div>
-                        </div>
-                        <p
-                            v-else
-                            class="rounded-lg border border-dashed p-3 text-xs text-muted-foreground"
-                        >
-                            La terraza aún no tiene características
-                            configuradas.
-                            <Link
-                                :href="urls.edit"
-                                class="font-medium underline underline-offset-2"
-                                >Configúralas en Fotos y datos</Link
-                            >.
-                        </p>
                     </section>
 
                     <section class="grid gap-4 border-t pt-5">
@@ -543,14 +570,9 @@ function destroy(item: ListingPackage): void {
                                     </h3>
                                 </div>
                                 <p class="mt-1 text-xs text-muted-foreground">
-                                    Solo servicios comerciales del paquete. Las
-                                    características de la terraza se administran
-                                    en
-                                    <Link
-                                        :href="urls.edit"
-                                        class="font-medium underline underline-offset-2"
-                                        >Fotos y datos</Link
-                                    >.
+                                    Elige servicios del catálogo comercial. Las
+                                    características del lugar ya se incluyen en
+                                    todos los paquetes.
                                 </p>
                             </div>
                             <Badge variant="secondary">
