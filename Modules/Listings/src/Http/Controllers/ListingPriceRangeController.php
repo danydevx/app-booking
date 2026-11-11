@@ -81,25 +81,87 @@ class ListingPriceRangeController extends Controller
      */
     private function payload(array $data): array
     {
+        $dailyPricing = $this->dailyPricing($data['daily_pricing'] ?? []);
+        $dailyPrices = [];
+
+        foreach ($dailyPricing ?? [] as $row) {
+            if ($row['price_cents'] !== null) {
+                $dailyPrices[] = $row['price_cents'];
+            }
+        }
+
+        $legacyPrice = $this->toCents($data['price'] ?? null);
+
         return [
             'name' => $data['name'],
             'starts_at' => $data['starts_at'],
             'ends_at' => $data['ends_at'],
-            'price_cents' => (int) round(((float) $data['price']) * 100),
+            'price_cents' => $dailyPrices !== [] ? min($dailyPrices) : ($legacyPrice ?? 0),
+            'daily_pricing' => $dailyPricing,
             'included_hours' => $data['included_hours'] ?? null,
             'included_people' => $data['included_people'] ?? null,
-            'extra_hour_cents' => isset($data['extra_hour'])
-                ? (int) round(((float) $data['extra_hour']) * 100)
-                : null,
-            'extra_person_cents' => isset($data['extra_person'])
-                ? (int) round(((float) $data['extra_person']) * 100)
-                : null,
-            'deposit_required_cents' => isset($data['deposit_required'])
-                ? (int) round(((float) $data['deposit_required']) * 100)
-                : null,
+            'extra_hour_cents' => $this->toCents($data['extra_hour'] ?? null),
+            'extra_person_cents' => $this->toCents($data['extra_person'] ?? null),
+            'deposit_required_cents' => $this->toCents($data['deposit_required'] ?? null),
             'conditions' => $data['conditions'] ?? null,
             'active' => $data['active'] ?? false,
         ];
+    }
+
+    private function toCents(mixed $value): ?int
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return (int) round(((float) $value) * 100);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, array{hours: int|null, entry_time: string|null, exit_time: string|null, price_cents: int|null}>|null
+     */
+    private function dailyPricing(array $input): ?array
+    {
+        $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        $pricing = [];
+
+        foreach ($days as $day) {
+            $row = $input[$day] ?? null;
+
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $hours = isset($row['hours']) && $row['hours'] !== ''
+                ? (int) $row['hours']
+                : null;
+            $entryTime = $this->time($row['entry_time'] ?? null);
+            $exitTime = $this->time($row['exit_time'] ?? null);
+            $priceCents = $this->toCents($row['price'] ?? null);
+
+            if ($hours === null && $entryTime === null && $exitTime === null && $priceCents === null) {
+                continue;
+            }
+
+            $pricing[$day] = [
+                'hours' => $hours,
+                'entry_time' => $entryTime,
+                'exit_time' => $exitTime,
+                'price_cents' => $priceCents,
+            ];
+        }
+
+        return $pricing === [] ? null : $pricing;
+    }
+
+    private function time(mixed $value): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        return trim($value);
     }
 
     private function ensureOwned(Listing $listing, Team $team): void

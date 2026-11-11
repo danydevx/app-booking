@@ -19,6 +19,7 @@ use Modules\Listings\Database\Factories\ListingPriceRangeFactory;
  * @property Carbon $starts_at
  * @property Carbon $ends_at
  * @property int $price_cents
+ * @property array<string, array{hours: int|null, entry_time: string|null, exit_time: string|null, price_cents: int|null}>|null $daily_pricing
  * @property int|null $included_hours
  * @property int|null $included_people
  * @property int|null $extra_hour_cents
@@ -36,6 +37,7 @@ use Modules\Listings\Database\Factories\ListingPriceRangeFactory;
     'starts_at',
     'ends_at',
     'price_cents',
+    'daily_pricing',
     'included_hours',
     'included_people',
     'extra_hour_cents',
@@ -88,6 +90,7 @@ class ListingPriceRange extends Model
             'starts_at' => 'date',
             'ends_at' => 'date',
             'price_cents' => 'integer',
+            'daily_pricing' => 'array',
             'included_hours' => 'integer',
             'included_people' => 'integer',
             'extra_hour_cents' => 'integer',

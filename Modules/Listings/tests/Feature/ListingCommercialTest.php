@@ -438,8 +438,20 @@ class ListingCommercialTest extends TestCase
                 'name' => 'Temporada alta',
                 'starts_at' => now()->subDay()->toDateString(),
                 'ends_at' => now()->addDays(20)->toDateString(),
-                'price' => '3200',
-                'included_hours' => 8,
+                'daily_pricing' => [
+                    'monday' => [
+                        'hours' => 10,
+                        'entry_time' => '12:00',
+                        'exit_time' => '20:00',
+                        'price' => '3200',
+                    ],
+                    'friday' => [
+                        'hours' => 10,
+                        'entry_time' => '12:00',
+                        'exit_time' => '22:00',
+                        'price' => '4500',
+                    ],
+                ],
                 'included_people' => 50,
                 'extra_hour' => '450',
                 'extra_person' => '60',
@@ -451,6 +463,8 @@ class ListingCommercialTest extends TestCase
 
         $range = ListingPriceRange::query()->firstOrFail();
         $this->assertSame(320000, $range->price_cents);
+        $this->assertSame(320000, $range->daily_pricing['monday']['price_cents']);
+        $this->assertSame(450000, $range->daily_pricing['friday']['price_cents']);
         $this->assertSame(45000, $range->extra_hour_cents);
 
         ListingPriceRange::factory()->forListing($listing)->create([
@@ -470,6 +484,12 @@ class ListingCommercialTest extends TestCase
                 ->where('listing.priceRanges.0.id', $range->id)
                 ->where('listing.priceRanges.0.name', 'Temporada alta')
                 ->where('listing.priceRanges.0.price_formatted', '$3,200.00 MXN')
+                ->where('listing.priceRanges.0.daily_pricing.0.label', 'Lunes')
+                ->where('listing.priceRanges.0.daily_pricing.0.hours', 10)
+                ->where('listing.priceRanges.0.daily_pricing.0.entry_time_label', '12:00 pm')
+                ->where('listing.priceRanges.0.daily_pricing.0.exit_time_label', '8:00 pm')
+                ->where('listing.priceRanges.0.daily_pricing.0.formatted', '$3,200.00 MXN')
+                ->where('listing.priceRanges.0.daily_pricing.4.formatted', '$4,500.00 MXN')
                 ->where('listing.priceRanges.0.status.value', 'current')
                 ->where('listing.priceRanges.0.conditions', 'No aplica en días festivos.'));
 
@@ -482,13 +502,26 @@ class ListingCommercialTest extends TestCase
                 'name' => 'Temporada alta actualizada',
                 'starts_at' => now()->subDay()->toDateString(),
                 'ends_at' => now()->addDays(20)->toDateString(),
-                'price' => '3400',
+                'daily_pricing' => [
+                    'monday' => [
+                        'hours' => 8,
+                        'entry_time' => '13:00',
+                        'exit_time' => '21:00',
+                        'price' => '3400',
+                    ],
+                ],
                 'active' => false,
             ])
             ->assertSessionHasNoErrors();
 
         $this->assertSame('Temporada alta actualizada', $range->fresh()->name);
         $this->assertFalse($range->fresh()->active);
+
+        $range->refresh();
+        $this->assertSame(340000, $range->price_cents);
+        $this->assertSame(['monday'], array_keys($range->daily_pricing));
+        $this->assertSame(340000, $range->daily_pricing['monday']['price_cents']);
+        $this->assertSame('13:00', $range->daily_pricing['monday']['entry_time']);
 
         $this->actingAs($owner)
             ->delete(route('listings.pricing.ranges.destroy', [
@@ -518,6 +551,46 @@ class ListingCommercialTest extends TestCase
             ])
             ->assertSessionHasErrors('ends_at');
 
+        $this->actingAs($owner)
+            ->post(route('listings.pricing.ranges.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'name' => 'Horario inválido',
+                'starts_at' => now()->toDateString(),
+                'ends_at' => now()->addDay()->toDateString(),
+                'daily_pricing' => [
+                    'monday' => [
+                        'hours' => 30,
+                        'entry_time' => '25:00',
+                        'exit_time' => '20:00',
+                        'price' => '1000',
+                    ],
+                    'lunes' => [
+                        'hours' => 8,
+                        'price' => '1000',
+                    ],
+                ],
+                'active' => true,
+            ])
+            ->assertSessionHasErrors([
+                'daily_pricing',
+                'daily_pricing.monday.hours',
+                'daily_pricing.monday.entry_time',
+            ]);
+
+        $this->actingAs($owner)
+            ->post(route('listings.pricing.ranges.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'name' => 'Sin precio',
+                'starts_at' => now()->toDateString(),
+                'ends_at' => now()->addDay()->toDateString(),
+                'active' => true,
+            ])
+            ->assertSessionHasErrors('daily_pricing');
+
         $foreignListing = Listing::factory()->forTeam(Team::factory()->create())->create();
         $foreignRange = ListingPriceRange::factory()->forListing($foreignListing)->create();
 
@@ -534,6 +607,27 @@ class ListingCommercialTest extends TestCase
                 'active' => true,
             ])
             ->assertNotFound();
+    }
+
+    public function test_price_range_without_daily_rows_falls_back_to_flat_price(): void
+    {
+        [, , $listing] = $this->ownerListing();
+
+        ListingPriceRange::factory()->forListing($listing)->create([
+            'name' => 'Temporada heredada',
+            'price_cents' => 500000,
+            'daily_pricing' => null,
+            'included_hours' => 6,
+        ]);
+
+        $this->get(route('public.listings.show', ['listing' => $listing->slug]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->has('listing.priceRanges', 1)
+                ->where('listing.priceRanges.0.price_formatted', '$5,000.00 MXN')
+                ->where('listing.priceRanges.0.daily_pricing.0.hours', 6)
+                ->where('listing.priceRanges.0.daily_pricing.0.formatted', '$5,000.00 MXN')
+                ->where('listing.priceRanges.0.daily_pricing.6.formatted', '$5,000.00 MXN'));
     }
 
     /**

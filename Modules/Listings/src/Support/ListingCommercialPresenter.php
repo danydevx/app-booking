@@ -57,22 +57,60 @@ final class ListingCommercialPresenter
      */
     private static function dailyRows(Listing $listing): array
     {
-        $currency = $listing->currency ?: 'MXN';
         $configured = is_array($listing->daily_pricing) ? $listing->daily_pricing : [];
 
-        $days = [
-            'monday' => 'Lunes',
-            'tuesday' => 'Martes',
-            'wednesday' => 'Miércoles',
-            'thursday' => 'Jueves',
-            'friday' => 'Viernes',
-            'saturday' => 'Sábado',
-            'sunday' => 'Domingo',
-        ];
+        return self::dayRows($configured, $listing->currency ?: 'MXN');
+    }
 
+    /**
+     * @return array<string, array{hours: int|null, entry_time: string|null, exit_time: string|null, price: string|null}>
+     */
+    public static function dailyPricingForForm(Listing $listing): array
+    {
+        $pricing = [];
+
+        foreach (self::dailyRows($listing) as $row) {
+            $pricing[$row['key']] = [
+                'hours' => $row['hours'],
+                'entry_time' => $row['entry_time'],
+                'exit_time' => $row['exit_time'],
+                'price' => $row['price'],
+            ];
+        }
+
+        return $pricing;
+    }
+
+    /**
+     * @return array<int, array{key: string, label: string, cents: int|null, formatted: string|null, price: string|null, hours: int|null, entry_time: string|null, entry_time_label: string|null, exit_time: string|null, exit_time_label: string|null, has_data: bool}>
+     */
+    private static function rangeDailyRows(ListingPriceRange $range): array
+    {
+        $configured = is_array($range->daily_pricing) ? $range->daily_pricing : [];
+
+        if ($configured === [] && $range->price_cents > 0) {
+            foreach (array_keys(self::dayLabels()) as $key) {
+                $configured[$key] = [
+                    'hours' => $range->included_hours,
+                    'entry_time' => null,
+                    'exit_time' => null,
+                    'price_cents' => $range->price_cents,
+                ];
+            }
+        }
+
+        return self::dayRows($configured, $range->listing->currency ?: 'MXN');
+    }
+
+    /**
+     * @param  array<string, mixed>  $configured
+     * @return array<int, array{key: string, label: string, cents: int|null, formatted: string|null, price: string|null, hours: int|null, entry_time: string|null, entry_time_label: string|null, exit_time: string|null, exit_time_label: string|null, has_data: bool}>
+     */
+    private static function dayRows(array $configured, string $currency): array
+    {
         $rows = [];
 
-        foreach ($days as $key => $label) {
+        foreach (self::dayLabels() as $key => $label) {
             $row = is_array($configured[$key] ?? null) ? $configured[$key] : [];
             $cents = isset($row['price_cents']) ? (int) $row['price_cents'] : null;
             $hours = isset($row['hours']) ? (int) $row['hours'] : null;
@@ -98,22 +136,19 @@ final class ListingCommercialPresenter
     }
 
     /**
-     * @return array<string, array{hours: int|null, entry_time: string|null, exit_time: string|null, price: string|null}>
+     * @return array<string, string>
      */
-    public static function dailyPricingForForm(Listing $listing): array
+    private static function dayLabels(): array
     {
-        $pricing = [];
-
-        foreach (self::dailyRows($listing) as $row) {
-            $pricing[$row['key']] = [
-                'hours' => $row['hours'],
-                'entry_time' => $row['entry_time'],
-                'exit_time' => $row['exit_time'],
-                'price' => $row['price'],
-            ];
-        }
-
-        return $pricing;
+        return [
+            'monday' => 'Lunes',
+            'tuesday' => 'Martes',
+            'wednesday' => 'Miércoles',
+            'thursday' => 'Jueves',
+            'friday' => 'Viernes',
+            'saturday' => 'Sábado',
+            'sunday' => 'Domingo',
+        ];
     }
 
     /**
@@ -122,6 +157,16 @@ final class ListingCommercialPresenter
     public static function publicPriceRange(ListingPriceRange $range): array
     {
         $currency = $range->listing->currency ?: 'MXN';
+        $dailyRows = self::rangeDailyRows($range);
+        $dailyPrices = [];
+
+        foreach ($dailyRows as $row) {
+            if ($row['cents'] !== null) {
+                $dailyPrices[] = $row['cents'];
+            }
+        }
+
+        $priceCents = $dailyPrices !== [] ? min($dailyPrices) : $range->price_cents;
 
         return [
             'id' => $range->id,
@@ -130,8 +175,9 @@ final class ListingCommercialPresenter
             'ends_at' => $range->ends_at->toDateString(),
             'starts_at_label' => $range->starts_at->format('d/m/Y'),
             'ends_at_label' => $range->ends_at->format('d/m/Y'),
-            'price_formatted' => self::money($range->price_cents, $currency),
+            'price_formatted' => self::money($priceCents, $currency),
             'currency' => $currency,
+            'daily_pricing' => $dailyRows,
             'included_hours' => $range->included_hours,
             'included_people' => $range->included_people,
             'extra_hour_formatted' => self::money($range->extra_hour_cents, $currency),
@@ -147,8 +193,20 @@ final class ListingCommercialPresenter
      */
     public static function ownerPriceRange(ListingPriceRange $range, Team $team, Listing $listing): array
     {
+        $dailyPricing = [];
+
+        foreach (self::rangeDailyRows($range) as $row) {
+            $dailyPricing[$row['key']] = [
+                'hours' => $row['hours'],
+                'entry_time' => $row['entry_time'],
+                'exit_time' => $row['exit_time'],
+                'price' => $row['price'],
+            ];
+        }
+
         return [
             ...self::publicPriceRange($range),
+            'daily_pricing' => $dailyPricing,
             'price' => self::decimal($range->price_cents),
             'extra_hour' => self::decimal($range->extra_hour_cents),
             'extra_person' => self::decimal($range->extra_person_cents),

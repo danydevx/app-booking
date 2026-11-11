@@ -99,6 +99,19 @@ export type ListingPriceRangePublic = {
     ends_at_label: string;
     price_formatted: string;
     currency: string;
+    daily_pricing: Array<{
+        key: string;
+        label: string;
+        cents: number | null;
+        formatted: string | null;
+        price: string | null;
+        hours: number | null;
+        entry_time: string | null;
+        entry_time_label: string | null;
+        exit_time: string | null;
+        exit_time_label: string | null;
+        has_data: boolean;
+    }>;
     included_hours: number | null;
     included_people: number | null;
     extra_hour_formatted: string | null;

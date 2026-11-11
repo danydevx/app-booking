@@ -314,36 +314,108 @@ const whatsappUrl = computed(
                                             {{ range.status.label }}
                                         </Badge>
                                     </div>
-                                    <p class="mt-1 text-lg font-semibold">
-                                        {{ range.price_formatted }}
-                                    </p>
                                     <p class="text-xs text-muted-foreground">
                                         {{ range.starts_at_label }} al
                                         {{ range.ends_at_label }}
                                     </p>
                                     <p
+                                        v-if="range.price_formatted"
+                                        class="mt-1 text-sm font-medium"
+                                    >
+                                        Desde {{ range.price_formatted }}
+                                    </p>
+                                    <div
                                         v-if="
-                                            range.included_hours ||
-                                            range.included_people
+                                            range.daily_pricing.some(
+                                                (day) => day.has_data,
+                                            )
                                         "
+                                        class="mt-2 overflow-x-auto rounded-lg border"
+                                    >
+                                        <table
+                                            class="w-full min-w-[32rem] text-sm"
+                                        >
+                                            <thead
+                                                class="bg-muted/40 text-left"
+                                            >
+                                                <tr>
+                                                    <th
+                                                        class="px-3 py-2 font-medium"
+                                                    >
+                                                        Día
+                                                    </th>
+                                                    <th
+                                                        class="px-3 py-2 font-medium"
+                                                    >
+                                                        Horas
+                                                    </th>
+                                                    <th
+                                                        class="px-3 py-2 font-medium"
+                                                    >
+                                                        Entrada
+                                                    </th>
+                                                    <th
+                                                        class="px-3 py-2 font-medium"
+                                                    >
+                                                        Salida
+                                                    </th>
+                                                    <th
+                                                        class="px-3 py-2 font-medium"
+                                                    >
+                                                        Precio
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template
+                                                    v-for="day in range.daily_pricing"
+                                                    :key="day.key"
+                                                >
+                                                    <tr
+                                                        v-if="day.has_data"
+                                                        class="border-t"
+                                                    >
+                                                        <td
+                                                            class="px-3 py-2 font-medium"
+                                                        >
+                                                            {{ day.label }}
+                                                        </td>
+                                                        <td class="px-3 py-2">
+                                                            {{
+                                                                day.hours ?? '—'
+                                                            }}
+                                                        </td>
+                                                        <td class="px-3 py-2">
+                                                            {{
+                                                                day.entry_time_label ??
+                                                                '—'
+                                                            }}
+                                                        </td>
+                                                        <td class="px-3 py-2">
+                                                            {{
+                                                                day.exit_time_label ??
+                                                                '—'
+                                                            }}
+                                                        </td>
+                                                        <td
+                                                            class="px-3 py-2 font-medium"
+                                                        >
+                                                            {{
+                                                                day.formatted ??
+                                                                'No especificado'
+                                                            }}
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p
+                                        v-if="range.included_people"
                                         class="mt-1 text-sm text-muted-foreground"
                                     >
-                                        Incluye
-                                        <span v-if="range.included_hours">
-                                            {{ range.included_hours }} horas
-                                        </span>
-                                        <span
-                                            v-if="
-                                                range.included_hours &&
-                                                range.included_people
-                                            "
-                                        >
-                                            para
-                                        </span>
-                                        <span v-if="range.included_people">
-                                            {{ range.included_people }} personas
-                                        </span>
-                                        .
+                                        Personas incluidas:
+                                        {{ range.included_people }}
                                     </p>
                                     <p
                                         v-if="

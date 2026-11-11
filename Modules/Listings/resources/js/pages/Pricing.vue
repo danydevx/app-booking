@@ -35,6 +35,15 @@ type PriceRange = {
     ends_at_label: string;
     price: string | null;
     price_formatted: string;
+    daily_pricing: Record<
+        string,
+        {
+            hours: number | null;
+            entry_time: string | null;
+            exit_time: string | null;
+            price: string | null;
+        }
+    >;
     included_hours: number | null;
     included_people: number | null;
     extra_hour: string | null;
@@ -168,6 +177,15 @@ function dailyError(
     ];
 }
 
+function rangeDailyError(
+    day: string,
+    field: 'hours' | 'entry_time' | 'exit_time' | 'price',
+): string | undefined {
+    return (rangeForm.errors as Record<string, string | undefined>)[
+        `daily_pricing.${day}.${field}`
+    ];
+}
+
 const preview = computed(() => {
     const rows: Array<{ label: string; value: string }> = [];
     const money = (value: string | number): string =>
@@ -228,8 +246,7 @@ const rangeForm = useForm({
     name: '',
     starts_at: '',
     ends_at: '',
-    price: '',
-    included_hours: '',
+    daily_pricing: emptyDailyPricing(),
     included_people: '',
     extra_hour: '',
     extra_person: '',
@@ -237,6 +254,23 @@ const rangeForm = useForm({
     conditions: '',
     active: true,
 });
+
+function emptyDailyPricing(): Record<
+    string,
+    {
+        hours: string;
+        entry_time: string;
+        exit_time: string;
+        price: string;
+    }
+> {
+    return Object.fromEntries(
+        dayFields.map((day) => [
+            day.key,
+            { hours: '', entry_time: '', exit_time: '', price: '' },
+        ]),
+    );
+}
 
 const editingRange = ref<PriceRange | null>(null);
 
@@ -261,9 +295,24 @@ function editRange(range: PriceRange): void {
     rangeForm.name = range.name;
     rangeForm.starts_at = range.starts_at;
     rangeForm.ends_at = range.ends_at;
-    rangeForm.price = range.price ?? '';
-    rangeForm.included_hours =
-        range.included_hours !== null ? String(range.included_hours) : '';
+    rangeForm.daily_pricing = Object.fromEntries(
+        dayFields.map((day) => {
+            const row = range.daily_pricing[day.key];
+
+            return [
+                day.key,
+                {
+                    hours:
+                        row?.hours !== null && row?.hours !== undefined
+                            ? String(row.hours)
+                            : '',
+                    entry_time: row?.entry_time ?? '',
+                    exit_time: row?.exit_time ?? '',
+                    price: row?.price ?? '',
+                },
+            ];
+        }),
+    );
     rangeForm.included_people =
         range.included_people !== null ? String(range.included_people) : '';
     rangeForm.extra_hour = range.extra_hour ?? '';
@@ -277,6 +326,7 @@ function editRange(range: PriceRange): void {
 function resetRange(): void {
     editingRange.value = null;
     rangeForm.reset();
+    rangeForm.daily_pricing = emptyDailyPricing();
     rangeForm.active = true;
 }
 
@@ -304,6 +354,25 @@ function rangeStatusVariant(
     }
 
     return 'outline';
+}
+
+function rangeHasData(range: PriceRange, day: string): boolean {
+    const row = range.daily_pricing[day];
+
+    return Boolean(
+        row && (row.price || row.hours || row.entry_time || row.exit_time),
+    );
+}
+
+function formatRangePrice(value: string | null): string {
+    if (!value) {
+        return '—';
+    }
+
+    return `$${Number(value).toLocaleString('es-MX', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
 }
 </script>
 
@@ -716,33 +785,155 @@ function rangeStatusVariant(
                         </div>
                     </div>
                     <div class="grid gap-2">
-                        <Label for="range-price">Precio (MXN)</Label>
-                        <Input
-                            id="range-price"
-                            v-model="rangeForm.price"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            required
-                        />
-                        <p
-                            v-if="rangeForm.errors.price"
-                            class="text-sm text-destructive"
-                        >
-                            {{ rangeForm.errors.price }}
-                        </p>
+                        <Label>Precio por día</Label>
+                        <div class="overflow-x-auto rounded-lg border">
+                            <table class="w-full min-w-[42rem] text-sm">
+                                <thead class="bg-muted/40 text-left">
+                                    <tr>
+                                        <th class="px-3 py-2 font-medium">
+                                            Día
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Horas
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Entrada
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Salida
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Precio
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="day in dayFields"
+                                        :key="day.key"
+                                        class="border-t"
+                                    >
+                                        <td class="px-3 py-2 font-medium">
+                                            {{ day.label }}
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            <Input
+                                                v-model="
+                                                    rangeForm.daily_pricing[
+                                                        day.key
+                                                    ].hours
+                                                "
+                                                type="number"
+                                                min="1"
+                                                max="24"
+                                                class="w-20"
+                                            />
+                                            <p
+                                                v-if="
+                                                    rangeDailyError(
+                                                        day.key,
+                                                        'hours',
+                                                    )
+                                                "
+                                                class="mt-1 text-xs text-destructive"
+                                            >
+                                                {{
+                                                    rangeDailyError(
+                                                        day.key,
+                                                        'hours',
+                                                    )
+                                                }}
+                                            </p>
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            <Input
+                                                v-model="
+                                                    rangeForm.daily_pricing[
+                                                        day.key
+                                                    ].entry_time
+                                                "
+                                                type="time"
+                                                class="w-32"
+                                            />
+                                            <p
+                                                v-if="
+                                                    rangeDailyError(
+                                                        day.key,
+                                                        'entry_time',
+                                                    )
+                                                "
+                                                class="mt-1 text-xs text-destructive"
+                                            >
+                                                {{
+                                                    rangeDailyError(
+                                                        day.key,
+                                                        'entry_time',
+                                                    )
+                                                }}
+                                            </p>
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            <Input
+                                                v-model="
+                                                    rangeForm.daily_pricing[
+                                                        day.key
+                                                    ].exit_time
+                                                "
+                                                type="time"
+                                                class="w-32"
+                                            />
+                                            <p
+                                                v-if="
+                                                    rangeDailyError(
+                                                        day.key,
+                                                        'exit_time',
+                                                    )
+                                                "
+                                                class="mt-1 text-xs text-destructive"
+                                            >
+                                                {{
+                                                    rangeDailyError(
+                                                        day.key,
+                                                        'exit_time',
+                                                    )
+                                                }}
+                                            </p>
+                                        </td>
+                                        <td class="px-3 py-2">
+                                            <Input
+                                                v-model="
+                                                    rangeForm.daily_pricing[
+                                                        day.key
+                                                    ].price
+                                                "
+                                                type="number"
+                                                min="0"
+                                                step="0.01"
+                                                class="w-32"
+                                            />
+                                            <p
+                                                v-if="
+                                                    rangeDailyError(
+                                                        day.key,
+                                                        'price',
+                                                    )
+                                                "
+                                                class="mt-1 text-xs text-destructive"
+                                            >
+                                                {{
+                                                    rangeDailyError(
+                                                        day.key,
+                                                        'price',
+                                                    )
+                                                }}
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="grid gap-2">
-                            <Label for="range-hours">Horas incluidas</Label>
-                            <Input
-                                id="range-hours"
-                                v-model="rangeForm.included_hours"
-                                type="number"
-                                min="1"
-                                max="168"
-                            />
-                        </div>
                         <div class="grid gap-2">
                             <Label for="range-people">Personas incluidas</Label>
                             <Input
@@ -851,8 +1042,7 @@ function rangeStatusVariant(
                                 </div>
                                 <p class="mt-1 text-sm text-muted-foreground">
                                     {{ range.starts_at_label }} al
-                                    {{ range.ends_at_label }} ·
-                                    {{ range.price_formatted }}
+                                    {{ range.ends_at_label }}
                                 </p>
                             </div>
                             <div class="flex flex-wrap gap-2">
@@ -873,26 +1063,83 @@ function rangeStatusVariant(
                             </div>
                         </div>
                         <p
-                            v-if="range.included_hours || range.included_people"
+                            v-if="range.included_people"
                             class="mt-2 text-sm text-muted-foreground"
                         >
-                            Incluye
-                            <span v-if="range.included_hours">
-                                {{ range.included_hours }} horas
-                            </span>
-                            <span
-                                v-if="
-                                    range.included_hours &&
-                                    range.included_people
-                                "
-                            >
-                                para
-                            </span>
-                            <span v-if="range.included_people">
-                                {{ range.included_people }} personas
-                            </span>
-                            .
+                            Personas incluidas: {{ range.included_people }}
                         </p>
+                        <div
+                            v-if="
+                                dayFields.some((day) =>
+                                    rangeHasData(range, day.key),
+                                )
+                            "
+                            class="mt-3 overflow-x-auto rounded-lg border"
+                        >
+                            <table class="w-full min-w-[34rem] text-sm">
+                                <thead class="bg-muted/40 text-left">
+                                    <tr>
+                                        <th class="px-3 py-2 font-medium">
+                                            Día
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Horas
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Entrada
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Salida
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Precio
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template
+                                        v-for="day in dayFields"
+                                        :key="day.key"
+                                    >
+                                        <tr
+                                            v-if="rangeHasData(range, day.key)"
+                                            class="border-t"
+                                        >
+                                            <td class="px-3 py-2 font-medium">
+                                                {{ day.label }}
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                {{
+                                                    range.daily_pricing[day.key]
+                                                        ?.hours ?? '—'
+                                                }}
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                {{
+                                                    range.daily_pricing[day.key]
+                                                        ?.entry_time ?? '—'
+                                                }}
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                {{
+                                                    range.daily_pricing[day.key]
+                                                        ?.exit_time ?? '—'
+                                                }}
+                                            </td>
+                                            <td class="px-3 py-2 font-medium">
+                                                {{
+                                                    formatRangePrice(
+                                                        range.daily_pricing[
+                                                            day.key
+                                                        ]?.price ?? null,
+                                                    )
+                                                }}
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
                         <p
                             v-if="
                                 range.extra_hour_formatted ||
