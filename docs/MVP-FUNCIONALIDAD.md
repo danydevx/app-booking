@@ -121,7 +121,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Datos: nombre, descripción, ubicación, coordenadas, capacidad, reglas y contacto.
 - Detalles de espacio: tipo, acceso, estacionamiento y vista.
 - Características/amenidades agrupadas por categoría.
-- Precios informativos: desde, precio independiente por día (lunes a domingo), horas/personas incluidas, cargos adicionales y anticipo requerido.
+- Precios informativos: desde, tarifa por día (lunes a domingo) con horas, entrada, salida y precio, cargos adicionales y anticipo requerido.
 - Tarifas por temporada con rango de fechas, precio, capacidad, cargos adicionales y condiciones.
 - Paquetes de renta con precio, duración, capacidad, amenidades, servicios y condiciones.
 - Servicios comerciales reutilizando el catálogo de características: incluidos o con costo adicional, precio opcional y unidad de cobro.
@@ -360,7 +360,7 @@ Catálogo actual: **50 características en 8 categorías**.
 
 ## 11. Verificación y calidad
 
-- **394 tests / 3,017 aserciones** en SQLite y MySQL 8.4.
+- **394 tests / 3,022 aserciones** en SQLite y MySQL 8.4.
 - Smoke test de flujo completo:
   landing → solicitud → CRM → cotización → contrato → portal → reserva → opinión → reportes.
 - Pint, PHPStan, formato/lint frontend (`npm run check`), `vue-tsc`, build y `composer ci:check` en verde.
