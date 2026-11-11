@@ -91,7 +91,6 @@ class ListingCommercialTest extends TestCase
                 'price' => '5000',
                 'duration_hours' => 8,
                 'included_people' => 50,
-                'included_amenities' => ['wifi', 'pool'],
                 'included_services' => ['dj'],
                 'conditions' => 'Anticipo no reembolsable.',
                 'active' => true,
@@ -101,7 +100,6 @@ class ListingCommercialTest extends TestCase
 
         $package = ListingPackage::query()->firstOrFail();
         $this->assertSame(500000, $package->price_cents);
-        $this->assertSame(['wifi', 'pool'], $package->included_amenities);
         $this->assertSame(['dj'], $package->included_services);
         $this->assertSame(2, $package->sort_order);
 
@@ -116,7 +114,7 @@ class ListingCommercialTest extends TestCase
                 ->has('listing.packages', 1)
                 ->where('listing.packages.0.id', $package->id)
                 ->where('listing.packages.0.price_formatted', '$5,000.00 MXN')
-                ->where('listing.packages.0.amenities.0.label', 'Wi-Fi')
+                ->missing('listing.packages.0.amenities')
                 ->where('listing.packages.0.services.0.label', 'DJ'));
 
         $this->actingAs($owner)
@@ -129,7 +127,6 @@ class ListingCommercialTest extends TestCase
                 'price' => '5200',
                 'duration_hours' => 6,
                 'included_people' => 40,
-                'included_amenities' => ['wifi'],
                 'included_services' => [],
                 'active' => false,
                 'sort_order' => 1,
@@ -142,7 +139,7 @@ class ListingCommercialTest extends TestCase
         $this->assertNotNull($inactive);
     }
 
-    public function test_package_validation_rejects_unknown_features(): void
+    public function test_package_validation_rejects_unknown_services(): void
     {
         [$owner, $team, $listing] = $this->ownerListing();
 
@@ -155,10 +152,10 @@ class ListingCommercialTest extends TestCase
                 'price' => '1000',
                 'duration_hours' => 8,
                 'included_people' => 20,
-                'included_amenities' => ['inventada'],
+                'included_services' => ['inventada'],
                 'active' => true,
             ])
-            ->assertSessionHasErrors('included_amenities.0');
+            ->assertSessionHasErrors('included_services.0');
     }
 
     public function test_service_crud_is_unique_and_publicly_classified(): void
@@ -383,7 +380,7 @@ class ListingCommercialTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Listings/Packages/Index')
                 ->has('packages', 1)
-                ->has('amenityGroups')
+                ->missing('amenityGroups')
                 ->has('serviceGroups'));
 
         $this->actingAs($owner)

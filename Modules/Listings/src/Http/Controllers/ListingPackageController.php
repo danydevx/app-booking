@@ -44,7 +44,6 @@ class ListingPackageController extends Controller
                 'slug' => $listing->slug,
             ],
             'packages' => $packages,
-            'amenityGroups' => TerraceServiceCatalog::amenityGroups(),
             'serviceGroups' => TerraceServiceCatalog::commercialServiceGroups(),
             'urls' => [
                 ...$this->formData->ownerUrls($team, $listing),
@@ -133,7 +132,6 @@ class ListingPackageController extends Controller
             'price_cents' => (int) round(((float) $data['price']) * 100),
             'duration_hours' => $data['duration_hours'],
             'included_people' => $data['included_people'],
-            'included_amenities' => $data['included_amenities'] ?? null,
             'included_services' => $data['included_services'] ?? null,
             'conditions' => $data['conditions'] ?? null,
             'active' => $data['active'] ?? false,

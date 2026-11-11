@@ -80,31 +80,12 @@ final class TerraceServiceCatalog
     /**
      * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
      */
-    public static function amenityGroups(): array
-    {
-        return array_values(array_filter(
-            self::groups(),
-            fn (array $group): bool => ! in_array($group['key'], ['lodging', 'extras'], true),
-        ));
-    }
-
-    /**
-     * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
-     */
     public static function commercialServiceGroups(): array
     {
         return array_values(array_filter(
             self::groups(),
             fn (array $group): bool => in_array($group['key'], ['lodging', 'extras'], true),
         ));
-    }
-
-    /**
-     * @return array<int, string>
-     */
-    public static function amenityKeys(): array
-    {
-        return self::keysFromGroups(self::amenityGroups());
     }
 
     /**

@@ -260,7 +260,6 @@ final class ListingCommercialPresenter
             'currency' => $package->listing->currency ?: 'MXN',
             'duration_hours' => $package->duration_hours,
             'included_people' => $package->included_people,
-            'amenities' => $package->amenityItems(),
             'services' => $package->serviceItems(),
             'conditions' => $package->conditions,
         ];
@@ -274,7 +273,6 @@ final class ListingCommercialPresenter
         return [
             ...self::publicPackage($package),
             'price' => self::decimal($package->price_cents),
-            'included_amenity_keys' => $package->included_amenities ?? [],
             'included_service_keys' => $package->included_services ?? [],
             'active' => $package->active,
             'sort_order' => $package->sort_order,

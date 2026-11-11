@@ -123,7 +123,7 @@ La landing pública y la administración están separadas por URL y layout:
 - Características/amenidades agrupadas por categoría.
 - Precios informativos: desde, tarifa por día (lunes a domingo) con horas, entrada, salida y precio, cargos adicionales y anticipo requerido.
 - Tarifas por temporada con rango de fechas y precio por día (lunes a domingo) con horas, entrada, salida y precio; capacidad, cargos adicionales y condiciones.
-- Paquetes de renta con precio, duración, capacidad, amenidades, servicios y condiciones.
+- Paquetes de renta con precio, duración, capacidad, servicios y condiciones.
 - Servicios comerciales reutilizando el catálogo de características: incluidos o con costo adicional, precio opcional y unidad de cobro.
 - Promociones informativas con vigencia, días aplicables y condiciones.
 - Fotos y videos con límites por plan.

@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import {
+    BadgeDollarSign,
+    Check,
+    Clock,
+    Info,
+    Package,
+    Pencil,
+    Plus,
+    Sparkles,
+    Trash2,
+    Users,
+} from '@lucide/vue';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,12 +28,10 @@ type ListingPackage = {
     price_formatted: string;
     duration_hours: number;
     included_people: number;
-    amenities: Array<{ key: string; label: string }>;
     services: Array<{ key: string; label: string }>;
     conditions: string | null;
     active: boolean;
     sort_order: number;
-    included_amenity_keys: string[];
     included_service_keys: string[];
     update_url: string;
     delete_url: string;
@@ -30,7 +40,6 @@ type ListingPackage = {
 const props = defineProps<{
     listing: { id: number; name: string; slug: string };
     packages: ListingPackage[];
-    amenityGroups: ServiceGroup[];
     serviceGroups: ServiceGroup[];
     urls: {
         index: string;
@@ -83,7 +92,6 @@ const form = useForm({
     price: '',
     duration_hours: 8,
     included_people: 50,
-    included_amenities: [] as string[],
     included_services: [] as string[],
     conditions: '',
     active: true,
@@ -92,11 +100,50 @@ const form = useForm({
 
 const editing = ref<ListingPackage | null>(null);
 
-function toggleAmenity(key: string): void {
-    form.included_amenities = form.included_amenities.includes(key)
-        ? form.included_amenities.filter((item) => item !== key)
-        : [...form.included_amenities, key];
+function formatCurrency(
+    value: string | number | null | undefined,
+): string | null {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    const amount = Number(value);
+
+    if (!Number.isFinite(amount)) {
+        return null;
+    }
+
+    return `$${amount.toLocaleString('es-MX', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    })}`;
 }
+
+const activeCount = computed(
+    () => props.packages.filter((item) => item.active).length,
+);
+
+const lowestPrice = computed(() => {
+    const prices = props.packages
+        .map((item) => Number(item.price))
+        .filter((amount) => Number.isFinite(amount) && amount >= 0);
+
+    return prices.length > 0 ? formatCurrency(Math.min(...prices)) : null;
+});
+
+const distinctServiceCount = computed(() => {
+    const keys = new Set<string>();
+
+    for (const item of props.packages) {
+        for (const service of item.services) {
+            keys.add(service.key);
+        }
+    }
+
+    return keys.size;
+});
+
+const selectedServiceCount = computed(() => form.included_services.length);
 
 function toggleService(key: string): void {
     form.included_services = form.included_services.includes(key)
@@ -127,12 +174,15 @@ function edit(item: ListingPackage): void {
     form.price = item.price ?? '';
     form.duration_hours = item.duration_hours;
     form.included_people = item.included_people;
-    form.included_amenities = [...item.included_amenity_keys];
     form.included_services = [...item.included_service_keys];
     form.conditions = item.conditions ?? '';
     form.active = item.active;
     form.sort_order = String(item.sort_order);
     form.clearErrors();
+
+    document
+        .getElementById('package-form')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function reset(): void {
@@ -141,6 +191,13 @@ function reset(): void {
     form.active = true;
     form.duration_hours = 8;
     form.included_people = 50;
+}
+
+function focusForm(): void {
+    document
+        .getElementById('package-form')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('package-name')?.focus({ preventScroll: true });
 }
 
 function destroy(item: ListingPackage): void {
@@ -156,145 +213,312 @@ function destroy(item: ListingPackage): void {
     <Head :title="`Paquetes · ${listing.name}`" />
 
     <div class="flex w-full flex-col gap-6 p-4">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-semibold">Paquetes de renta</h1>
-                <p class="text-sm text-muted-foreground">
-                    Opciones comerciales informativas para {{ listing.name }}.
+        <header class="flex flex-wrap items-start justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <div
+                    class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+                >
+                    <Package class="size-6" />
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-2xl font-semibold">
+                            Paquetes de renta
+                        </h1>
+                        <Badge variant="outline">Informativo</Badge>
+                    </div>
+                    <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
+                        Combina precio, duración y servicios para
+                        {{ listing.name }}. No calculan reservas ni pagos.
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <Button variant="outline" as-child>
+                    <Link :href="urls.manage">Volver al resumen</Link>
+                </Button>
+                <Button v-if="urls.public" variant="outline" as-child>
+                    <a
+                        :href="urls.public"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Ver pública
+                    </a>
+                </Button>
+            </div>
+        </header>
+
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-xl border bg-card p-4">
+                <div
+                    class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    <Package class="size-4" />
+                    Paquetes
+                </div>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ packages.length }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    {{ packages.length === 1 ? 'Configurado' : 'Configurados' }}
                 </p>
             </div>
-            <Button variant="outline" as-child>
-                <Link :href="urls.manage">Volver al resumen</Link>
-            </Button>
-        </div>
+            <div class="rounded-xl border bg-card p-4">
+                <div
+                    class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    <Check class="size-4" />
+                    Activos
+                </div>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ activeCount }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    Visibles en la ficha pública
+                </p>
+            </div>
+            <div class="rounded-xl border bg-card p-4">
+                <div
+                    class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    <BadgeDollarSign class="size-4" />
+                    Precio más bajo
+                </div>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ lowestPrice ?? 'Sin definir' }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    {{
+                        lowestPrice ? 'MXN · por paquete' : 'Agrega un paquete'
+                    }}
+                </p>
+            </div>
+            <div class="rounded-xl border bg-card p-4">
+                <div
+                    class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    <Sparkles class="size-4" />
+                    Servicios incluidos
+                </div>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ distinctServiceCount }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    Distintos entre paquetes
+                </p>
+            </div>
+        </section>
 
         <div
-            class="grid items-start gap-6 xl:grid-cols-[minmax(0,25rem)_minmax(0,1fr)]"
+            class="grid items-start gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]"
         >
-            <section class="rounded-xl border bg-card p-5">
-                <h2 class="text-lg font-semibold">
-                    {{ editing ? 'Editar paquete' : 'Nuevo paquete' }}
-                </h2>
-
-                <form class="mt-4 grid gap-4" @submit.prevent="submit">
-                    <div class="grid gap-2">
-                        <Label for="package-name">Nombre</Label>
-                        <Input
-                            id="package-name"
-                            v-model="form.name"
-                            maxlength="120"
-                            required
-                            placeholder="Paquete Familiar"
-                        />
-                        <p
-                            v-if="form.errors.name"
-                            class="text-sm text-destructive"
+            <section class="overflow-hidden rounded-xl border bg-card">
+                <div
+                    class="flex flex-wrap items-start justify-between gap-3 border-b p-5"
+                >
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"
                         >
-                            {{ form.errors.name }}
-                        </p>
+                            <Plus class="size-4" />
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold">
+                                {{
+                                    editing ? 'Editar paquete' : 'Nuevo paquete'
+                                }}
+                            </h2>
+                            <p class="text-xs text-muted-foreground">
+                                {{
+                                    editing
+                                        ? 'Modifica los datos y guarda los cambios.'
+                                        : 'Crea una opción comercial para la terraza.'
+                                }}
+                            </p>
+                        </div>
                     </div>
-                    <div class="grid gap-2">
-                        <Label for="package-description">Descripción</Label>
-                        <textarea
-                            id="package-description"
-                            v-model="form.description"
-                            rows="3"
-                            maxlength="2000"
-                            class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        />
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
+                    <Badge v-if="editing" variant="outline">Editando</Badge>
+                </div>
+
+                <form
+                    id="package-form"
+                    class="grid gap-5 p-5"
+                    @submit.prevent="submit"
+                >
+                    <section class="grid gap-4">
+                        <div class="flex items-center gap-2">
+                            <Package class="size-4 text-primary" />
+                            <h3 class="text-sm font-semibold">
+                                Datos del paquete
+                            </h3>
+                        </div>
                         <div class="grid gap-2">
-                            <Label for="package-price">Precio (MXN)</Label>
+                            <Label for="package-name">Nombre</Label>
                             <Input
-                                id="package-price"
-                                v-model="form.price"
-                                type="number"
-                                min="0"
-                                step="0.01"
+                                id="package-name"
+                                v-model="form.name"
+                                maxlength="120"
                                 required
+                                placeholder="Paquete Familiar"
                             />
                             <p
-                                v-if="form.errors.price"
+                                v-if="form.errors.name"
                                 class="text-sm text-destructive"
                             >
-                                {{ form.errors.price }}
+                                {{ form.errors.name }}
                             </p>
                         </div>
                         <div class="grid gap-2">
-                            <Label for="package-hours">Duración (horas)</Label>
-                            <Input
-                                id="package-hours"
-                                v-model.number="form.duration_hours"
-                                type="number"
-                                min="1"
-                                max="168"
-                                required
+                            <Label for="package-description">Descripción</Label>
+                            <textarea
+                                id="package-description"
+                                v-model="form.description"
+                                rows="3"
+                                maxlength="2000"
+                                class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                placeholder="Describe qué incluye el paquete."
                             />
-                        </div>
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="grid gap-2">
-                            <Label for="package-people"
-                                >Personas incluidas</Label
+                            <p
+                                v-if="form.errors.description"
+                                class="text-sm text-destructive"
                             >
-                            <Input
-                                id="package-people"
-                                v-model.number="form.included_people"
-                                type="number"
-                                min="1"
-                                required
-                            />
+                                {{ form.errors.description }}
+                            </p>
                         </div>
-                        <div class="grid gap-2">
-                            <Label for="package-order">Orden</Label>
-                            <Input
-                                id="package-order"
-                                v-model="form.sort_order"
-                                type="number"
-                                min="0"
-                            />
-                        </div>
-                    </div>
+                    </section>
 
-                    <div class="grid gap-2">
-                        <Label>Amenidades incluidas</Label>
-                        <div class="space-y-3 rounded-lg border p-3">
-                            <div
-                                v-for="group in amenityGroups"
-                                :key="group.key"
-                            >
-                                <p
-                                    class="mb-1 text-xs font-medium text-muted-foreground"
-                                >
-                                    {{ group.label }}
-                                </p>
-                                <div class="grid gap-1 sm:grid-cols-2">
-                                    <label
-                                        v-for="service in group.services"
-                                        :key="service.value"
-                                        class="flex cursor-pointer items-center gap-2 text-sm"
+                    <section class="grid gap-4 border-t pt-5">
+                        <div class="flex items-center gap-2">
+                            <BadgeDollarSign class="size-4 text-primary" />
+                            <h3 class="text-sm font-semibold">
+                                Precio y capacidad
+                            </h3>
+                        </div>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="grid gap-2">
+                                <Label for="package-price">Precio (MXN)</Label>
+                                <div class="relative">
+                                    <span
+                                        class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground"
                                     >
-                                        <Checkbox
-                                            :checked="
-                                                form.included_amenities.includes(
-                                                    service.value,
-                                                )
-                                            "
-                                            @update:checked="
-                                                toggleAmenity(service.value)
-                                            "
-                                        />
-                                        {{ service.label }}
-                                    </label>
+                                        $
+                                    </span>
+                                    <Input
+                                        id="package-price"
+                                        v-model="form.price"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        required
+                                        placeholder="0.00"
+                                        class="pl-7"
+                                    />
                                 </div>
+                                <p
+                                    v-if="form.errors.price"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.price }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="package-hours">
+                                    Duración (horas)
+                                </Label>
+                                <Input
+                                    id="package-hours"
+                                    v-model.number="form.duration_hours"
+                                    type="number"
+                                    min="1"
+                                    max="168"
+                                    required
+                                />
+                                <p
+                                    v-if="form.errors.duration_hours"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.duration_hours }}
+                                </p>
                             </div>
                         </div>
-                    </div>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="grid gap-2">
+                                <Label for="package-people">
+                                    Personas incluidas
+                                </Label>
+                                <Input
+                                    id="package-people"
+                                    v-model.number="form.included_people"
+                                    type="number"
+                                    min="1"
+                                    required
+                                />
+                                <p
+                                    v-if="form.errors.included_people"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.included_people }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="package-order">Orden</Label>
+                                <Input
+                                    id="package-order"
+                                    v-model="form.sort_order"
+                                    type="number"
+                                    min="0"
+                                    placeholder="Automático"
+                                />
+                                <p
+                                    v-if="form.errors.sort_order"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.sort_order }}
+                                </p>
+                            </div>
+                        </div>
+                    </section>
 
-                    <div class="grid gap-2">
-                        <Label>Servicios incluidos</Label>
-                        <div class="space-y-3 rounded-lg border p-3">
+                    <section class="grid gap-3 border-t pt-5">
+                        <div
+                            class="flex flex-wrap items-start justify-between gap-2"
+                        >
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <Sparkles class="size-4 text-primary" />
+                                    <h3 class="text-sm font-semibold">
+                                        Servicios incluidos
+                                    </h3>
+                                </div>
+                                <p class="mt-1 text-xs text-muted-foreground">
+                                    Solo servicios comerciales del paquete. Las
+                                    características de la terraza se administran
+                                    en
+                                    <Link
+                                        :href="urls.edit"
+                                        class="font-medium underline underline-offset-2"
+                                        >Fotos y datos</Link
+                                    >.
+                                </p>
+                            </div>
+                            <Badge variant="secondary">
+                                {{ selectedServiceCount }} seleccionados
+                            </Badge>
+                        </div>
+
+                        <div
+                            v-if="serviceGroups.length === 0"
+                            class="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground"
+                        >
+                            No hay servicios comerciales disponibles.
+                            <Link
+                                :href="urls.services"
+                                class="font-medium underline underline-offset-2"
+                                >Créalos en Servicios</Link
+                            >.
+                        </div>
+                        <div v-else class="space-y-3 rounded-lg border p-3">
                             <div
                                 v-for="group in serviceGroups"
                                 :key="group.key"
@@ -325,35 +549,51 @@ function destroy(item: ListingPackage): void {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        <p
+                            v-if="form.errors.included_services"
+                            class="text-sm text-destructive"
+                        >
+                            {{ form.errors.included_services }}
+                        </p>
+                    </section>
 
-                    <div class="grid gap-2">
-                        <Label for="package-conditions">Condiciones</Label>
-                        <textarea
-                            id="package-conditions"
-                            v-model="form.conditions"
-                            rows="3"
-                            maxlength="2000"
-                            class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        />
-                    </div>
+                    <section class="grid gap-4 border-t pt-5">
+                        <div class="flex items-center gap-2">
+                            <Info class="size-4 text-primary" />
+                            <h3 class="text-sm font-semibold">
+                                Condiciones y visibilidad
+                            </h3>
+                        </div>
+                        <div class="grid gap-2">
+                            <Label for="package-conditions">Condiciones</Label>
+                            <textarea
+                                id="package-conditions"
+                                v-model="form.conditions"
+                                rows="3"
+                                maxlength="2000"
+                                class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                placeholder="Ej. Anticipo no reembolsable."
+                            />
+                            <p
+                                v-if="form.errors.conditions"
+                                class="text-sm text-destructive"
+                            >
+                                {{ form.errors.conditions }}
+                            </p>
+                        </div>
+                        <label class="flex items-center gap-3 text-sm">
+                            <Checkbox v-model:checked="form.active" />
+                            Paquete activo y visible en la ficha pública
+                        </label>
+                        <p
+                            v-if="form.errors.active"
+                            class="text-sm text-destructive"
+                        >
+                            {{ form.errors.active }}
+                        </p>
+                    </section>
 
-                    <label class="flex items-center gap-3 text-sm">
-                        <Checkbox v-model:checked="form.active" />
-                        Paquete activo
-                    </label>
-
-                    <p
-                        v-if="form.errors.active"
-                        class="text-sm text-destructive"
-                    >
-                        {{ form.errors.active }}
-                    </p>
-
-                    <div class="flex flex-wrap gap-2">
-                        <Button type="submit" :disabled="form.processing">
-                            {{ editing ? 'Guardar cambios' : 'Crear paquete' }}
-                        </Button>
+                    <div class="flex flex-wrap justify-end gap-2 border-t pt-5">
                         <Button
                             v-if="editing"
                             type="button"
@@ -362,97 +602,185 @@ function destroy(item: ListingPackage): void {
                         >
                             Cancelar
                         </Button>
+                        <Button type="submit" :disabled="form.processing">
+                            <Check class="size-4" />
+                            {{ editing ? 'Guardar cambios' : 'Crear paquete' }}
+                        </Button>
                     </div>
                 </form>
             </section>
 
-            <section class="space-y-3">
-                <div
-                    v-if="packages.length === 0"
-                    class="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground"
-                >
-                    No hay paquetes configurados.
+            <section class="space-y-4">
+                <div class="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg font-semibold">
+                            Paquetes configurados
+                        </h2>
+                        <p class="text-sm text-muted-foreground">
+                            Opciones que se muestran en la ficha pública.
+                        </p>
+                    </div>
+                    <Badge variant="secondary">
+                        {{ packages.length }}
+                        {{ packages.length === 1 ? 'paquete' : 'paquetes' }}
+                    </Badge>
                 </div>
 
-                <article
-                    v-for="item in packages"
-                    :key="item.id"
-                    class="rounded-xl border bg-card p-4"
+                <div
+                    v-if="packages.length === 0"
+                    class="rounded-xl border border-dashed p-10 text-center"
                 >
                     <div
-                        class="flex flex-wrap items-start justify-between gap-3"
+                        class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
                     >
-                        <div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h2 class="font-semibold">{{ item.name }}</h2>
-                                <Badge
-                                    :variant="
-                                        item.active ? 'default' : 'secondary'
-                                    "
+                        <Package class="size-6" />
+                    </div>
+                    <p class="mt-3 font-medium">Sin paquetes configurados</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Crea un paquete para ofrecer una opción cerrada de
+                        renta.
+                    </p>
+                    <Button
+                        type="button"
+                        class="mt-4"
+                        variant="outline"
+                        @click="focusForm"
+                    >
+                        <Plus class="size-4" />
+                        Crear primer paquete
+                    </Button>
+                </div>
+
+                <div v-else class="grid items-start gap-4 lg:grid-cols-2">
+                    <article
+                        v-for="item in packages"
+                        :key="item.id"
+                        class="flex flex-col overflow-hidden rounded-xl border bg-card"
+                    >
+                        <div
+                            class="flex flex-wrap items-start justify-between gap-3 border-b p-4"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
                                 >
-                                    {{ item.active ? 'Activo' : 'Inactivo' }}
-                                </Badge>
+                                    <Package class="size-4" />
+                                </div>
+                                <div>
+                                    <div
+                                        class="flex flex-wrap items-center gap-2"
+                                    >
+                                        <h3 class="font-semibold">
+                                            {{ item.name }}
+                                        </h3>
+                                        <Badge
+                                            :variant="
+                                                item.active
+                                                    ? 'default'
+                                                    : 'secondary'
+                                            "
+                                        >
+                                            {{
+                                                item.active
+                                                    ? 'Activo'
+                                                    : 'Inactivo'
+                                            }}
+                                        </Badge>
+                                    </div>
+                                    <p
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        Orden {{ item.sort_order }}
+                                    </p>
+                                </div>
                             </div>
-                            <p class="mt-1 text-sm text-muted-foreground">
-                                {{ item.price_formatted }} ·
-                                {{ item.duration_hours }} horas ·
-                                {{ item.included_people }} personas
+                            <p class="text-right">
+                                <span
+                                    class="block text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase"
+                                >
+                                    Precio
+                                </span>
+                                <span class="text-lg font-semibold">
+                                    {{ item.price_formatted }}
+                                </span>
                             </p>
                         </div>
-                        <div class="flex flex-wrap gap-2">
+
+                        <div class="flex-1 space-y-3 p-4">
+                            <div class="flex flex-wrap gap-2 text-xs">
+                                <span
+                                    class="inline-flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1"
+                                >
+                                    <Clock class="size-3" />
+                                    {{ item.duration_hours }} horas
+                                </span>
+                                <span
+                                    class="inline-flex items-center gap-1 rounded-full border bg-muted/30 px-2 py-1"
+                                >
+                                    <Users class="size-3" />
+                                    {{ item.included_people }} personas
+                                </span>
+                            </div>
+
+                            <p
+                                v-if="item.description"
+                                class="text-sm whitespace-pre-line text-muted-foreground"
+                            >
+                                {{ item.description }}
+                            </p>
+
+                            <div
+                                v-if="item.services.length > 0"
+                                class="space-y-1"
+                            >
+                                <p
+                                    class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                                >
+                                    Servicios incluidos
+                                </p>
+                                <div class="flex flex-wrap gap-1">
+                                    <Badge
+                                        v-for="service in item.services"
+                                        :key="service.key"
+                                        variant="outline"
+                                    >
+                                        {{ service.label }}
+                                    </Badge>
+                                </div>
+                            </div>
+                            <p v-else class="text-xs text-muted-foreground">
+                                Sin servicios adicionales incluidos.
+                            </p>
+
+                            <p
+                                v-if="item.conditions"
+                                class="rounded-lg bg-muted/30 p-2 text-xs text-muted-foreground"
+                            >
+                                {{ item.conditions }}
+                            </p>
+                        </div>
+
+                        <div class="flex justify-end gap-2 border-t p-3">
                             <Button
                                 size="sm"
                                 variant="outline"
                                 @click="edit(item)"
                             >
+                                <Pencil class="size-4" />
                                 Editar
                             </Button>
                             <Button
                                 size="sm"
                                 variant="ghost"
+                                class="text-destructive hover:text-destructive"
                                 @click="destroy(item)"
                             >
+                                <Trash2 class="size-4" />
                                 Eliminar
                             </Button>
                         </div>
-                    </div>
-                    <p
-                        v-if="item.description"
-                        class="mt-3 text-sm whitespace-pre-line text-muted-foreground"
-                    >
-                        {{ item.description }}
-                    </p>
-                    <div
-                        v-if="item.amenities.length > 0"
-                        class="mt-3 flex flex-wrap gap-1"
-                    >
-                        <Badge
-                            v-for="amenity in item.amenities"
-                            :key="amenity.key"
-                            variant="secondary"
-                        >
-                            {{ amenity.label }}
-                        </Badge>
-                    </div>
-                    <div
-                        v-if="item.services.length > 0"
-                        class="mt-2 flex flex-wrap gap-1"
-                    >
-                        <Badge
-                            v-for="service in item.services"
-                            :key="service.key"
-                            variant="outline"
-                        >
-                            {{ service.label }}
-                        </Badge>
-                    </div>
-                    <p
-                        v-if="item.conditions"
-                        class="mt-3 text-xs text-muted-foreground"
-                    >
-                        {{ item.conditions }}
-                    </p>
-                </article>
+                    </article>
+                </div>
             </section>
         </div>
     </div>

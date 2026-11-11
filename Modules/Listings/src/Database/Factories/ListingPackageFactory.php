@@ -27,7 +27,6 @@ class ListingPackageFactory extends Factory
             'price_cents' => 500000,
             'duration_hours' => 8,
             'included_people' => 50,
-            'included_amenities' => ['wifi', 'pool'],
             'included_services' => ['dj'],
             'conditions' => 'Anticipo no reembolsable.',
             'active' => true,

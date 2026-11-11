@@ -558,18 +558,6 @@ const whatsappUrl = computed(
                                     {{ packageItem.description }}
                                 </p>
                                 <div
-                                    v-if="packageItem.amenities.length > 0"
-                                    class="mt-3 flex flex-wrap gap-1"
-                                >
-                                    <Badge
-                                        v-for="amenity in packageItem.amenities"
-                                        :key="amenity.key"
-                                        variant="secondary"
-                                    >
-                                        {{ amenity.label }}
-                                    </Badge>
-                                </div>
-                                <div
                                     v-if="packageItem.services.length > 0"
                                     class="mt-2 flex flex-wrap gap-1"
                                 >

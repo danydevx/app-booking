@@ -57,7 +57,6 @@ export type ListingPackagePublic = {
     currency: string;
     duration_hours: number;
     included_people: number;
-    amenities: Array<{ key: string; label: string }>;
     services: Array<{ key: string; label: string }>;
     conditions: string | null;
 };

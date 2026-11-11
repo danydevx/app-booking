@@ -21,7 +21,6 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property int $price_cents
  * @property int $duration_hours
  * @property int $included_people
- * @property array<int, string>|null $included_amenities
  * @property array<int, string>|null $included_services
  * @property string|null $conditions
  * @property bool $active
@@ -37,7 +36,6 @@ use Modules\Listings\Support\TerraceServiceCatalog;
     'price_cents',
     'duration_hours',
     'included_people',
-    'included_amenities',
     'included_services',
     'conditions',
     'active',
@@ -76,14 +74,6 @@ class ListingPackage extends Model
     /**
      * @return array<int, array{key: string, label: string}>
      */
-    public function amenityItems(): array
-    {
-        return $this->items($this->included_amenities);
-    }
-
-    /**
-     * @return array<int, array{key: string, label: string}>
-     */
     public function serviceItems(): array
     {
         return $this->items($this->included_services);
@@ -115,7 +105,6 @@ class ListingPackage extends Model
             'price_cents' => 'integer',
             'duration_hours' => 'integer',
             'included_people' => 'integer',
-            'included_amenities' => 'array',
             'included_services' => 'array',
             'active' => 'boolean',
             'sort_order' => 'integer',
