@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
+import LocationPickerMap from './LocationPickerMap.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -141,6 +142,12 @@ watch(
         }
     },
 );
+
+function setCoordinates(latitude: string, longitude: string): void {
+    form.latitude = latitude;
+    form.longitude = longitude;
+    form.clearErrors('latitude', 'longitude');
+}
 
 function toggleService(service: string): void {
     form.services = form.services.includes(service)
@@ -340,6 +347,15 @@ function submit(): void {
                     />
                     <InputError :message="form.errors.longitude" />
                 </div>
+            </div>
+
+            <div class="grid gap-2">
+                <Label>Ubicación en el mapa</Label>
+                <LocationPickerMap
+                    :latitude="form.latitude"
+                    :longitude="form.longitude"
+                    @change="setCoordinates"
+                />
             </div>
         </section>
 

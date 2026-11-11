@@ -119,6 +119,7 @@ La landing pública y la administración están separadas por URL y layout:
 
 - Alta, edición, publicación y despublicación.
 - Datos: nombre, descripción, ubicación, coordenadas, capacidad, reglas y contacto.
+- Ubicación con mapa interactivo: clic o arrastre del pin para ajustar latitud y longitud.
 - Detalles de espacio: tipo, acceso, estacionamiento y vista.
 - Características del lugar (instalaciones, espacios y equipamiento) desde un catálogo global agrupado por categoría; sin precios individuales.
 - Precios informativos: desde, tarifa por día (lunes a domingo) con horas, entrada, salida y precio, cargos adicionales y anticipo requerido.
