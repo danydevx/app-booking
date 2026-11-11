@@ -135,7 +135,7 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-    <form class="space-y-5" @submit.prevent="submit">
+    <form class="space-y-5" @submit.prevent="submit" novalidate>
         <RequiredFieldsHint />
         <div class="space-y-1">
             <h2 class="text-lg font-semibold">Me interesa rentarla</h2>

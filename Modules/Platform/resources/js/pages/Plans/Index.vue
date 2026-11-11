@@ -460,7 +460,7 @@ function intervalLabel(interval: string): string {
 
         <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
             <DialogScrollContent class="sm:max-w-3xl">
-                <form class="grid gap-5" @submit.prevent="submit">
+                <form class="grid gap-5" @submit.prevent="submit" novalidate>
                     <DialogHeader>
                         <DialogTitle>
                             {{ editing ? 'Editar plan' : 'Nuevo plan' }}

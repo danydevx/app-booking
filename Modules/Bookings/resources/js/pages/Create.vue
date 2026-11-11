@@ -219,6 +219,7 @@ async function submit(): Promise<void> {
             v-else
             class="grid w-full gap-4 rounded-xl border bg-card p-5"
             @submit.prevent="submit"
+            novalidate
         >
             <RequiredFieldsHint />
             <div v-if="activeListing" class="grid gap-2">

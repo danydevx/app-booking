@@ -422,7 +422,7 @@ function statusVariant(
 
         <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
             <DialogScrollContent class="sm:max-w-2xl">
-                <form class="grid gap-5" @submit.prevent="submit">
+                <form class="grid gap-5" @submit.prevent="submit" novalidate>
                     <DialogHeader>
                         <DialogTitle>
                             {{

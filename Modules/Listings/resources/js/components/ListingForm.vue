@@ -263,7 +263,7 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-    <form class="space-y-8" @submit.prevent="submit">
+    <form class="space-y-8" @submit.prevent="submit" novalidate>
         <RequiredFieldsHint />
 
         <section class="space-y-5">

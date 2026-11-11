@@ -1478,7 +1478,11 @@ function formatRangePrice(value: string | null): string {
 
         <Dialog :open="rangeDialogOpen" @update:open="handleRangeDialogOpen">
             <DialogScrollContent class="sm:max-w-4xl">
-                <form class="grid gap-5" @submit.prevent="submitRange">
+                <form
+                    class="grid gap-5"
+                    @submit.prevent="submitRange"
+                    novalidate
+                >
                     <DialogHeader>
                         <DialogTitle>
                             {{
