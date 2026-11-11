@@ -392,7 +392,7 @@ class ListingCommercialTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Listings/Services/Index')
                 ->has('services', 1)
-                ->has('serviceOptions')
+                ->has('serviceGroups')
                 ->has('priceUnits', 4));
 
         $this->actingAs($owner)

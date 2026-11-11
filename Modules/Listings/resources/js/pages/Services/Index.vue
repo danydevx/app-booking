@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import {
+    BadgeDollarSign,
+    Check,
+    Eye,
+    Info,
+    Pencil,
+    Plus,
+    Sparkles,
+    Trash2,
+} from '@lucide/vue';
+import { computed, ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { ServiceOption } from '../../types';
+import type { ServiceGroup, ServiceOption } from '../../types';
 
 type CommercialService = {
     id: number;
@@ -27,7 +37,7 @@ type CommercialService = {
 const props = defineProps<{
     listing: { id: number; name: string; slug: string };
     services: CommercialService[];
-    serviceOptions: ServiceOption[];
+    serviceGroups: ServiceGroup[];
     priceUnits: ServiceOption[];
     urls: {
         index: string;
@@ -85,6 +95,26 @@ const form = useForm({
 
 const editing = ref<CommercialService | null>(null);
 
+const includedCount = computed(
+    () => props.services.filter((item) => item.is_included).length,
+);
+
+const paidCount = computed(
+    () => props.services.filter((item) => !item.is_included).length,
+);
+
+const activeCount = computed(
+    () => props.services.filter((item) => item.active).length,
+);
+
+function serviceGroupLabel(key: string): string | null {
+    return (
+        props.serviceGroups.find((group) =>
+            group.services.some((service) => service.value === key),
+        )?.label ?? null
+    );
+}
+
 function submit(): void {
     if (editing.value) {
         form.patch(editing.value.update_url, {
@@ -110,6 +140,10 @@ function edit(item: CommercialService): void {
     form.price_unit = item.price_unit;
     form.active = item.active;
     form.clearErrors();
+
+    document
+        .getElementById('service-form')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function reset(): void {
@@ -117,6 +151,13 @@ function reset(): void {
     form.reset();
     form.price_unit = 'event';
     form.active = true;
+}
+
+function focusForm(): void {
+    document
+        .getElementById('service-form')
+        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('service-key')?.focus({ preventScroll: true });
 }
 
 function destroy(item: CommercialService): void {
@@ -132,112 +173,293 @@ function destroy(item: CommercialService): void {
     <Head :title="`Servicios · ${listing.name}`" />
 
     <div class="flex w-full flex-col gap-6 p-4">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-semibold">Servicios adicionales</h1>
-                <p class="text-sm text-muted-foreground">
-                    Información comercial de servicios ofrecidos por
-                    {{ listing.name }}.
+        <header class="flex flex-wrap items-start justify-between gap-4">
+            <div class="flex items-start gap-4">
+                <div
+                    class="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"
+                >
+                    <Sparkles class="size-6" />
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-2xl font-semibold">
+                            Servicios adicionales
+                        </h1>
+                        <Badge variant="outline">Informativo</Badge>
+                    </div>
+                    <p class="mt-1 max-w-2xl text-sm text-muted-foreground">
+                        Servicios comerciales de {{ listing.name }} que pueden
+                        incluirse en la renta o cobrarse aparte.
+                    </p>
+                </div>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <Button variant="outline" as-child>
+                    <Link :href="urls.manage">Volver al resumen</Link>
+                </Button>
+                <Button v-if="urls.public" variant="outline" as-child>
+                    <a
+                        :href="urls.public"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        Ver pública
+                    </a>
+                </Button>
+            </div>
+        </header>
+
+        <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-xl border bg-card p-4">
+                <div
+                    class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    <Sparkles class="size-4" />
+                    Servicios
+                </div>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ services.length }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    {{ services.length === 1 ? 'Configurado' : 'Configurados' }}
                 </p>
             </div>
-            <Button variant="outline" as-child>
-                <Link :href="urls.manage">Volver al resumen</Link>
-            </Button>
-        </div>
+            <div class="rounded-xl border bg-card p-4">
+                <div
+                    class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    <Check class="size-4" />
+                    Incluidos
+                </div>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ includedCount }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    En la renta del espacio
+                </p>
+            </div>
+            <div class="rounded-xl border bg-card p-4">
+                <div
+                    class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    <BadgeDollarSign class="size-4" />
+                    Costo adicional
+                </div>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ paidCount }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    Se cobran por separado
+                </p>
+            </div>
+            <div class="rounded-xl border bg-card p-4">
+                <div
+                    class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                >
+                    <Eye class="size-4" />
+                    Activos
+                </div>
+                <p class="mt-2 text-2xl font-semibold">
+                    {{ activeCount }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                    Visibles en la ficha pública
+                </p>
+            </div>
+        </section>
 
         <div
-            class="grid items-start gap-6 xl:grid-cols-[minmax(0,25rem)_minmax(0,1fr)]"
+            class="grid items-start gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]"
         >
-            <section class="rounded-xl border bg-card p-5">
-                <h2 class="text-lg font-semibold">
-                    {{ editing ? 'Editar servicio' : 'Nuevo servicio' }}
-                </h2>
+            <section class="overflow-hidden rounded-xl border bg-card">
+                <div
+                    class="flex flex-wrap items-start justify-between gap-3 border-b p-5"
+                >
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                        >
+                            <Plus class="size-4" />
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold">
+                                {{
+                                    editing
+                                        ? 'Editar servicio'
+                                        : 'Nuevo servicio'
+                                }}
+                            </h2>
+                            <p class="text-xs text-muted-foreground">
+                                {{
+                                    editing
+                                        ? 'Modifica los datos y guarda los cambios.'
+                                        : 'Agrega un servicio a la oferta de la terraza.'
+                                }}
+                            </p>
+                        </div>
+                    </div>
+                    <Badge v-if="editing" variant="outline">Editando</Badge>
+                </div>
 
-                <form class="mt-4 grid gap-4" @submit.prevent="submit">
-                    <div class="grid gap-2">
-                        <Label for="service-key">Servicio</Label>
-                        <select
-                            id="service-key"
-                            v-model="form.service_key"
-                            class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                            required
-                        >
-                            <option value="">
-                                Selecciona una característica
-                            </option>
-                            <option
-                                v-for="option in serviceOptions"
-                                :key="option.value"
-                                :value="option.value"
-                            >
-                                {{ option.label }}
-                            </option>
-                        </select>
-                        <p
-                            v-if="form.errors.service_key"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.service_key }}
-                        </p>
-                    </div>
-                    <div class="grid gap-2">
-                        <Label for="service-description">Descripción</Label>
-                        <textarea
-                            id="service-description"
-                            v-model="form.description"
-                            rows="3"
-                            maxlength="2000"
-                            class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        />
-                    </div>
-                    <div class="grid gap-4 sm:grid-cols-2">
+                <form
+                    id="service-form"
+                    class="grid gap-5 p-5"
+                    @submit.prevent="submit"
+                >
+                    <section class="grid gap-4">
+                        <div class="flex items-center gap-2">
+                            <Sparkles class="size-4 text-primary" />
+                            <h3 class="text-sm font-semibold">
+                                Datos del servicio
+                            </h3>
+                        </div>
                         <div class="grid gap-2">
-                            <Label for="service-price">Precio (MXN)</Label>
-                            <Input
-                                id="service-price"
-                                v-model="form.price"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                            />
+                            <Label for="service-key">Servicio</Label>
+                            <select
+                                id="service-key"
+                                v-model="form.service_key"
+                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                required
+                            >
+                                <option value="">Selecciona un servicio</option>
+                                <optgroup
+                                    v-for="group in serviceGroups"
+                                    :key="group.key"
+                                    :label="group.label"
+                                >
+                                    <option
+                                        v-for="service in group.services"
+                                        :key="service.value"
+                                        :value="service.value"
+                                    >
+                                        {{ service.label }}
+                                    </option>
+                                </optgroup>
+                            </select>
                             <p
-                                v-if="form.errors.price"
+                                v-if="form.errors.service_key"
                                 class="text-sm text-destructive"
                             >
-                                {{ form.errors.price }}
+                                {{ form.errors.service_key }}
                             </p>
                         </div>
                         <div class="grid gap-2">
-                            <Label for="service-unit">Unidad de cobro</Label>
-                            <select
-                                id="service-unit"
-                                v-model="form.price_unit"
-                                class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                            <Label for="service-description">
+                                Descripción
+                            </Label>
+                            <textarea
+                                id="service-description"
+                                v-model="form.description"
+                                rows="3"
+                                maxlength="2000"
+                                class="min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                placeholder="Detalla qué incluye o cómo se cobra."
+                            />
+                            <p
+                                v-if="form.errors.description"
+                                class="text-sm text-destructive"
                             >
-                                <option
-                                    v-for="unit in priceUnits"
-                                    :key="unit.value"
-                                    :value="unit.value"
-                                >
-                                    {{ unit.label }}
-                                </option>
-                            </select>
+                                {{ form.errors.description }}
+                            </p>
                         </div>
-                    </div>
-                    <div class="grid gap-2">
-                        <label class="flex items-center gap-3 text-sm">
-                            <Checkbox v-model:checked="form.is_included" />
-                            Incluido en la renta
-                        </label>
-                        <label class="flex items-center gap-3 text-sm">
-                            <Checkbox v-model:checked="form.active" />
-                            Servicio activo
-                        </label>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <Button type="submit" :disabled="form.processing">
-                            {{ editing ? 'Guardar cambios' : 'Crear servicio' }}
-                        </Button>
+                    </section>
+
+                    <section class="grid gap-4 border-t pt-5">
+                        <div class="flex items-center gap-2">
+                            <BadgeDollarSign class="size-4 text-primary" />
+                            <h3 class="text-sm font-semibold">
+                                Precio y unidad de cobro
+                            </h3>
+                        </div>
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="grid gap-2">
+                                <Label for="service-price">Precio (MXN)</Label>
+                                <div class="relative">
+                                    <span
+                                        class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-muted-foreground"
+                                    >
+                                        $
+                                    </span>
+                                    <Input
+                                        id="service-price"
+                                        v-model="form.price"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="0.00"
+                                        class="pl-7"
+                                    />
+                                </div>
+                                <p
+                                    v-if="form.errors.price"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.price }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="service-unit">
+                                    Unidad de cobro
+                                </Label>
+                                <select
+                                    id="service-unit"
+                                    v-model="form.price_unit"
+                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    <option
+                                        v-for="unit in priceUnits"
+                                        :key="unit.value"
+                                        :value="unit.value"
+                                    >
+                                        {{ unit.label }}
+                                    </option>
+                                </select>
+                                <p
+                                    v-if="form.errors.price_unit"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.price_unit }}
+                                </p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                            Si el servicio está incluido en la renta, el precio
+                            puede omitirse.
+                        </p>
+                    </section>
+
+                    <section class="grid gap-4 border-t pt-5">
+                        <div class="flex items-center gap-2">
+                            <Info class="size-4 text-primary" />
+                            <h3 class="text-sm font-semibold">Visibilidad</h3>
+                        </div>
+                        <div
+                            class="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2"
+                        >
+                            <label class="flex items-center gap-3 text-sm">
+                                <Checkbox v-model:checked="form.is_included" />
+                                Incluido en la renta
+                            </label>
+                            <label class="flex items-center gap-3 text-sm">
+                                <Checkbox v-model:checked="form.active" />
+                                Visible en la ficha
+                            </label>
+                        </div>
+                        <p
+                            v-if="form.errors.is_included"
+                            class="text-sm text-destructive"
+                        >
+                            {{ form.errors.is_included }}
+                        </p>
+                        <p
+                            v-if="form.errors.active"
+                            class="text-sm text-destructive"
+                        >
+                            {{ form.errors.active }}
+                        </p>
+                    </section>
+
+                    <div class="flex flex-wrap justify-end gap-2 border-t pt-5">
                         <Button
                             v-if="editing"
                             type="button"
@@ -246,78 +468,166 @@ function destroy(item: CommercialService): void {
                         >
                             Cancelar
                         </Button>
+                        <Button type="submit" :disabled="form.processing">
+                            <Check class="size-4" />
+                            {{ editing ? 'Guardar cambios' : 'Crear servicio' }}
+                        </Button>
                     </div>
                 </form>
             </section>
 
-            <section class="space-y-3">
-                <div
-                    v-if="services.length === 0"
-                    class="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground"
-                >
-                    No hay servicios comerciales configurados.
+            <section class="space-y-4">
+                <div class="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                        <h2 class="text-lg font-semibold">
+                            Servicios configurados
+                        </h2>
+                        <p class="text-sm text-muted-foreground">
+                            Servicios que se muestran en la ficha pública.
+                        </p>
+                    </div>
+                    <Badge variant="secondary">
+                        {{ services.length }}
+                        {{ services.length === 1 ? 'servicio' : 'servicios' }}
+                    </Badge>
                 </div>
 
-                <article
-                    v-for="item in services"
-                    :key="item.id"
-                    class="rounded-xl border bg-card p-4"
+                <div
+                    v-if="services.length === 0"
+                    class="rounded-xl border border-dashed p-10 text-center"
                 >
                     <div
-                        class="flex flex-wrap items-start justify-between gap-3"
+                        class="mx-auto flex size-12 items-center justify-center rounded-full bg-muted text-muted-foreground"
                     >
-                        <div>
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h2 class="font-semibold">{{ item.label }}</h2>
-                                <Badge
-                                    :variant="
-                                        item.is_included
-                                            ? 'default'
-                                            : 'secondary'
-                                    "
+                        <Sparkles class="size-6" />
+                    </div>
+                    <p class="mt-3 font-medium">Sin servicios configurados</p>
+                    <p class="mt-1 text-sm text-muted-foreground">
+                        Agrega servicios como DJ, banquetes o mobiliario
+                        adicional.
+                    </p>
+                    <Button
+                        type="button"
+                        class="mt-4"
+                        variant="outline"
+                        @click="focusForm"
+                    >
+                        <Plus class="size-4" />
+                        Crear primer servicio
+                    </Button>
+                </div>
+
+                <div v-else class="grid items-start gap-4 lg:grid-cols-2">
+                    <article
+                        v-for="item in services"
+                        :key="item.id"
+                        class="flex flex-col overflow-hidden rounded-xl border bg-card"
+                    >
+                        <div
+                            class="flex flex-wrap items-start justify-between gap-3 border-b p-4"
+                        >
+                            <div class="flex items-start gap-3">
+                                <div
+                                    class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
                                 >
-                                    {{
-                                        item.is_included
-                                            ? 'Incluido'
-                                            : 'Costo adicional'
-                                    }}
-                                </Badge>
-                                <Badge v-if="!item.active" variant="outline">
-                                    Inactivo
-                                </Badge>
+                                    <Sparkles class="size-4" />
+                                </div>
+                                <div>
+                                    <div
+                                        class="flex flex-wrap items-center gap-2"
+                                    >
+                                        <h3 class="font-semibold">
+                                            {{ item.label }}
+                                        </h3>
+                                        <Badge
+                                            :variant="
+                                                item.is_included
+                                                    ? 'default'
+                                                    : 'secondary'
+                                            "
+                                        >
+                                            {{
+                                                item.is_included
+                                                    ? 'Incluido'
+                                                    : 'Costo adicional'
+                                            }}
+                                        </Badge>
+                                        <Badge
+                                            v-if="!item.active"
+                                            variant="outline"
+                                        >
+                                            Inactivo
+                                        </Badge>
+                                    </div>
+                                    <p
+                                        v-if="
+                                            serviceGroupLabel(item.service_key)
+                                        "
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        {{
+                                            serviceGroupLabel(item.service_key)
+                                        }}
+                                    </p>
+                                </div>
                             </div>
-                            <p class="mt-1 text-sm text-muted-foreground">
-                                {{
-                                    item.has_price
-                                        ? `${item.price_formatted} · ${item.price_unit_label}`
-                                        : 'Precio no especificado'
-                                }}
+                            <p class="text-right">
+                                <span
+                                    class="block text-[0.65rem] font-medium tracking-wide text-muted-foreground uppercase"
+                                >
+                                    Precio
+                                </span>
+                                <span class="font-semibold">
+                                    {{
+                                        item.has_price
+                                            ? item.price_formatted
+                                            : item.is_included
+                                              ? 'Incluido'
+                                              : 'No especificado'
+                                    }}
+                                </span>
+                                <span
+                                    v-if="item.has_price"
+                                    class="block text-xs text-muted-foreground"
+                                >
+                                    {{ item.price_unit_label }}
+                                </span>
                             </p>
                         </div>
-                        <div class="flex flex-wrap gap-2">
+
+                        <div class="flex-1 space-y-3 p-4">
+                            <p
+                                v-if="item.description"
+                                class="text-sm whitespace-pre-line text-muted-foreground"
+                            >
+                                {{ item.description }}
+                            </p>
+                            <p v-else class="text-xs text-muted-foreground">
+                                Sin descripción adicional.
+                            </p>
+                        </div>
+
+                        <div class="flex justify-end gap-2 border-t p-3">
                             <Button
                                 size="sm"
                                 variant="outline"
                                 @click="edit(item)"
                             >
+                                <Pencil class="size-4" />
                                 Editar
                             </Button>
                             <Button
                                 size="sm"
                                 variant="ghost"
+                                class="text-destructive hover:text-destructive"
                                 @click="destroy(item)"
                             >
+                                <Trash2 class="size-4" />
                                 Eliminar
                             </Button>
                         </div>
-                    </div>
-                    <p
-                        v-if="item.description"
-                        class="mt-3 text-sm whitespace-pre-line text-muted-foreground"
-                    >
-                        {{ item.description }}
-                    </p>
-                </article>
+                    </article>
+                </div>
             </section>
         </div>
     </div>

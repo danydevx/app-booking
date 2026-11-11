@@ -45,7 +45,7 @@ class ListingServiceController extends Controller
                 'slug' => $listing->slug,
             ],
             'services' => $services,
-            'serviceOptions' => TerraceServiceCatalog::options(),
+            'serviceGroups' => TerraceServiceCatalog::groups(),
             'priceUnits' => ListingServicePriceUnit::options(),
             'urls' => [
                 ...$this->formData->ownerUrls($team, $listing),
