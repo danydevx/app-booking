@@ -15,7 +15,9 @@ import {
     Users,
     Wallet,
 } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
+import { z } from 'zod';
+import { useFrontValidation } from '@/composables/useFrontValidation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -352,35 +354,109 @@ function emptyDailyPricing(): Record<string, DailyFormRow> {
 const editingRange = ref<PriceRange | null>(null);
 const rangeDialogOpen = ref(false);
 
+const numericString = (message: string) =>
+    z
+        .string()
+        .refine(
+            (value) =>
+                value === '' ||
+                (Number.isFinite(Number(value)) && Number(value) >= 0),
+            message,
+        );
+
+const rangeDailySchema = z.object({
+    hours: z
+        .string()
+        .refine(
+            (value) =>
+                value === '' ||
+                (Number.isInteger(Number(value)) &&
+                    Number(value) >= 1 &&
+                    Number(value) <= 24),
+            'Indica horas entre 1 y 24.',
+        ),
+    entry_time: z
+        .string()
+        .refine(
+            (value) => value === '' || /^([01]\d|2[0-3]):[0-5]\d$/.test(value),
+            'Indica una hora de entrada válida.',
+        ),
+    exit_time: z
+        .string()
+        .refine(
+            (value) => value === '' || /^([01]\d|2[0-3]):[0-5]\d$/.test(value),
+            'Indica una hora de salida válida.',
+        ),
+    price: numericString('Indica un precio válido.'),
+});
+
+const rangeSchema = z
+    .object({
+        name: z
+            .string()
+            .trim()
+            .min(1, 'El nombre es obligatorio.')
+            .max(120, 'El nombre no puede superar 120 caracteres.'),
+        starts_at: z.string().min(1, 'La fecha de inicio es obligatoria.'),
+        ends_at: z.string().min(1, 'La fecha de fin es obligatoria.'),
+        daily_pricing: z.record(rangeDailySchema),
+        included_people: z
+            .string()
+            .refine(
+                (value) =>
+                    value === '' ||
+                    (Number.isInteger(Number(value)) && Number(value) >= 1),
+                'Indica una cantidad válida de personas.',
+            ),
+        extra_hour: numericString('Indica un costo válido.'),
+        extra_person: numericString('Indica un costo válido.'),
+        deposit_required: numericString('Indica un anticipo válido.'),
+        conditions: z
+            .string()
+            .max(2000, 'Las condiciones no pueden superar 2000 caracteres.'),
+        active: z.boolean(),
+    })
+    .refine(
+        (values) =>
+            !values.starts_at ||
+            !values.ends_at ||
+            values.ends_at >= values.starts_at,
+        {
+            path: ['ends_at'],
+            message: 'La fecha final debe ser igual o posterior al inicio.',
+        },
+    )
+    .refine(
+        (values) =>
+            Object.values(values.daily_pricing).some(
+                (row) => row.price.trim() !== '',
+            ),
+        {
+            path: ['daily_pricing'],
+            message: 'Define el precio de al menos un día.',
+        },
+    );
+
+const { validate } = useFrontValidation(rangeSchema, () => ({
+    name: rangeForm.name,
+    starts_at: rangeForm.starts_at,
+    ends_at: rangeForm.ends_at,
+    daily_pricing: rangeForm.daily_pricing,
+    included_people: rangeForm.included_people,
+    extra_hour: rangeForm.extra_hour,
+    extra_person: rangeForm.extra_person,
+    deposit_required: rangeForm.deposit_required,
+    conditions: rangeForm.conditions,
+    active: rangeForm.active,
+}));
+
 function openCreateRange(): void {
     resetRange();
     rangeDialogOpen.value = true;
 }
 
-const hasRangePrice = computed(() =>
-    dayFields.some(
-        (day) =>
-            String(rangeForm.daily_pricing[day.key]?.price ?? '').trim() !== '',
-    ),
-);
-
-watch(
-    () => rangeForm.daily_pricing,
-    () => {
-        if (hasRangePrice.value && rangeForm.errors.daily_pricing) {
-            rangeForm.clearErrors('daily_pricing');
-        }
-    },
-    { deep: true },
-);
-
-function submitRange(): void {
-    if (!hasRangePrice.value) {
-        rangeForm.setError(
-            'daily_pricing',
-            'Define el precio de al menos un día.',
-        );
-
+async function submitRange(): Promise<void> {
+    if (!(await validate(rangeForm))) {
         return;
     }
 

@@ -15,6 +15,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { computed, watch } from 'vue';
+import { z } from 'zod';
+import { useFrontValidation } from '@/composables/useFrontValidation';
 import type {
     ListingDetailField,
     ListingFormData,
@@ -144,6 +146,87 @@ watch(
     },
 );
 
+const decimalString = (message: string, min?: number, max?: number) =>
+    z.string().refine((value) => {
+        if (value === '') {
+            return true;
+        }
+
+        if (!Number.isFinite(Number(value))) {
+            return false;
+        }
+
+        const number = Number(value);
+
+        return (
+            (min === undefined || number >= min) &&
+            (max === undefined || number <= max)
+        );
+    }, message);
+
+const listingSchema = z.object({
+    name: z
+        .string()
+        .trim()
+        .min(1, 'El nombre es obligatorio.')
+        .max(120, 'El nombre no puede superar 120 caracteres.'),
+    description: z
+        .string()
+        .max(5000, 'La descripción no puede superar 5000 caracteres.'),
+    address: z
+        .string()
+        .max(255, 'La dirección no puede superar 255 caracteres.'),
+    city: z.string().max(120, 'El municipio no puede superar 120 caracteres.'),
+    state: z.string().max(120, 'El estado no puede superar 120 caracteres.'),
+    country: z.string().max(120, 'El país no puede superar 120 caracteres.'),
+    postal_code: z
+        .string()
+        .max(20, 'El código postal no puede superar 20 caracteres.'),
+    latitude: decimalString('Indica una latitud válida.', -90, 90),
+    longitude: decimalString('Indica una longitud válida.', -180, 180),
+    capacity: decimalString('Indica una capacidad válida.', 1, 100000),
+    services: z.array(z.string()),
+    details: z.record(z.string()),
+    rules: z
+        .string()
+        .max(2000, 'Las reglas no pueden superar 2000 caracteres.'),
+    contact_name: z
+        .string()
+        .max(120, 'El contacto no puede superar 120 caracteres.'),
+    contact_email: z
+        .string()
+        .refine(
+            (value) => value === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+            'Indica un correo válido.',
+        ),
+    contact_phone: z
+        .string()
+        .max(40, 'El teléfono no puede superar 40 caracteres.'),
+    whatsapp_phone: z
+        .string()
+        .max(40, 'El WhatsApp no puede superar 40 caracteres.'),
+});
+
+const { validate } = useFrontValidation(listingSchema, () => ({
+    name: form.name,
+    description: form.description,
+    address: form.address,
+    city: form.city,
+    state: form.state,
+    country: form.country,
+    postal_code: form.postal_code,
+    latitude: String(form.latitude),
+    longitude: String(form.longitude),
+    capacity: String(form.capacity),
+    services: form.services,
+    details: { ...form.details },
+    rules: form.rules,
+    contact_name: form.contact_name,
+    contact_email: form.contact_email,
+    contact_phone: form.contact_phone,
+    whatsapp_phone: form.whatsapp_phone,
+}));
+
 function setCoordinates(latitude: string, longitude: string): void {
     form.latitude = latitude;
     form.longitude = longitude;
@@ -162,7 +245,11 @@ function detailError(key: string): string | undefined {
     ];
 }
 
-function submit(): void {
+async function submit(): Promise<void> {
+    if (!(await validate(form))) {
+        return;
+    }
+
     if (props.mode === 'create' && props.urls.store) {
         form.post(props.urls.store);
 

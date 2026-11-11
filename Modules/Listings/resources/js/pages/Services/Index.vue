@@ -10,6 +10,8 @@ import {
     Trash2,
 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
+import { z } from 'zod';
+import { useFrontValidation } from '@/composables/useFrontValidation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -110,6 +112,47 @@ const form = useForm({
 const editing = ref<CommercialService | null>(null);
 const dialogOpen = ref(false);
 
+const serviceSchema = z
+    .object({
+        service_key: z.string().min(1, 'Selecciona un servicio.'),
+        description: z
+            .string()
+            .max(2000, 'La descripción no puede superar 2000 caracteres.'),
+        pricing_mode: z.enum(['included', 'additional', 'quote']),
+        provider: z.enum(['own', 'external']),
+        price: z.string(),
+        price_unit: z.string().min(1, 'Selecciona una unidad de cobro.'),
+        active: z.boolean(),
+    })
+    .superRefine((values, context) => {
+        if (values.pricing_mode !== 'additional') {
+            return;
+        }
+
+        if (
+            values.price === '' ||
+            !Number.isFinite(Number(values.price)) ||
+            Number(values.price) < 0 ||
+            Number(values.price) > 10000000
+        ) {
+            context.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['price'],
+                message: 'Indica un precio válido para el costo adicional.',
+            });
+        }
+    });
+
+const { validate } = useFrontValidation(serviceSchema, () => ({
+    service_key: form.service_key,
+    description: form.description,
+    pricing_mode: form.pricing_mode,
+    provider: form.provider,
+    price: form.price,
+    price_unit: form.price_unit,
+    active: form.active,
+}));
+
 const includedCount = computed(
     () =>
         props.services.filter((item) => item.pricing_mode === 'included')
@@ -198,7 +241,11 @@ function openCreate(): void {
     dialogOpen.value = true;
 }
 
-function submit(): void {
+async function submit(): Promise<void> {
+    if (!(await validate(form))) {
+        return;
+    }
+
     const options = {
         preserveScroll: true,
         onSuccess: () => {

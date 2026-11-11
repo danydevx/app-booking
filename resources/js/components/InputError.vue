@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CircleAlert } from '@lucide/vue';
+import { FieldError } from '@/components/ui/field';
 
 defineProps<{
     message?: string;
@@ -7,12 +8,8 @@ defineProps<{
 </script>
 
 <template>
-    <div
-        v-if="message"
-        role="alert"
-        class="flex items-start gap-1.5 text-sm text-destructive"
-    >
+    <FieldError v-if="message" class="flex items-start gap-1.5">
         <CircleAlert class="mt-0.5 size-3.5 shrink-0" />
-        <p>{{ message }}</p>
-    </div>
+        <span>{{ message }}</span>
+    </FieldError>
 </template>

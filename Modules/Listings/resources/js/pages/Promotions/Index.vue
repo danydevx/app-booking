@@ -2,6 +2,8 @@
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { Check, Pencil, Plus, Tag, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
+import { z } from 'zod';
+import { useFrontValidation } from '@/composables/useFrontValidation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -104,6 +106,67 @@ const form = useForm({
 const editing = ref<Promotion | null>(null);
 const dialogOpen = ref(false);
 
+const promotionSchema = z
+    .object({
+        title: z
+            .string()
+            .trim()
+            .min(1, 'El título es obligatorio.')
+            .max(120, 'El título no puede superar 120 caracteres.'),
+        description: z
+            .string()
+            .max(2000, 'La descripción no puede superar 2000 caracteres.'),
+        promotional_price: z
+            .string()
+            .refine(
+                (value) =>
+                    value === '' ||
+                    (Number.isFinite(Number(value)) &&
+                        Number(value) >= 0 &&
+                        Number(value) <= 10000000),
+                'Indica un precio válido.',
+            ),
+        previous_price: z
+            .string()
+            .refine(
+                (value) =>
+                    value === '' ||
+                    (Number.isFinite(Number(value)) &&
+                        Number(value) >= 0 &&
+                        Number(value) <= 10000000),
+                'Indica un precio válido.',
+            ),
+        starts_at: z.string().min(1, 'La fecha de inicio es obligatoria.'),
+        ends_at: z.string().min(1, 'La fecha de fin es obligatoria.'),
+        applies_on: z.array(z.string()),
+        conditions: z
+            .string()
+            .max(2000, 'Las condiciones no pueden superar 2000 caracteres.'),
+        active: z.boolean(),
+    })
+    .refine(
+        (values) =>
+            !values.starts_at ||
+            !values.ends_at ||
+            values.ends_at >= values.starts_at,
+        {
+            path: ['ends_at'],
+            message: 'La fecha final debe ser igual o posterior al inicio.',
+        },
+    );
+
+const { validate } = useFrontValidation(promotionSchema, () => ({
+    title: form.title,
+    description: form.description,
+    promotional_price: form.promotional_price,
+    previous_price: form.previous_price,
+    starts_at: form.starts_at,
+    ends_at: form.ends_at,
+    applies_on: form.applies_on,
+    conditions: form.conditions,
+    active: form.active,
+}));
+
 function toggleDay(day: string): void {
     form.applies_on = form.applies_on.includes(day)
         ? form.applies_on.filter((item) => item !== day)
@@ -145,7 +208,11 @@ function reset(): void {
     form.active = true;
 }
 
-function submit(): void {
+async function submit(): Promise<void> {
+    if (!(await validate(form))) {
+        return;
+    }
+
     const options = {
         preserveScroll: true,
         onSuccess: () => {

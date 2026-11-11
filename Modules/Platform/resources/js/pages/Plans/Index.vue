@@ -10,6 +10,8 @@ import {
     X,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import { z } from 'zod';
+import { useFrontValidation } from '@/composables/useFrontValidation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -53,6 +55,44 @@ const props = defineProps<{
 
 const editing = ref<PlanRow | null>(null);
 const dialogOpen = ref(false);
+
+const planSchema = z.object({
+    slug: z
+        .string()
+        .trim()
+        .min(1, 'El slug es obligatorio.')
+        .max(40, 'El slug no puede superar 40 caracteres.')
+        .regex(
+            /^[a-z0-9_-]+$/,
+            'Usa solo minúsculas, números, guiones y guiones bajos.',
+        ),
+    name: z
+        .string()
+        .trim()
+        .min(1, 'El nombre es obligatorio.')
+        .max(80, 'El nombre no puede superar 80 caracteres.'),
+    description: z
+        .string()
+        .max(500, 'La descripción no puede superar 500 caracteres.'),
+    stripe_price_id: z
+        .string()
+        .max(255, 'El precio de Stripe no puede superar 255 caracteres.'),
+    interval: z.enum(['month', 'year']),
+    active: z.boolean(),
+    limits: z.record(z.number().int().min(0).max(1000000)),
+    features: z.record(z.boolean()),
+});
+
+const { validate } = useFrontValidation(planSchema, () => ({
+    slug: form.slug,
+    name: form.name,
+    description: form.description,
+    stripe_price_id: form.stripe_price_id,
+    interval: form.interval,
+    active: form.active,
+    limits: { ...form.limits },
+    features: { ...form.features },
+}));
 
 function blankLimits(): Record<string, number> {
     return Object.fromEntries(
@@ -138,7 +178,18 @@ function fieldError(key: string): string | undefined {
     return (form.errors as Record<string, string | undefined>)[key];
 }
 
-function submit(): void {
+async function submit(): Promise<void> {
+    if (!(await validate(form))) {
+        return;
+    }
+
+    form.limits = Object.fromEntries(
+        Object.entries(form.limits).map(([key, value]) => [
+            key,
+            Number(value) || 0,
+        ]),
+    );
+
     const options = {
         preserveScroll: true,
         onSuccess: () => {

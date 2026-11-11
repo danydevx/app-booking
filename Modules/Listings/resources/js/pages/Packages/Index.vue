@@ -14,6 +14,8 @@ import {
     Users,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import { z } from 'zod';
+import { useFrontValidation } from '@/composables/useFrontValidation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -111,6 +113,62 @@ const form = useForm({
 const editing = ref<ListingPackage | null>(null);
 const dialogOpen = ref(false);
 
+const packageSchema = z.object({
+    name: z
+        .string()
+        .trim()
+        .min(1, 'El nombre es obligatorio.')
+        .max(120, 'El nombre no puede superar 120 caracteres.'),
+    description: z
+        .string()
+        .max(2000, 'La descripción no puede superar 2000 caracteres.'),
+    price: z
+        .string()
+        .refine(
+            (value) =>
+                value !== '' &&
+                Number.isFinite(Number(value)) &&
+                Number(value) >= 0 &&
+                Number(value) <= 10000000,
+            'Indica un precio válido.',
+        ),
+    duration_hours: z.coerce
+        .number()
+        .int('La duración debe ser un número entero.')
+        .min(1, 'La duración mínima es 1 hora.')
+        .max(168, 'La duración máxima es 168 horas.'),
+    included_people: z.coerce
+        .number()
+        .int('Las personas deben ser un número entero.')
+        .min(1, 'Incluye al menos una persona.')
+        .max(100000, 'El número de personas es demasiado alto.'),
+    included_services: z.array(z.string()),
+    conditions: z
+        .string()
+        .max(2000, 'Las condiciones no pueden superar 2000 caracteres.'),
+    active: z.boolean(),
+    sort_order: z
+        .string()
+        .refine(
+            (value) =>
+                value === '' ||
+                (Number.isInteger(Number(value)) && Number(value) >= 0),
+            'El orden debe ser un número entero positivo.',
+        ),
+});
+
+const { validate } = useFrontValidation(packageSchema, () => ({
+    name: form.name,
+    description: form.description,
+    price: form.price,
+    duration_hours: form.duration_hours,
+    included_people: form.included_people,
+    included_services: form.included_services,
+    conditions: form.conditions,
+    active: form.active,
+    sort_order: form.sort_order,
+}));
+
 function formatCurrency(
     value: string | number | null | undefined,
 ): string | null {
@@ -174,7 +232,11 @@ function openCreate(): void {
     dialogOpen.value = true;
 }
 
-function submit(): void {
+async function submit(): Promise<void> {
+    if (!(await validate(form))) {
+        return;
+    }
+
     const options = {
         preserveScroll: true,
         onSuccess: () => {
