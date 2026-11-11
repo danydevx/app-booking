@@ -19,72 +19,6 @@ class CustomerEmailTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_pro_owner_can_manage_email_templates(): void
-    {
-        [$owner, $team] = $this->ownerWithTeam();
-        $this->subscribePro($team);
-
-        $this->actingAs($owner)
-            ->post(route('bookings.templates.store', ['current_team' => $team->slug]), [
-                'name' => 'Seguimiento inicial',
-                'subject' => 'Hola {{nombre}}',
-                'body' => 'Te contactamos sobre {{terraza}}.',
-            ])
-            ->assertSessionHasNoErrors();
-
-        $template = EmailTemplate::query()->firstOrFail();
-        $this->assertSame($team->id, $template->team_id);
-
-        $this->actingAs($owner)
-            ->get(route('bookings.templates.index', ['current_team' => $team->slug]))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Bookings/Templates/Index')
-                ->has('templates', 1)
-                ->where('templates.0.name', 'Seguimiento inicial'));
-
-        $this->actingAs($owner)
-            ->patch(route('bookings.templates.update', [
-                'current_team' => $team->slug,
-                'template' => $template->id,
-            ]), [
-                'name' => 'Seguimiento actualizado',
-                'subject' => 'Nuevo asunto',
-                'body' => 'Nuevo cuerpo',
-            ])
-            ->assertSessionHasNoErrors();
-
-        $this->assertSame('Seguimiento actualizado', $template->fresh()->name);
-
-        $this->actingAs($owner)
-            ->delete(route('bookings.templates.destroy', [
-                'current_team' => $team->slug,
-                'template' => $template->id,
-            ]))
-            ->assertSessionHasNoErrors();
-
-        $this->assertDatabaseCount('email_templates', 0);
-    }
-
-    public function test_templates_are_isolated_by_team(): void
-    {
-        [$owner, $team] = $this->ownerWithTeam();
-        $this->subscribePro($team);
-        $foreignTeam = Team::factory()->create();
-        $foreignTemplate = EmailTemplate::factory()->create(['team_id' => $foreignTeam->id]);
-
-        $this->actingAs($owner)
-            ->patch(route('bookings.templates.update', [
-                'current_team' => $team->slug,
-                'template' => $foreignTemplate->id,
-            ]), [
-                'name' => 'Intruso',
-                'subject' => 'Asunto',
-                'body' => 'Cuerpo',
-            ])
-            ->assertNotFound();
-    }
-
     public function test_owner_can_send_a_rendered_email_and_it_is_logged(): void
     {
         [$owner, $team, $listing] = $this->ownerListing();
@@ -181,14 +115,20 @@ class CustomerEmailTest extends TestCase
         $this->assertNull($customer->fresh()->email_opt_out_at);
     }
 
-    public function test_free_plan_cannot_manage_templates_or_send_email(): void
+    public function test_team_email_template_management_is_not_exposed(): void
+    {
+        [$owner, $team] = $this->ownerListing();
+        $this->subscribePro($team);
+
+        $this->actingAs($owner)
+            ->get("/app/{$team->slug}/bookings/templates")
+            ->assertNotFound();
+    }
+
+    public function test_free_plan_cannot_send_email(): void
     {
         [$owner, $team] = $this->ownerListing();
         $customer = Customer::factory()->create(['team_id' => $team->id]);
-
-        $this->actingAs($owner)
-            ->get(route('bookings.templates.index', ['current_team' => $team->slug]))
-            ->assertRedirect(route('billing.index', ['current_team' => $team->slug]));
 
         $this->actingAs($owner)
             ->post(route('bookings.customers.emails.send', [

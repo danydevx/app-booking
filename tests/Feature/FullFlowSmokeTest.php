@@ -81,7 +81,6 @@ class FullFlowSmokeTest extends TestCase
         ]))->assertOk();
         $this->get(route('bookings.today', ['current_team' => $team->slug]))->assertOk();
         $this->get(route('bookings.reports', ['current_team' => $team->slug]))->assertOk();
-        $this->get(route('bookings.templates.index', ['current_team' => $team->slug]))->assertOk();
 
         // Customer workspace sections.
         foreach ([

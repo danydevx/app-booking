@@ -709,7 +709,6 @@ class CustomerController extends Controller
                     'current_team' => $team->slug,
                     'customer' => $customer->id,
                 ]),
-                'templates' => route('bookings.templates.index', ['current_team' => $team->slug]),
                 'tags_sync' => route('bookings.customers.tags.sync', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,

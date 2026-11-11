@@ -87,7 +87,6 @@ const props = defineProps<{
         quotes_index: string;
         emails_send: string;
         email_opt_in: string;
-        templates: string;
         pipeline_update: string;
         merge: string;
         archive: string;
@@ -1037,12 +1036,9 @@ function statusVariant(
                             <h2 class="text-lg font-semibold">Correo</h2>
                             <p class="text-sm text-muted-foreground">
                                 Envía un correo de seguimiento usando una
-                                plantilla.
+                                plantilla de la plataforma.
                             </p>
                         </div>
-                        <Button variant="outline" size="sm" as-child>
-                            <Link :href="urls.templates">Plantillas</Link>
-                        </Button>
                     </div>
 
                     <div

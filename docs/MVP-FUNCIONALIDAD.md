@@ -208,7 +208,7 @@ La landing pública y la administración están separadas por URL y layout:
 
 ### 5.9 Correo y plantillas
 
-- Plantillas por cuenta con variables:
+- Plantillas administradas por el superadmin de la plataforma, con variables:
     - `{{nombre}}`
     - `{{correo}}`
     - `{{terraza}}`

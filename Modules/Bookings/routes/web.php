@@ -17,7 +17,6 @@ use Modules\Bookings\Http\Controllers\CustomerPipelineController;
 use Modules\Bookings\Http\Controllers\CustomerQuoteController;
 use Modules\Bookings\Http\Controllers\CustomerTagController;
 use Modules\Bookings\Http\Controllers\CustomerTaskController;
-use Modules\Bookings\Http\Controllers\EmailTemplateController;
 use Modules\Bookings\Http\Controllers\ManualBookingController;
 use Modules\Bookings\Http\Controllers\PublicAvailabilityController;
 use Modules\Bookings\Http\Controllers\PublicBookingPortalController;
@@ -143,11 +142,6 @@ Route::prefix('app')->group(function (): void {
                 ->name('customers.email-opt-in');
             Route::post('/customers/{customer}/quotes', [CustomerQuoteController::class, 'store'])
                 ->name('customers.quotes.store');
-
-            Route::get('/templates', [EmailTemplateController::class, 'index'])->name('templates.index');
-            Route::post('/templates', [EmailTemplateController::class, 'store'])->name('templates.store');
-            Route::patch('/templates/{template}', [EmailTemplateController::class, 'update'])->name('templates.update');
-            Route::delete('/templates/{template}', [EmailTemplateController::class, 'destroy'])->name('templates.destroy');
 
             Route::get('/quotes', [CustomerQuoteController::class, 'index'])->name('quotes.index');
             Route::get('/quotes/{quote}', [CustomerQuoteController::class, 'show'])->name('quotes.show');

@@ -10,7 +10,6 @@ import {
     Inbox,
     LayoutGrid,
     ListChecks,
-    Mail,
     Shield,
 } from '@lucide/vue';
 import { computed } from 'vue';
@@ -66,11 +65,6 @@ const mainNavItems = computed<NavItem[]>(() => {
             title: 'Cotizaciones',
             href: `/app/${page.props.currentTeam.slug}/bookings/quotes`,
             icon: FileText,
-        });
-        items.push({
-            title: 'Plantillas',
-            href: `/app/${page.props.currentTeam.slug}/bookings/templates`,
-            icon: Mail,
         });
         items.push({
             title: 'Reportes',
