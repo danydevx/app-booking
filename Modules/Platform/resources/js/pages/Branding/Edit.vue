@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
+import { Image as ImageIcon, Trash2, Upload } from '@lucide/vue';
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +40,7 @@ const form = useForm({
 });
 
 const preview = ref<string | null>(props.branding.logo_url);
+const logoInput = ref<HTMLInputElement | null>(null);
 
 function onLogoChange(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -46,16 +48,26 @@ function onLogoChange(event: Event): void {
 
     form.logo = file;
     form.remove_logo = false;
+    form.clearErrors('logo');
 
     if (file) {
         preview.value = URL.createObjectURL(file);
     }
 }
 
+function chooseLogo(): void {
+    logoInput.value?.click();
+}
+
 function removeLogo(): void {
     form.logo = null;
     form.remove_logo = true;
+    form.clearErrors('logo');
     preview.value = null;
+
+    if (logoInput.value) {
+        logoInput.value.value = '';
+    }
 }
 
 function submit(): void {
@@ -99,31 +111,63 @@ function submit(): void {
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="logo">Logo</Label>
-                        <div class="flex flex-wrap items-center gap-3">
-                            <img
-                                v-if="preview"
-                                :src="preview"
-                                alt="Logo de la plataforma"
-                                class="size-16 rounded-md border object-cover"
-                            />
-                            <input
-                                id="logo"
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp"
-                                class="block text-sm"
-                                @change="onLogoChange"
-                            />
-                            <Button
-                                v-if="preview"
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                @click="removeLogo"
+                        <Label>Logo</Label>
+                        <div
+                            class="flex flex-wrap items-center gap-4 rounded-xl border bg-muted/20 p-4"
+                        >
+                            <div
+                                class="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-background"
                             >
-                                Quitar logo
-                            </Button>
+                                <img
+                                    v-if="preview"
+                                    :src="preview"
+                                    alt="Logo de la plataforma"
+                                    class="size-full object-contain p-2"
+                                />
+                                <ImageIcon
+                                    v-else
+                                    class="size-7 text-muted-foreground"
+                                />
+                            </div>
+                            <div class="grid gap-2">
+                                <div class="flex flex-wrap gap-2">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        @click="chooseLogo"
+                                    >
+                                        <Upload class="size-4" />
+                                        {{
+                                            preview
+                                                ? 'Cambiar logo'
+                                                : 'Subir logo'
+                                        }}
+                                    </Button>
+                                    <Button
+                                        v-if="preview"
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        @click="removeLogo"
+                                    >
+                                        <Trash2 class="size-4" />
+                                        Quitar
+                                    </Button>
+                                </div>
+                                <p class="text-xs text-muted-foreground">
+                                    PNG, JPG o WebP. Máximo 2 MB. Se recomienda
+                                    fondo transparente y formato cuadrado.
+                                </p>
+                            </div>
                         </div>
+                        <input
+                            ref="logoInput"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            class="hidden"
+                            @change="onLogoChange"
+                        />
                         <p
                             v-if="form.errors.logo"
                             class="text-sm text-destructive"

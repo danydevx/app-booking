@@ -26,6 +26,17 @@ const appUrl = computed(() =>
     page.props.currentTeam ? dashboard(page.props.currentTeam.slug).url : '/',
 );
 
+const branding = computed(
+    () =>
+        (page.props.branding ?? {}) as {
+            app_name?: string | null;
+            logo_url?: string | null;
+        },
+);
+
+const appName = computed(() => branding.value.app_name || 'Plataforma');
+const logoUrl = computed(() => branding.value.logo_url ?? null);
+
 const navigation = [
     { title: 'Resumen', href: '/app/platform', icon: LayoutDashboard },
     { title: 'Cuentas', href: '/app/platform/accounts', icon: Users },
@@ -59,14 +70,21 @@ function isActive(href: string): boolean {
             >
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <Link href="/app/platform" class="flex items-center gap-2">
+                        <img
+                            v-if="logoUrl"
+                            :src="logoUrl"
+                            :alt="appName"
+                            class="size-9 rounded-lg object-contain"
+                        />
                         <span
+                            v-else
                             class="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground"
                         >
                             <Shield class="size-5" />
                         </span>
                         <span>
                             <span class="block text-lg font-semibold">
-                                Plataforma
+                                {{ appName }}
                             </span>
                             <span class="block text-xs text-muted-foreground">
                                 Operación y moderación
