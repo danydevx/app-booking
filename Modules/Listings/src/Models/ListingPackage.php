@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Modules\Listings\Database\Factories\ListingPackageFactory;
-use Modules\Listings\Support\TerraceServiceCatalog;
+use Modules\Listings\Support\CommercialServiceCatalog;
 
 /**
  * @property int $id
@@ -90,7 +90,7 @@ class ListingPackage extends Model
             ->unique()
             ->map(fn (string $key): array => [
                 'key' => $key,
-                'label' => TerraceServiceCatalog::label($key),
+                'label' => CommercialServiceCatalog::label($key),
             ])
             ->values()
             ->all();

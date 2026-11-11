@@ -49,6 +49,20 @@ const contactPhone = computed(
 const whatsappUrl = computed(
     () => props.listing.whatsapp_url ?? props.listing.account.whatsapp_url,
 );
+
+function serviceBadgeVariant(
+    mode: string,
+): 'default' | 'secondary' | 'outline' {
+    if (mode === 'included') {
+        return 'default';
+    }
+
+    if (mode === 'additional') {
+        return 'secondary';
+    }
+
+    return 'outline';
+}
 </script>
 
 <template>
@@ -525,6 +539,112 @@ const whatsappUrl = computed(
                     </section>
 
                     <section
+                        v-if="listing.serviceGroups.length > 0"
+                        class="space-y-4"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">
+                                Características
+                            </h2>
+                            <p class="text-sm text-muted-foreground">
+                                Instalaciones, espacios y equipamiento del
+                                lugar.
+                            </p>
+                        </div>
+                        <div
+                            v-for="group in listing.serviceGroups"
+                            :key="group.key"
+                            class="space-y-2"
+                        >
+                            <h3
+                                class="text-sm font-medium text-muted-foreground"
+                            >
+                                {{ group.label }}
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                                <Badge
+                                    v-for="service in group.services"
+                                    :key="service.value"
+                                    variant="secondary"
+                                >
+                                    {{ service.label }}
+                                </Badge>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section
+                        v-if="listing.commercialServices.length > 0"
+                        class="space-y-4"
+                    >
+                        <div>
+                            <h2 class="text-lg font-semibold">
+                                Servicios disponibles
+                            </h2>
+                            <p class="text-sm text-muted-foreground">
+                                Servicios incluidos, con costo adicional o
+                                sujetos a cotización.
+                            </p>
+                        </div>
+                        <div class="grid gap-3 md:grid-cols-2">
+                            <article
+                                v-for="service in listing.commercialServices"
+                                :key="service.id"
+                                class="rounded-xl border bg-card p-4"
+                            >
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="font-semibold">
+                                        {{ service.label }}
+                                    </h3>
+                                    <Badge
+                                        :variant="
+                                            serviceBadgeVariant(
+                                                service.pricing_mode,
+                                            )
+                                        "
+                                    >
+                                        {{ service.pricing_mode_label }}
+                                    </Badge>
+                                    <Badge
+                                        v-if="service.provider === 'external'"
+                                        variant="outline"
+                                    >
+                                        {{ service.provider_label }}
+                                    </Badge>
+                                </div>
+                                <p
+                                    v-if="
+                                        service.pricing_mode === 'additional' &&
+                                        service.has_price
+                                    "
+                                    class="mt-2 text-sm font-medium"
+                                >
+                                    {{ service.price_formatted }} ·
+                                    {{ service.price_unit_label }}
+                                </p>
+                                <p
+                                    v-else-if="service.pricing_mode === 'quote'"
+                                    class="mt-2 text-sm text-muted-foreground"
+                                >
+                                    Precio a consultar con el anfitrión.
+                                </p>
+                                <p
+                                    v-else
+                                    class="mt-2 text-sm text-muted-foreground"
+                                >
+                                    Incluido en la renta.
+                                </p>
+                                <p
+                                    v-if="service.description"
+                                    class="mt-2 text-sm whitespace-pre-line text-muted-foreground"
+                                >
+                                    {{ service.description }}
+                                </p>
+                            </article>
+                        </div>
+                    </section>
+
+                    <section
                         v-if="listing.packages.length > 0"
                         class="space-y-4"
                     >
@@ -559,15 +679,22 @@ const whatsappUrl = computed(
                                 </p>
                                 <div
                                     v-if="packageItem.services.length > 0"
-                                    class="mt-2 flex flex-wrap gap-1"
+                                    class="mt-3 space-y-1"
                                 >
-                                    <Badge
-                                        v-for="service in packageItem.services"
-                                        :key="service.key"
-                                        variant="outline"
+                                    <p
+                                        class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
                                     >
-                                        {{ service.label }}
-                                    </Badge>
+                                        Servicios incluidos
+                                    </p>
+                                    <div class="flex flex-wrap gap-1">
+                                        <Badge
+                                            v-for="service in packageItem.services"
+                                            :key="service.key"
+                                            variant="outline"
+                                        >
+                                            {{ service.label }}
+                                        </Badge>
+                                    </div>
                                 </div>
                                 <p
                                     v-if="packageItem.conditions"
@@ -576,93 +703,6 @@ const whatsappUrl = computed(
                                     {{ packageItem.conditions }}
                                 </p>
                             </article>
-                        </div>
-                    </section>
-
-                    <section
-                        v-if="listing.commercialServices.length > 0"
-                        class="space-y-4"
-                    >
-                        <div>
-                            <h2 class="text-lg font-semibold">
-                                Servicios adicionales
-                            </h2>
-                            <p class="text-sm text-muted-foreground">
-                                Servicios incluidos o disponibles con costo
-                                extra.
-                            </p>
-                        </div>
-                        <div class="grid gap-3 md:grid-cols-2">
-                            <article
-                                v-for="service in listing.commercialServices"
-                                :key="service.id"
-                                class="rounded-xl border bg-card p-4"
-                            >
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <h3 class="font-semibold">
-                                        {{ service.label }}
-                                    </h3>
-                                    <Badge
-                                        :variant="
-                                            service.is_included
-                                                ? 'default'
-                                                : 'secondary'
-                                        "
-                                    >
-                                        {{
-                                            service.is_included
-                                                ? 'Incluido'
-                                                : 'Costo adicional'
-                                        }}
-                                    </Badge>
-                                </div>
-                                <p
-                                    v-if="service.has_price"
-                                    class="mt-2 text-sm font-medium"
-                                >
-                                    {{ service.price_formatted }} ·
-                                    {{ service.price_unit_label }}
-                                </p>
-                                <p
-                                    v-else
-                                    class="mt-2 text-sm text-muted-foreground"
-                                >
-                                    Precio no especificado
-                                </p>
-                                <p
-                                    v-if="service.description"
-                                    class="mt-2 text-sm whitespace-pre-line text-muted-foreground"
-                                >
-                                    {{ service.description }}
-                                </p>
-                            </article>
-                        </div>
-                    </section>
-
-                    <section
-                        v-if="listing.serviceGroups.length > 0"
-                        class="space-y-4"
-                    >
-                        <h2 class="text-lg font-semibold">Características</h2>
-                        <div
-                            v-for="group in listing.serviceGroups"
-                            :key="group.key"
-                            class="space-y-2"
-                        >
-                            <h3
-                                class="text-sm font-medium text-muted-foreground"
-                            >
-                                {{ group.label }}
-                            </h3>
-                            <div class="flex flex-wrap gap-2">
-                                <Badge
-                                    v-for="service in group.services"
-                                    :key="service.value"
-                                    variant="secondary"
-                                >
-                                    {{ service.label }}
-                                </Badge>
-                            </div>
                         </div>
                     </section>
 

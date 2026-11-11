@@ -169,7 +169,8 @@ class ListingCommercialTest extends TestCase
             ]), [
                 'service_key' => 'dj',
                 'description' => 'DJ para cuatro horas.',
-                'is_included' => false,
+                'pricing_mode' => 'additional',
+                'provider' => 'external',
                 'price' => '2500',
                 'price_unit' => ListingServicePriceUnit::Event->value,
                 'active' => true,
@@ -179,6 +180,8 @@ class ListingCommercialTest extends TestCase
         $service = ListingService::query()->firstOrFail();
         $this->assertSame(250000, $service->price_cents);
         $this->assertSame('DJ', $service->serviceLabel());
+        $this->assertSame('additional', $service->pricing_mode->value);
+        $this->assertSame('external', $service->provider->value);
 
         ListingService::factory()->forListing($listing)->create([
             'service_key' => 'waiters',
@@ -202,6 +205,10 @@ class ListingCommercialTest extends TestCase
                 ->has('listing.commercialServices', 1)
                 ->where('listing.commercialServices.0.label', 'DJ')
                 ->where('listing.commercialServices.0.is_included', false)
+                ->where('listing.commercialServices.0.pricing_mode', 'additional')
+                ->where('listing.commercialServices.0.pricing_mode_label', 'Costo adicional')
+                ->where('listing.commercialServices.0.provider', 'external')
+                ->where('listing.commercialServices.0.provider_label', 'Proveedor externo')
                 ->where('listing.commercialServices.0.has_price', true)
                 ->where('listing.commercialServices.0.price_formatted', '$2,500.00 MXN')
                 ->where('listing.commercialServices.0.price_unit_label', 'Por evento'));
@@ -213,14 +220,70 @@ class ListingCommercialTest extends TestCase
                 'service' => $service->id,
             ]), [
                 'service_key' => 'dj',
-                'is_included' => true,
+                'pricing_mode' => 'included',
+                'provider' => 'own',
                 'price_unit' => ListingServicePriceUnit::Event->value,
                 'active' => true,
             ])
             ->assertSessionHasNoErrors();
 
         $this->assertTrue($service->fresh()->is_included);
+        $this->assertSame('included', $service->fresh()->pricing_mode->value);
+        $this->assertSame('own', $service->fresh()->provider->value);
         $this->assertNull($service->fresh()->price_cents);
+    }
+
+    public function test_service_pricing_mode_controls_price_requirements(): void
+    {
+        [$owner, $team, $listing] = $this->ownerListing();
+
+        $this->actingAs($owner)
+            ->post(route('listings.services.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'service_key' => 'bartender',
+                'pricing_mode' => 'additional',
+                'provider' => 'own',
+                'price_unit' => ListingServicePriceUnit::Event->value,
+                'active' => true,
+            ])
+            ->assertSessionHasErrors('price');
+
+        $this->actingAs($owner)
+            ->post(route('listings.services.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'service_key' => 'live_music',
+                'pricing_mode' => 'quote',
+                'provider' => 'external',
+                'price_unit' => ListingServicePriceUnit::Event->value,
+                'active' => true,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $quote = ListingService::query()->where('service_key', 'live_music')->firstOrFail();
+        $this->assertSame('quote', $quote->pricing_mode->value);
+        $this->assertNull($quote->price_cents);
+
+        $this->actingAs($owner)
+            ->post(route('listings.services.store', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]), [
+                'service_key' => 'event_coordinator',
+                'pricing_mode' => 'included',
+                'provider' => 'own',
+                'price' => '1200',
+                'price_unit' => ListingServicePriceUnit::Event->value,
+                'active' => true,
+            ])
+            ->assertSessionHasNoErrors();
+
+        $included = ListingService::query()->where('service_key', 'event_coordinator')->firstOrFail();
+        $this->assertSame('included', $included->pricing_mode->value);
+        $this->assertNull($included->price_cents);
     }
 
     public function test_promotions_only_show_when_current_and_active(): void
@@ -393,7 +456,9 @@ class ListingCommercialTest extends TestCase
                 ->component('Listings/Services/Index')
                 ->has('services', 1)
                 ->has('serviceGroups')
-                ->has('priceUnits', 4));
+                ->has('priceUnits', 4)
+                ->has('pricingModes', 3)
+                ->has('providers', 2));
 
         $this->actingAs($owner)
             ->get(route('listings.promotions.index', [

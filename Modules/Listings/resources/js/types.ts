@@ -67,6 +67,10 @@ export type ListingCommercialService = {
     label: string;
     description: string | null;
     is_included: boolean;
+    pricing_mode: string;
+    pricing_mode_label: string;
+    provider: string;
+    provider_label: string;
     price_formatted: string | null;
     has_price: boolean;
     price_unit: string;

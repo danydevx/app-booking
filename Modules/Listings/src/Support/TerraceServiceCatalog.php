@@ -24,6 +24,23 @@ final class TerraceServiceCatalog
     ];
 
     /**
+     * Keys that were previously part of the characteristics catalog and are
+     * now commercial services. They remain valid so existing listings do not
+     * lose their saved selections.
+     *
+     * @var array<int, string>
+     */
+    private const LEGACY_COMMERCIAL_KEYS = [
+        'catering',
+        'taquizas',
+        'decoration',
+        'candy_bar',
+        'dj',
+        'waiters',
+        'ice_and_drinks',
+    ];
+
+    /**
      * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
      */
     public static function groups(): array
@@ -78,22 +95,11 @@ final class TerraceServiceCatalog
     }
 
     /**
-     * @return array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>
-     */
-    public static function commercialServiceGroups(): array
-    {
-        return array_values(array_filter(
-            self::groups(),
-            fn (array $group): bool => in_array($group['key'], ['lodging', 'extras'], true),
-        ));
-    }
-
-    /**
      * @return array<int, string>
      */
-    public static function commercialServiceKeys(): array
+    public static function legacyCommercialKeys(): array
     {
-        return self::keysFromGroups(self::commercialServiceGroups());
+        return self::LEGACY_COMMERCIAL_KEYS;
     }
 
     /**
@@ -174,7 +180,6 @@ final class TerraceServiceCatalog
         }
 
         $groups = [];
-        $used = [];
 
         foreach (self::groups() as $group) {
             $services = array_values(array_filter(
@@ -191,26 +196,6 @@ final class TerraceServiceCatalog
                 'label' => $group['label'],
                 'services' => $services,
             ];
-
-            foreach ($services as $service) {
-                $used[] = $service['value'];
-            }
-        }
-
-        $unknown = array_values(array_diff($selected, $used));
-
-        if ($unknown !== []) {
-            $groups[] = [
-                'key' => 'other',
-                'label' => 'Otros',
-                'services' => array_map(
-                    fn (string $key): array => [
-                        'value' => $key,
-                        'label' => $key,
-                    ],
-                    $unknown,
-                ),
-            ];
         }
 
         return $groups;
@@ -219,23 +204,6 @@ final class TerraceServiceCatalog
     public static function label(string $key): string
     {
         return self::all()[$key] ?? $key;
-    }
-
-    /**
-     * @param  array<int, array{key: string, label: string, services: array<int, array{value: string, label: string}>}>  $groups
-     * @return array<int, string>
-     */
-    private static function keysFromGroups(array $groups): array
-    {
-        $keys = [];
-
-        foreach ($groups as $group) {
-            foreach ($group['services'] as $service) {
-                $keys[] = $service['value'];
-            }
-        }
-
-        return $keys;
     }
 
     /**

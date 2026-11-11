@@ -21,7 +21,10 @@ class SaveListingRequest extends FormRequest
      */
     public function rules(): array
     {
-        $services = array_keys(TerraceServiceCatalog::all());
+        $services = array_merge(
+            array_keys(TerraceServiceCatalog::all()),
+            TerraceServiceCatalog::legacyCommercialKeys(),
+        );
         $detailFields = TerraceDetailCatalog::all();
         $detailKeys = array_keys($detailFields);
         $detailKeyRule = $detailKeys === []
@@ -62,7 +65,7 @@ class SaveListingRequest extends FormRequest
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'services' => ['nullable', 'array'],
-            'services.*' => ['string', Rule::in($services)],
+            'services.*' => ['string', 'distinct', Rule::in($services)],
             'details' => ['nullable', $detailKeyRule, 'max:20'],
             'details.*' => ['nullable', 'string', 'max:255'],
             'rules' => ['nullable', 'string', 'max:2000'],

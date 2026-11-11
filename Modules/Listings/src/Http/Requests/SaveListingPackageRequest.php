@@ -4,7 +4,7 @@ namespace Modules\Listings\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use Modules\Listings\Support\TerraceServiceCatalog;
+use Modules\Listings\Support\CommercialServiceCatalog;
 
 class SaveListingPackageRequest extends FormRequest
 {
@@ -25,7 +25,7 @@ class SaveListingPackageRequest extends FormRequest
             'duration_hours' => ['required', 'integer', 'min:1', 'max:168'],
             'included_people' => ['required', 'integer', 'min:1', 'max:100000'],
             'included_services' => ['nullable', 'array'],
-            'included_services.*' => ['string', Rule::in(TerraceServiceCatalog::commercialServiceKeys())],
+            'included_services.*' => ['string', 'distinct', Rule::in(CommercialServiceCatalog::keys())],
             'conditions' => ['nullable', 'string', 'max:2000'],
             'active' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:100000'],

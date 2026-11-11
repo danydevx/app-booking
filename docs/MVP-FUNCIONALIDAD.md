@@ -120,11 +120,11 @@ La landing pública y la administración están separadas por URL y layout:
 - Alta, edición, publicación y despublicación.
 - Datos: nombre, descripción, ubicación, coordenadas, capacidad, reglas y contacto.
 - Detalles de espacio: tipo, acceso, estacionamiento y vista.
-- Características/amenidades agrupadas por categoría.
+- Características del lugar (instalaciones, espacios y equipamiento) desde un catálogo global agrupado por categoría; sin precios individuales.
 - Precios informativos: desde, tarifa por día (lunes a domingo) con horas, entrada, salida y precio, cargos adicionales y anticipo requerido.
 - Tarifas por temporada con rango de fechas y precio por día (lunes a domingo) con horas, entrada, salida y precio; capacidad, cargos adicionales y condiciones.
-- Paquetes de renta con precio, duración, capacidad, servicios y condiciones.
-- Servicios comerciales reutilizando el catálogo de características: incluidos o con costo adicional, precio opcional y unidad de cobro.
+- Paquetes de renta con precio, duración, capacidad, servicios incluidos y condiciones; los servicios se reutilizan del catálogo de servicios.
+- Servicios comerciales con catálogo independiente de las características: incluidos, con costo adicional o precio a consultar; precio, unidad, descripción y proveedor propio o externo.
 - Promociones informativas con vigencia, días aplicables y condiciones.
 - Fotos y videos con límites por plan.
 - Vista pública y administración por terraza.

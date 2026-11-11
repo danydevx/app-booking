@@ -11,12 +11,14 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Listings\Enums\ListingServicePriceUnit;
+use Modules\Listings\Enums\ListingServicePricingMode;
+use Modules\Listings\Enums\ListingServiceProvider;
 use Modules\Listings\Http\Requests\SaveListingServiceRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingService;
+use Modules\Listings\Support\CommercialServiceCatalog;
 use Modules\Listings\Support\ListingCommercialPresenter;
 use Modules\Listings\Support\ListingFormData;
-use Modules\Listings\Support\TerraceServiceCatalog;
 
 class ListingServiceController extends Controller
 {
@@ -45,8 +47,10 @@ class ListingServiceController extends Controller
                 'slug' => $listing->slug,
             ],
             'services' => $services,
-            'serviceGroups' => TerraceServiceCatalog::groups(),
+            'serviceGroups' => CommercialServiceCatalog::groups(),
             'priceUnits' => ListingServicePriceUnit::options(),
+            'pricingModes' => ListingServicePricingMode::options(),
+            'providers' => ListingServiceProvider::options(),
             'urls' => [
                 ...$this->formData->ownerUrls($team, $listing),
                 'store' => route('listings.services.store', [
@@ -122,11 +126,16 @@ class ListingServiceController extends Controller
      */
     private function payload(array $data): array
     {
+        $pricingMode = ListingServicePricingMode::from((string) $data['pricing_mode']);
+        $provider = ListingServiceProvider::from((string) $data['provider']);
+
         return [
             'service_key' => $data['service_key'],
             'description' => $data['description'] ?? null,
-            'is_included' => $data['is_included'] ?? false,
-            'price_cents' => isset($data['price'])
+            'is_included' => $pricingMode === ListingServicePricingMode::Included,
+            'pricing_mode' => $pricingMode,
+            'provider' => $provider,
+            'price_cents' => $pricingMode === ListingServicePricingMode::Additional
                 ? (int) round(((float) $data['price']) * 100)
                 : null,
             'price_unit' => $data['price_unit'],

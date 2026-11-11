@@ -11,7 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Modules\Listings\Database\Factories\ListingServiceFactory;
 use Modules\Listings\Enums\ListingServicePriceUnit;
-use Modules\Listings\Support\TerraceServiceCatalog;
+use Modules\Listings\Enums\ListingServicePricingMode;
+use Modules\Listings\Enums\ListingServiceProvider;
+use Modules\Listings\Support\CommercialServiceCatalog;
 
 /**
  * @property int $id
@@ -20,6 +22,8 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property string $service_key
  * @property string|null $description
  * @property bool $is_included
+ * @property ListingServicePricingMode $pricing_mode
+ * @property ListingServiceProvider $provider
  * @property int|null $price_cents
  * @property ListingServicePriceUnit $price_unit
  * @property bool $active
@@ -32,6 +36,8 @@ use Modules\Listings\Support\TerraceServiceCatalog;
     'service_key',
     'description',
     'is_included',
+    'pricing_mode',
+    'provider',
     'price_cents',
     'price_unit',
     'active',
@@ -68,7 +74,7 @@ class ListingService extends Model
 
     public function serviceLabel(): string
     {
-        return TerraceServiceCatalog::label($this->service_key);
+        return CommercialServiceCatalog::label($this->service_key);
     }
 
     /**
@@ -78,6 +84,8 @@ class ListingService extends Model
     {
         return [
             'is_included' => 'boolean',
+            'pricing_mode' => ListingServicePricingMode::class,
+            'provider' => ListingServiceProvider::class,
             'price_cents' => 'integer',
             'price_unit' => ListingServicePriceUnit::class,
             'active' => 'boolean',

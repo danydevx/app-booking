@@ -21,7 +21,7 @@ class TerraceServiceCatalogTest extends TestCase
     {
         $all = TerraceServiceCatalog::all();
 
-        $this->assertCount(50, $all);
+        $this->assertCount(43, $all);
         $this->assertSame(count($all), count(array_unique($all)));
 
         foreach ([
@@ -67,13 +67,6 @@ class TerraceServiceCatalogTest extends TestCase
             'fire_pit',
             'lodging',
             'rooms',
-            'catering',
-            'taquizas',
-            'decoration',
-            'candy_bar',
-            'dj',
-            'waiters',
-            'ice_and_drinks',
             'security_cameras',
         ] as $key) {
             $this->assertArrayHasKey($key, $all);
@@ -85,9 +78,9 @@ class TerraceServiceCatalogTest extends TestCase
         $groups = TerraceServiceCatalog::groups();
         $all = TerraceServiceCatalog::all();
 
-        $this->assertCount(8, $groups);
+        $this->assertCount(7, $groups);
         $this->assertSame('Instalaciones y espacios', $groups[0]['label']);
-        $this->assertSame('Seguridad', $groups[7]['label']);
+        $this->assertSame('Seguridad', $groups[6]['label']);
 
         $grouped = [];
 
@@ -125,7 +118,7 @@ class TerraceServiceCatalogTest extends TestCase
         ], $priority);
 
         $this->assertSame([], array_values(array_intersect($priority, $additional)));
-        $this->assertCount(50, array_merge($priority, $additional));
+        $this->assertCount(43, array_merge($priority, $additional));
     }
 
     public function test_listing_form_receives_grouped_service_options(): void
@@ -138,7 +131,7 @@ class TerraceServiceCatalogTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Listings/Create')
-                ->has('serviceGroups', 8)
+                ->has('serviceGroups', 7)
                 ->where('serviceGroups.0.key', 'spaces')
                 ->where('serviceGroups.0.label', 'Instalaciones y espacios')
                 ->where('serviceGroups.4.key', 'entertainment')

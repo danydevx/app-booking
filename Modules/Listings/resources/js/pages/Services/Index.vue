@@ -3,14 +3,13 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
     BadgeDollarSign,
     Check,
-    Eye,
     Info,
     Pencil,
     Plus,
     Sparkles,
     Trash2,
 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,6 +27,10 @@ type CommercialService = {
     has_price: boolean;
     price_unit: string;
     price_unit_label: string;
+    pricing_mode: string;
+    pricing_mode_label: string;
+    provider: string;
+    provider_label: string;
     is_included: boolean;
     active: boolean;
     update_url: string;
@@ -39,6 +42,8 @@ const props = defineProps<{
     services: CommercialService[];
     serviceGroups: ServiceGroup[];
     priceUnits: ServiceOption[];
+    pricingModes: ServiceOption[];
+    providers: ServiceOption[];
     urls: {
         index: string;
         manage: string;
@@ -87,7 +92,8 @@ defineOptions({
 const form = useForm({
     service_key: '',
     description: '',
-    is_included: false,
+    pricing_mode: 'additional',
+    provider: 'own',
     price: '',
     price_unit: 'event',
     active: true,
@@ -96,16 +102,79 @@ const form = useForm({
 const editing = ref<CommercialService | null>(null);
 
 const includedCount = computed(
-    () => props.services.filter((item) => item.is_included).length,
+    () =>
+        props.services.filter((item) => item.pricing_mode === 'included')
+            .length,
 );
 
-const paidCount = computed(
-    () => props.services.filter((item) => !item.is_included).length,
+const additionalCount = computed(
+    () =>
+        props.services.filter((item) => item.pricing_mode === 'additional')
+            .length,
 );
 
-const activeCount = computed(
-    () => props.services.filter((item) => item.active).length,
+const quoteCount = computed(
+    () => props.services.filter((item) => item.pricing_mode === 'quote').length,
 );
+
+const formServiceGroups = computed(() => {
+    const groups = props.serviceGroups.map((group) => ({
+        ...group,
+        services: [...group.services],
+    }));
+
+    if (!editing.value) {
+        return groups;
+    }
+
+    const key = editing.value.service_key;
+    const known = groups.some((group) =>
+        group.services.some((service) => service.value === key),
+    );
+
+    if (!known) {
+        groups.push({
+            key: 'legacy',
+            label: 'Otros servicios',
+            services: [{ value: key, label: editing.value.label }],
+        });
+    }
+
+    return groups;
+});
+
+watch(
+    () => form.pricing_mode,
+    (mode) => {
+        if (mode !== 'additional') {
+            form.price = '';
+        }
+    },
+);
+
+function pricingModeVariant(mode: string): 'default' | 'secondary' | 'outline' {
+    if (mode === 'included') {
+        return 'default';
+    }
+
+    if (mode === 'additional') {
+        return 'secondary';
+    }
+
+    return 'outline';
+}
+
+function servicePriceLabel(item: CommercialService): string {
+    if (item.pricing_mode === 'additional' && item.has_price) {
+        return item.price_formatted ?? 'No especificado';
+    }
+
+    if (item.pricing_mode === 'quote') {
+        return 'A consultar';
+    }
+
+    return 'Incluido';
+}
 
 function serviceGroupLabel(key: string): string | null {
     return (
@@ -135,7 +204,8 @@ function edit(item: CommercialService): void {
     editing.value = item;
     form.service_key = item.service_key;
     form.description = item.description ?? '';
-    form.is_included = item.is_included;
+    form.pricing_mode = item.pricing_mode;
+    form.provider = item.provider;
     form.price = item.price ?? '';
     form.price_unit = item.price_unit;
     form.active = item.active;
@@ -149,6 +219,8 @@ function edit(item: CommercialService): void {
 function reset(): void {
     editing.value = null;
     form.reset();
+    form.pricing_mode = 'additional';
+    form.provider = 'own';
     form.price_unit = 'event';
     form.active = true;
 }
@@ -246,7 +318,7 @@ function destroy(item: CommercialService): void {
                     Costo adicional
                 </div>
                 <p class="mt-2 text-2xl font-semibold">
-                    {{ paidCount }}
+                    {{ additionalCount }}
                 </p>
                 <p class="text-xs text-muted-foreground">
                     Se cobran por separado
@@ -256,14 +328,14 @@ function destroy(item: CommercialService): void {
                 <div
                     class="flex items-center gap-2 text-xs font-medium tracking-wide text-muted-foreground uppercase"
                 >
-                    <Eye class="size-4" />
-                    Activos
+                    <Info class="size-4" />
+                    A consultar
                 </div>
                 <p class="mt-2 text-2xl font-semibold">
-                    {{ activeCount }}
+                    {{ quoteCount }}
                 </p>
                 <p class="text-xs text-muted-foreground">
-                    Visibles en la ficha pública
+                    Requieren cotización
                 </p>
             </div>
         </section>
@@ -323,7 +395,7 @@ function destroy(item: CommercialService): void {
                             >
                                 <option value="">Selecciona un servicio</option>
                                 <optgroup
-                                    v-for="group in serviceGroups"
+                                    v-for="group in formServiceGroups"
                                     :key="group.key"
                                     :label="group.label"
                                 >
@@ -368,10 +440,63 @@ function destroy(item: CommercialService): void {
                         <div class="flex items-center gap-2">
                             <BadgeDollarSign class="size-4 text-primary" />
                             <h3 class="text-sm font-semibold">
-                                Precio y unidad de cobro
+                                Modalidad y proveedor
                             </h3>
                         </div>
                         <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="grid gap-2">
+                                <Label for="service-pricing-mode">
+                                    Modalidad de precio
+                                </Label>
+                                <select
+                                    id="service-pricing-mode"
+                                    v-model="form.pricing_mode"
+                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    <option
+                                        v-for="mode in pricingModes"
+                                        :key="mode.value"
+                                        :value="mode.value"
+                                    >
+                                        {{ mode.label }}
+                                    </option>
+                                </select>
+                                <p
+                                    v-if="form.errors.pricing_mode"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.pricing_mode }}
+                                </p>
+                            </div>
+                            <div class="grid gap-2">
+                                <Label for="service-provider">
+                                    Proveedor
+                                </Label>
+                                <select
+                                    id="service-provider"
+                                    v-model="form.provider"
+                                    class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                >
+                                    <option
+                                        v-for="provider in providers"
+                                        :key="provider.value"
+                                        :value="provider.value"
+                                    >
+                                        {{ provider.label }}
+                                    </option>
+                                </select>
+                                <p
+                                    v-if="form.errors.provider"
+                                    class="text-sm text-destructive"
+                                >
+                                    {{ form.errors.provider }}
+                                </p>
+                            </div>
+                        </div>
+                        <div
+                            v-if="form.pricing_mode === 'additional'"
+                            class="grid gap-4 sm:grid-cols-2"
+                        >
                             <div class="grid gap-2">
                                 <Label for="service-price">Precio (MXN)</Label>
                                 <div class="relative">
@@ -423,8 +548,8 @@ function destroy(item: CommercialService): void {
                             </div>
                         </div>
                         <p class="text-xs text-muted-foreground">
-                            Si el servicio está incluido en la renta, el precio
-                            puede omitirse.
+                            El precio solo es obligatorio para servicios con
+                            costo adicional.
                         </p>
                     </section>
 
@@ -433,24 +558,12 @@ function destroy(item: CommercialService): void {
                             <Info class="size-4 text-primary" />
                             <h3 class="text-sm font-semibold">Visibilidad</h3>
                         </div>
-                        <div
-                            class="grid gap-3 rounded-lg border bg-muted/20 p-3 sm:grid-cols-2"
-                        >
-                            <label class="flex items-center gap-3 text-sm">
-                                <Checkbox v-model:checked="form.is_included" />
-                                Incluido en la renta
-                            </label>
+                        <div class="rounded-lg border bg-muted/20 p-3">
                             <label class="flex items-center gap-3 text-sm">
                                 <Checkbox v-model:checked="form.active" />
-                                Visible en la ficha
+                                Disponible y visible en la ficha pública
                             </label>
                         </div>
-                        <p
-                            v-if="form.errors.is_included"
-                            class="text-sm text-destructive"
-                        >
-                            {{ form.errors.is_included }}
-                        </p>
                         <p
                             v-if="form.errors.active"
                             class="text-sm text-destructive"
@@ -541,16 +654,12 @@ function destroy(item: CommercialService): void {
                                         </h3>
                                         <Badge
                                             :variant="
-                                                item.is_included
-                                                    ? 'default'
-                                                    : 'secondary'
+                                                pricingModeVariant(
+                                                    item.pricing_mode,
+                                                )
                                             "
                                         >
-                                            {{
-                                                item.is_included
-                                                    ? 'Incluido'
-                                                    : 'Costo adicional'
-                                            }}
+                                            {{ item.pricing_mode_label }}
                                         </Badge>
                                         <Badge
                                             v-if="!item.active"
@@ -560,14 +669,14 @@ function destroy(item: CommercialService): void {
                                         </Badge>
                                     </div>
                                     <p
-                                        v-if="
-                                            serviceGroupLabel(item.service_key)
-                                        "
                                         class="mt-1 text-xs text-muted-foreground"
                                     >
                                         {{
-                                            serviceGroupLabel(item.service_key)
+                                            serviceGroupLabel(
+                                                item.service_key,
+                                            ) ?? 'Otros servicios'
                                         }}
+                                        · {{ item.provider_label }}
                                     </p>
                                 </div>
                             </div>
@@ -578,16 +687,13 @@ function destroy(item: CommercialService): void {
                                     Precio
                                 </span>
                                 <span class="font-semibold">
-                                    {{
-                                        item.has_price
-                                            ? item.price_formatted
-                                            : item.is_included
-                                              ? 'Incluido'
-                                              : 'No especificado'
-                                    }}
+                                    {{ servicePriceLabel(item) }}
                                 </span>
                                 <span
-                                    v-if="item.has_price"
+                                    v-if="
+                                        item.pricing_mode === 'additional' &&
+                                        item.has_price
+                                    "
                                     class="block text-xs text-muted-foreground"
                                 >
                                     {{ item.price_unit_label }}

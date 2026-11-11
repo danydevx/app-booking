@@ -13,9 +13,9 @@ use Inertia\Response;
 use Modules\Listings\Http\Requests\SaveListingPackageRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingPackage;
+use Modules\Listings\Support\CommercialServiceCatalog;
 use Modules\Listings\Support\ListingCommercialPresenter;
 use Modules\Listings\Support\ListingFormData;
-use Modules\Listings\Support\TerraceServiceCatalog;
 
 class ListingPackageController extends Controller
 {
@@ -44,7 +44,7 @@ class ListingPackageController extends Controller
                 'slug' => $listing->slug,
             ],
             'packages' => $packages,
-            'serviceGroups' => TerraceServiceCatalog::commercialServiceGroups(),
+            'serviceGroups' => CommercialServiceCatalog::groups(),
             'urls' => [
                 ...$this->formData->ownerUrls($team, $listing),
                 'store' => route('listings.packages.store', [
