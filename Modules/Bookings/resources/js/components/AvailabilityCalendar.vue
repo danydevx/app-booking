@@ -7,12 +7,14 @@ const props = withDefaults(
         blockedDates: BlockedDate[];
         months?: number;
         selectable?: boolean;
+        disablePast?: boolean;
         selectedStart?: string | null;
         selectedEnd?: string | null;
     }>(),
     {
         months: 2,
         selectable: false,
+        disablePast: false,
         selectedStart: null,
         selectedEnd: null,
     },
@@ -23,6 +25,18 @@ const emit = defineEmits<{
 }>();
 
 const weekdays = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+
+const today = (() => {
+    const now = new Date();
+
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+})();
+
+const dateFormatter = new Intl.DateTimeFormat('es-MX', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+});
 
 const blockedMap = computed(
     () => new Map(props.blockedDates.map((date) => [date.date, date])),
@@ -67,6 +81,24 @@ const monthData = computed(() => {
 
     return result;
 });
+
+function isToday(date: string): boolean {
+    return date === today;
+}
+
+function isDisabled(date: string): boolean {
+    return props.selectable && props.disablePast && date < today;
+}
+
+function dateAriaLabel(date: string): string {
+    const blocked = blockedMap.value.get(date);
+
+    if (!blocked) {
+        return dateFormatter.format(new Date(`${date}T12:00:00`));
+    }
+
+    return `${dateFormatter.format(new Date(`${date}T12:00:00`))}: ${blocked.label}`;
+}
 
 function isSelected(date: string): boolean {
     if (props.selectedStart === null) {
@@ -138,9 +170,20 @@ function dateTitle(date: string): string {
                         <button
                             v-else-if="selectable"
                             type="button"
-                            class="flex aspect-square items-center justify-center rounded-md border border-transparent text-sm transition-colors hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring/50"
-                            :class="dateClass(date)"
+                            class="flex aspect-square items-center justify-center rounded-md border border-transparent text-sm transition-colors focus-visible:ring-2 focus-visible:ring-ring/50 enabled:hover:bg-accent"
+                            :class="[
+                                dateClass(date),
+                                isToday(date) && !isSelected(date)
+                                    ? 'ring-1 ring-primary/50'
+                                    : '',
+                                isDisabled(date)
+                                    ? 'cursor-not-allowed opacity-40'
+                                    : '',
+                            ]"
+                            :disabled="isDisabled(date)"
                             :title="dateTitle(date)"
+                            :aria-label="dateAriaLabel(date)"
+                            :aria-pressed="isSelected(date)"
                             @click="emit('select', date)"
                         >
                             {{ Number(date.slice(-2)) }}
@@ -178,6 +221,10 @@ function dateTitle(date: string): string {
                     class="size-3 rounded-sm bg-rose-100 dark:bg-rose-950/40"
                 />
                 Reservada
+            </span>
+            <span class="flex items-center gap-2">
+                <span class="size-3 rounded-sm border border-primary/50" />
+                Hoy
             </span>
         </div>
     </div>
