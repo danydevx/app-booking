@@ -3,6 +3,7 @@
 namespace Modules\Listings\Support;
 
 use App\Models\Team;
+use Carbon\CarbonImmutable;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingPackage;
 use Modules\Listings\Models\ListingPriceRange;
@@ -17,16 +18,18 @@ final class ListingCommercialPresenter
     public static function pricing(Listing $listing): array
     {
         $currency = $listing->currency ?: 'MXN';
+        $dailyPrices = self::dailyRows($listing);
+        $hasDailyPrice = false;
+
+        foreach ($dailyPrices as $day) {
+            if ($day['cents'] !== null) {
+                $hasDailyPrice = true;
+                break;
+            }
+        }
+
         $hasPricing = $listing->price_from_cents !== null
-            || $listing->price_monday_cents !== null
-            || $listing->price_tuesday_cents !== null
-            || $listing->price_wednesday_cents !== null
-            || $listing->price_thursday_cents !== null
-            || $listing->price_friday_cents !== null
-            || $listing->price_saturday_cents !== null
-            || $listing->price_sunday_cents !== null
-            || $listing->price_weekday_cents !== null
-            || $listing->price_weekend_cents !== null
+            || $hasDailyPrice
             || $listing->included_hours !== null
             || $listing->included_people !== null
             || $listing->extra_hour_cents !== null
@@ -34,30 +37,12 @@ final class ListingCommercialPresenter
             || $listing->deposit_required_cents !== null
             || filled($listing->price_notes);
 
-        $dailyPrices = [
-            ['key' => 'monday', 'label' => 'Lunes', 'cents' => $listing->price_monday_cents],
-            ['key' => 'tuesday', 'label' => 'Martes', 'cents' => $listing->price_tuesday_cents],
-            ['key' => 'wednesday', 'label' => 'Miércoles', 'cents' => $listing->price_wednesday_cents],
-            ['key' => 'thursday', 'label' => 'Jueves', 'cents' => $listing->price_thursday_cents],
-            ['key' => 'friday', 'label' => 'Viernes', 'cents' => $listing->price_friday_cents],
-            ['key' => 'saturday', 'label' => 'Sábado', 'cents' => $listing->price_saturday_cents],
-            ['key' => 'sunday', 'label' => 'Domingo', 'cents' => $listing->price_sunday_cents],
-        ];
-
         return [
             'has_pricing' => $hasPricing,
             'currency' => $currency,
             'price_from_cents' => $listing->price_from_cents,
             'price_from_formatted' => self::money($listing->price_from_cents, $currency),
-            'daily_prices' => collect($dailyPrices)
-                ->map(fn (array $day): array => [
-                    'key' => $day['key'],
-                    'label' => $day['label'],
-                    'cents' => $day['cents'],
-                    'formatted' => self::money($day['cents'], $currency),
-                ])
-                ->values()
-                ->all(),
+            'daily_prices' => $dailyPrices,
             'included_hours' => $listing->included_hours,
             'included_people' => $listing->included_people,
             'extra_hour_formatted' => self::money($listing->extra_hour_cents, $currency),
@@ -65,6 +50,70 @@ final class ListingCommercialPresenter
             'deposit_required_formatted' => self::money($listing->deposit_required_cents, $currency),
             'price_notes' => $listing->price_notes,
         ];
+    }
+
+    /**
+     * @return array<int, array{key: string, label: string, cents: int|null, formatted: string|null, price: string|null, hours: int|null, entry_time: string|null, entry_time_label: string|null, exit_time: string|null, exit_time_label: string|null, has_data: bool}>
+     */
+    private static function dailyRows(Listing $listing): array
+    {
+        $currency = $listing->currency ?: 'MXN';
+        $configured = is_array($listing->daily_pricing) ? $listing->daily_pricing : [];
+
+        $days = [
+            'monday' => 'Lunes',
+            'tuesday' => 'Martes',
+            'wednesday' => 'Miércoles',
+            'thursday' => 'Jueves',
+            'friday' => 'Viernes',
+            'saturday' => 'Sábado',
+            'sunday' => 'Domingo',
+        ];
+
+        $rows = [];
+
+        foreach ($days as $key => $label) {
+            $row = is_array($configured[$key] ?? null) ? $configured[$key] : [];
+            $cents = isset($row['price_cents']) ? (int) $row['price_cents'] : null;
+            $hours = isset($row['hours']) ? (int) $row['hours'] : null;
+            $entryTime = is_string($row['entry_time'] ?? null) ? $row['entry_time'] : null;
+            $exitTime = is_string($row['exit_time'] ?? null) ? $row['exit_time'] : null;
+
+            $rows[] = [
+                'key' => $key,
+                'label' => $label,
+                'cents' => $cents,
+                'formatted' => self::money($cents, $currency),
+                'price' => self::decimal($cents),
+                'hours' => $hours,
+                'entry_time' => $entryTime,
+                'entry_time_label' => self::timeLabel($entryTime),
+                'exit_time' => $exitTime,
+                'exit_time_label' => self::timeLabel($exitTime),
+                'has_data' => $cents !== null || $hours !== null || $entryTime !== null || $exitTime !== null,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return array<string, array{hours: int|null, entry_time: string|null, exit_time: string|null, price: string|null}>
+     */
+    public static function dailyPricingForForm(Listing $listing): array
+    {
+        $pricing = [];
+
+        foreach (self::dailyRows($listing) as $row) {
+            $pricing[$row['key']] = [
+                'hours' => $row['hours'],
+                'entry_time' => $row['entry_time'],
+                'exit_time' => $row['exit_time'],
+                'price' => $row['price'],
+            ];
+        }
+
+        return $pricing;
     }
 
     /**
@@ -310,5 +359,18 @@ final class ListingCommercialPresenter
     public static function decimal(?int $cents): ?string
     {
         return $cents === null ? null : number_format($cents / 100, 2, '.', '');
+    }
+
+    private static function timeLabel(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return CarbonImmutable::createFromFormat('H:i', $value)->format('g:i a');
+        } catch (\Throwable) {
+            return $value;
+        }
     }
 }

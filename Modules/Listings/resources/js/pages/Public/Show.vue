@@ -157,34 +157,77 @@ const whatsappUrl = computed(
                                 con el anfitrión.
                             </p>
                         </div>
-                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <div
-                                v-if="listing.pricing.price_from_formatted"
-                                class="rounded-lg border p-3"
-                            >
-                                <p class="text-xs text-muted-foreground">
-                                    Desde
-                                </p>
-                                <p class="text-xl font-semibold">
-                                    {{ listing.pricing.price_from_formatted }}
-                                </p>
-                            </div>
-                            <template
-                                v-for="day in listing.pricing.daily_prices"
-                                :key="day.key"
-                            >
-                                <div
-                                    v-if="day.formatted"
-                                    class="rounded-lg border p-3"
-                                >
-                                    <p class="text-xs text-muted-foreground">
-                                        {{ day.label }}
-                                    </p>
-                                    <p class="text-xl font-semibold">
-                                        {{ day.formatted }}
-                                    </p>
-                                </div>
-                            </template>
+                        <div
+                            v-if="listing.pricing.price_from_formatted"
+                            class="rounded-lg border p-3 sm:max-w-xs"
+                        >
+                            <p class="text-xs text-muted-foreground">Desde</p>
+                            <p class="text-xl font-semibold">
+                                {{ listing.pricing.price_from_formatted }}
+                            </p>
+                        </div>
+                        <div
+                            v-if="
+                                listing.pricing.daily_prices.some(
+                                    (day) => day.has_data,
+                                )
+                            "
+                            class="overflow-x-auto rounded-lg border"
+                        >
+                            <table class="w-full min-w-[34rem] text-sm">
+                                <thead class="bg-muted/40 text-left">
+                                    <tr>
+                                        <th class="px-3 py-2 font-medium">
+                                            Día
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Horas
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Entrada
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Salida
+                                        </th>
+                                        <th class="px-3 py-2 font-medium">
+                                            Precio
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template
+                                        v-for="day in listing.pricing
+                                            .daily_prices"
+                                        :key="day.key"
+                                    >
+                                        <tr
+                                            v-if="day.has_data"
+                                            class="border-t"
+                                        >
+                                            <td class="px-3 py-2 font-medium">
+                                                {{ day.label }}
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                {{ day.hours ?? '—' }}
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                {{
+                                                    day.entry_time_label ?? '—'
+                                                }}
+                                            </td>
+                                            <td class="px-3 py-2">
+                                                {{ day.exit_time_label ?? '—' }}
+                                            </td>
+                                            <td class="px-3 py-2 font-medium">
+                                                {{
+                                                    day.formatted ??
+                                                    'No especificado'
+                                                }}
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
                         </div>
                         <p
                             v-if="

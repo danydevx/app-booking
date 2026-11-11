@@ -40,6 +40,7 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property int|null $price_friday_cents
  * @property int|null $price_saturday_cents
  * @property int|null $price_sunday_cents
+ * @property array<string, array{hours: int|null, entry_time: string|null, exit_time: string|null, price_cents: int|null}>|null $daily_pricing
  * @property int|null $price_weekday_cents
  * @property int|null $price_weekend_cents
  * @property int|null $included_hours
@@ -91,6 +92,7 @@ use Modules\Listings\Support\TerraceServiceCatalog;
     'price_friday_cents',
     'price_saturday_cents',
     'price_sunday_cents',
+    'daily_pricing',
     'price_weekday_cents',
     'price_weekend_cents',
     'included_hours',
@@ -284,6 +286,7 @@ class Listing extends Model
             'price_friday_cents' => 'integer',
             'price_saturday_cents' => 'integer',
             'price_sunday_cents' => 'integer',
+            'daily_pricing' => 'array',
             'price_weekday_cents' => 'integer',
             'price_weekend_cents' => 'integer',
             'included_hours' => 'integer',

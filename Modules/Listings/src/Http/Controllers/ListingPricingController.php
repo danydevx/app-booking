@@ -39,13 +39,7 @@ class ListingPricingController extends Controller
             ],
             'pricing' => [
                 'price_from' => $this->decimal($listing->price_from_cents),
-                'price_monday' => $this->decimal($listing->price_monday_cents),
-                'price_tuesday' => $this->decimal($listing->price_tuesday_cents),
-                'price_wednesday' => $this->decimal($listing->price_wednesday_cents),
-                'price_thursday' => $this->decimal($listing->price_thursday_cents),
-                'price_friday' => $this->decimal($listing->price_friday_cents),
-                'price_saturday' => $this->decimal($listing->price_saturday_cents),
-                'price_sunday' => $this->decimal($listing->price_sunday_cents),
+                'daily_pricing' => ListingCommercialPresenter::dailyPricingForForm($listing),
                 'included_hours' => $listing->included_hours,
                 'included_people' => $listing->included_people,
                 'extra_hour' => $this->decimal($listing->extra_hour_cents),
@@ -82,13 +76,7 @@ class ListingPricingController extends Controller
 
         $listing->forceFill([
             'price_from_cents' => $this->toCents($data['price_from'] ?? null),
-            'price_monday_cents' => $this->toCents($data['price_monday'] ?? null),
-            'price_tuesday_cents' => $this->toCents($data['price_tuesday'] ?? null),
-            'price_wednesday_cents' => $this->toCents($data['price_wednesday'] ?? null),
-            'price_thursday_cents' => $this->toCents($data['price_thursday'] ?? null),
-            'price_friday_cents' => $this->toCents($data['price_friday'] ?? null),
-            'price_saturday_cents' => $this->toCents($data['price_saturday'] ?? null),
-            'price_sunday_cents' => $this->toCents($data['price_sunday'] ?? null),
+            'daily_pricing' => $this->dailyPricing($data['daily_pricing'] ?? []),
             'included_hours' => $data['included_hours'] ?? null,
             'included_people' => $data['included_people'] ?? null,
             'extra_hour_cents' => $this->toCents($data['extra_hour'] ?? null),
@@ -115,6 +103,53 @@ class ListingPricingController extends Controller
         }
 
         return (int) round(((float) $value) * 100);
+    }
+
+    /**
+     * @param  array<string, mixed>  $input
+     * @return array<string, array{hours: int|null, entry_time: string|null, exit_time: string|null, price_cents: int|null}>|null
+     */
+    private function dailyPricing(array $input): ?array
+    {
+        $days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        $pricing = [];
+
+        foreach ($days as $day) {
+            $row = $input[$day] ?? null;
+
+            if (! is_array($row)) {
+                continue;
+            }
+
+            $hours = isset($row['hours']) && $row['hours'] !== ''
+                ? (int) $row['hours']
+                : null;
+            $entryTime = $this->time($row['entry_time'] ?? null);
+            $exitTime = $this->time($row['exit_time'] ?? null);
+            $priceCents = $this->toCents($row['price'] ?? null);
+
+            if ($hours === null && $entryTime === null && $exitTime === null && $priceCents === null) {
+                continue;
+            }
+
+            $pricing[$day] = [
+                'hours' => $hours,
+                'entry_time' => $entryTime,
+                'exit_time' => $exitTime,
+                'price_cents' => $priceCents,
+            ];
+        }
+
+        return $pricing === [] ? null : $pricing;
+    }
+
+    private function time(mixed $value): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return null;
+        }
+
+        return trim($value);
     }
 
     private function ensureOwned(Listing $listing, Team $team): void

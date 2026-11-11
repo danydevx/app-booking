@@ -7,15 +7,16 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
+type PricingDailyRow = {
+    hours: number | null;
+    entry_time: string | null;
+    exit_time: string | null;
+    price: string | null;
+};
+
 type Pricing = {
     price_from: string | null;
-    price_monday: string | null;
-    price_tuesday: string | null;
-    price_wednesday: string | null;
-    price_thursday: string | null;
-    price_friday: string | null;
-    price_saturday: string | null;
-    price_sunday: string | null;
+    daily_pricing: Record<string, PricingDailyRow>;
     included_hours: number | null;
     included_people: number | null;
     extra_hour: string | null;
@@ -99,15 +100,57 @@ defineOptions({
     }),
 });
 
-const form = useForm({
+type PricingForm = {
+    price_from: string;
+    daily_pricing: Record<
+        string,
+        {
+            hours: string;
+            entry_time: string;
+            exit_time: string;
+            price: string;
+        }
+    >;
+    included_hours: string | number;
+    included_people: string | number;
+    extra_hour: string;
+    extra_person: string;
+    deposit_required: string;
+    price_notes: string;
+};
+
+const dayFields = [
+    { key: 'monday', label: 'Lunes' },
+    { key: 'tuesday', label: 'Martes' },
+    { key: 'wednesday', label: 'Miércoles' },
+    { key: 'thursday', label: 'Jueves' },
+    { key: 'friday', label: 'Viernes' },
+    { key: 'saturday', label: 'Sábado' },
+    { key: 'sunday', label: 'Domingo' },
+] as const;
+
+const dailyPricing = Object.fromEntries(
+    dayFields.map((day) => {
+        const row = props.pricing.daily_pricing[day.key];
+
+        return [
+            day.key,
+            {
+                hours:
+                    row?.hours !== null && row?.hours !== undefined
+                        ? String(row.hours)
+                        : '',
+                entry_time: row?.entry_time ?? '',
+                exit_time: row?.exit_time ?? '',
+                price: row?.price ?? '',
+            },
+        ];
+    }),
+);
+
+const form = useForm<PricingForm>({
     price_from: props.pricing.price_from ?? '',
-    price_monday: props.pricing.price_monday ?? '',
-    price_tuesday: props.pricing.price_tuesday ?? '',
-    price_wednesday: props.pricing.price_wednesday ?? '',
-    price_thursday: props.pricing.price_thursday ?? '',
-    price_friday: props.pricing.price_friday ?? '',
-    price_saturday: props.pricing.price_saturday ?? '',
-    price_sunday: props.pricing.price_sunday ?? '',
+    daily_pricing: dailyPricing,
     included_hours: props.pricing.included_hours ?? '',
     included_people: props.pricing.included_people ?? '',
     extra_hour: props.pricing.extra_hour ?? '',
@@ -116,25 +159,14 @@ const form = useForm({
     price_notes: props.pricing.price_notes ?? '',
 });
 
-const dayFields: Array<{
-    key:
-        | 'price_monday'
-        | 'price_tuesday'
-        | 'price_wednesday'
-        | 'price_thursday'
-        | 'price_friday'
-        | 'price_saturday'
-        | 'price_sunday';
-    label: string;
-}> = [
-    { key: 'price_monday', label: 'Lunes' },
-    { key: 'price_tuesday', label: 'Martes' },
-    { key: 'price_wednesday', label: 'Miércoles' },
-    { key: 'price_thursday', label: 'Jueves' },
-    { key: 'price_friday', label: 'Viernes' },
-    { key: 'price_saturday', label: 'Sábado' },
-    { key: 'price_sunday', label: 'Domingo' },
-];
+function dailyError(
+    day: string,
+    field: 'hours' | 'entry_time' | 'exit_time' | 'price',
+): string | undefined {
+    return (form.errors as Record<string, string | undefined>)[
+        `daily_pricing.${day}.${field}`
+    ];
+}
 
 const preview = computed(() => {
     const rows: Array<{ label: string; value: string }> = [];
@@ -149,11 +181,21 @@ const preview = computed(() => {
     }
 
     for (const day of dayFields) {
-        if (form[day.key] !== '') {
-            rows.push({
-                label: day.label,
-                value: money(form[day.key]),
-            });
+        const row = form.daily_pricing[day.key];
+        const parts: string[] = [];
+
+        if (row?.hours) {
+            parts.push(`${row.hours} h`);
+        }
+        if (row?.entry_time || row?.exit_time) {
+            parts.push(`${row.entry_time || '—'} a ${row.exit_time || '—'}`);
+        }
+        if (row?.price) {
+            parts.push(money(row.price));
+        }
+
+        if (parts.length > 0) {
+            rows.push({ label: day.label, value: parts.join(' · ') });
         }
     }
     if (form.extra_hour !== '') {
@@ -319,31 +361,122 @@ function rangeStatusVariant(
                     <div>
                         <h3 class="text-sm font-semibold">Precio por día</h3>
                         <p class="text-sm text-muted-foreground">
-                            Define el precio para cada día de la semana.
+                            Define horas, horario de entrada/salida y precio
+                            para cada día.
                         </p>
                     </div>
 
-                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <div
-                            v-for="day in dayFields"
-                            :key="day.key"
-                            class="grid gap-2"
-                        >
-                            <Label :for="day.key">{{ day.label }}</Label>
-                            <Input
-                                :id="day.key"
-                                v-model="form[day.key]"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                            />
-                            <p
-                                v-if="form.errors[day.key]"
-                                class="text-sm text-destructive"
-                            >
-                                {{ form.errors[day.key] }}
-                            </p>
-                        </div>
+                    <div class="overflow-x-auto rounded-lg border">
+                        <table class="w-full min-w-[42rem] text-sm">
+                            <thead class="bg-muted/40 text-left">
+                                <tr>
+                                    <th class="px-3 py-2 font-medium">Día</th>
+                                    <th class="px-3 py-2 font-medium">Horas</th>
+                                    <th class="px-3 py-2 font-medium">
+                                        Entrada
+                                    </th>
+                                    <th class="px-3 py-2 font-medium">
+                                        Salida
+                                    </th>
+                                    <th class="px-3 py-2 font-medium">
+                                        Precio
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr
+                                    v-for="day in dayFields"
+                                    :key="day.key"
+                                    class="border-t"
+                                >
+                                    <td class="px-3 py-2 font-medium">
+                                        {{ day.label }}
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <Input
+                                            v-model="
+                                                form.daily_pricing[day.key]
+                                                    .hours
+                                            "
+                                            type="number"
+                                            min="1"
+                                            max="24"
+                                            class="w-20"
+                                        />
+                                        <p
+                                            v-if="dailyError(day.key, 'hours')"
+                                            class="mt-1 text-xs text-destructive"
+                                        >
+                                            {{ dailyError(day.key, 'hours') }}
+                                        </p>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <Input
+                                            v-model="
+                                                form.daily_pricing[day.key]
+                                                    .entry_time
+                                            "
+                                            type="time"
+                                            class="w-32"
+                                        />
+                                        <p
+                                            v-if="
+                                                dailyError(
+                                                    day.key,
+                                                    'entry_time',
+                                                )
+                                            "
+                                            class="mt-1 text-xs text-destructive"
+                                        >
+                                            {{
+                                                dailyError(
+                                                    day.key,
+                                                    'entry_time',
+                                                )
+                                            }}
+                                        </p>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <Input
+                                            v-model="
+                                                form.daily_pricing[day.key]
+                                                    .exit_time
+                                            "
+                                            type="time"
+                                            class="w-32"
+                                        />
+                                        <p
+                                            v-if="
+                                                dailyError(day.key, 'exit_time')
+                                            "
+                                            class="mt-1 text-xs text-destructive"
+                                        >
+                                            {{
+                                                dailyError(day.key, 'exit_time')
+                                            }}
+                                        </p>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <Input
+                                            v-model="
+                                                form.daily_pricing[day.key]
+                                                    .price
+                                            "
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            class="w-32"
+                                        />
+                                        <p
+                                            v-if="dailyError(day.key, 'price')"
+                                            class="mt-1 text-xs text-destructive"
+                                        >
+                                            {{ dailyError(day.key, 'price') }}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </section>
 
