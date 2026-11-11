@@ -2,6 +2,8 @@
 
 namespace Modules\Billing\Support;
 
+use Modules\Billing\Models\BillingPlan;
+
 final class PlanCatalog
 {
     /**
@@ -9,14 +11,26 @@ final class PlanCatalog
      */
     public function all(): array
     {
+        $configPlans = (array) config('billing.plans', []);
+        $databasePlans = BillingPlan::query()->get()->keyBy('slug');
+
+        $slugs = array_values(array_unique([
+            ...array_keys($configPlans),
+            ...$databasePlans->keys()->all(),
+        ]));
+
         $plans = [];
 
-        foreach ((array) config('billing.plans', []) as $slug => $config) {
-            if (! is_array($config)) {
+        foreach ($slugs as $slug) {
+            $slug = (string) $slug;
+            $config = $configPlans[$slug] ?? [];
+            $database = $databasePlans->get($slug);
+
+            if (! is_array($config) && $database === null) {
                 continue;
             }
 
-            $plans[(string) $slug] = Plan::fromConfig((string) $slug, $config);
+            $plans[$slug] = $this->plan($slug, is_array($config) ? $config : [], $database);
         }
 
         return $plans;
@@ -60,5 +74,46 @@ final class PlanCatalog
             $this->all(),
             fn (Plan $plan): bool => ! $plan->isFree() && $plan->active,
         ));
+    }
+
+    /**
+     * @param  array<string, mixed>  $config
+     */
+    private function plan(string $slug, array $config, ?BillingPlan $database): Plan
+    {
+        $configPrice = $config['stripe_price_id'] ?? null;
+        $configPrice = is_string($configPrice) && $configPrice !== ''
+            ? $configPrice
+            : null;
+
+        if ($database !== null) {
+            return new Plan(
+                slug: $slug,
+                name: (string) $database->name,
+                description: (string) ($database->description ?? ''),
+                stripePriceId: $database->stripe_price_id ?: $configPrice,
+                interval: (string) $database->interval,
+                active: (bool) $database->active,
+                limits: array_map('intval', array_merge(
+                    (array) ($config['limits'] ?? []),
+                    (array) ($database->limits ?? []),
+                )),
+                features: array_map('boolval', array_merge(
+                    (array) ($config['features'] ?? []),
+                    (array) ($database->features ?? []),
+                )),
+            );
+        }
+
+        return new Plan(
+            slug: $slug,
+            name: (string) ($config['name'] ?? ucfirst($slug)),
+            description: (string) ($config['description'] ?? ''),
+            stripePriceId: $configPrice,
+            interval: (string) ($config['interval'] ?? 'month'),
+            active: (bool) ($config['active'] ?? true),
+            limits: array_map('intval', (array) ($config['limits'] ?? [])),
+            features: array_map('boolval', (array) ($config['features'] ?? [])),
+        );
     }
 }

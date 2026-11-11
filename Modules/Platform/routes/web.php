@@ -6,6 +6,7 @@ use Modules\Platform\Http\Controllers\PlatformActivityController;
 use Modules\Platform\Http\Controllers\PlatformBrandingController;
 use Modules\Platform\Http\Controllers\PlatformDashboardController;
 use Modules\Platform\Http\Controllers\PlatformListingController;
+use Modules\Platform\Http\Controllers\PlatformPlanController;
 use Modules\Platform\Http\Controllers\PlatformReportController;
 use Modules\Platform\Http\Controllers\PlatformSubscriptionController;
 use Modules\Platform\Http\Controllers\PlatformSystemController;
@@ -83,6 +84,16 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::get('subscriptions', [PlatformSubscriptionController::class, 'index'])
             ->middleware('can:'.PlatformPermission::SUBSCRIPTIONS_VIEW)
             ->name('subscriptions.index');
+
+        Route::get('plans', [PlatformPlanController::class, 'index'])
+            ->middleware('can:'.PlatformPermission::PLANS_VIEW)
+            ->name('plans.index');
+        Route::post('plans', [PlatformPlanController::class, 'store'])
+            ->middleware('can:'.PlatformPermission::PLANS_MANAGE)
+            ->name('plans.store');
+        Route::patch('plans/{plan}', [PlatformPlanController::class, 'update'])
+            ->middleware('can:'.PlatformPermission::PLANS_MANAGE)
+            ->name('plans.update');
 
         Route::get('activity/export', [PlatformActivityController::class, 'export'])
             ->middleware('can:'.PlatformPermission::ACTIVITY_VIEW)

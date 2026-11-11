@@ -22,6 +22,10 @@ final class BillingServiceProvider extends ServiceProvider
     {
         $modulePath = dirname(__DIR__);
 
+        if (is_dir($modulePath.'/database/migrations')) {
+            $this->loadMigrationsFrom($modulePath.'/database/migrations');
+        }
+
         $this->loadRoutesFrom($modulePath.'/routes/web.php');
 
         Gate::define('manageBilling', [BillingPolicy::class, 'manage']);

@@ -30,6 +30,10 @@ final class PlatformPermission
 
     public const SUBSCRIPTIONS_VIEW = 'platform.subscriptions.view';
 
+    public const PLANS_VIEW = 'platform.plans.view';
+
+    public const PLANS_MANAGE = 'platform.plans.manage';
+
     public const REPORTS_VIEW = 'platform.reports.view';
 
     public const REPORTS_MANAGE = 'platform.reports.manage';
@@ -55,6 +59,8 @@ final class PlatformPermission
             self::LISTINGS_VIEW,
             self::LISTINGS_MODERATE,
             self::SUBSCRIPTIONS_VIEW,
+            self::PLANS_VIEW,
+            self::PLANS_MANAGE,
             self::REPORTS_VIEW,
             self::REPORTS_MANAGE,
             self::BRANDING_MANAGE,

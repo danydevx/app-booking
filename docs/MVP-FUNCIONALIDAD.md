@@ -52,7 +52,8 @@ La landing pública y la administración están separadas por URL y layout:
 - `Entitlements` valida límites y funciones en el backend; ocultar botones no es autorización.
 - Moneda: MXN.
 - Los pagos de renta y anticipos **no** se procesan en línea: el propietario los registra manualmente.
-- El precio y los IDs de Stripe se configuran por entorno.
+- Los planes, límites y features se administran desde `/app/platform/plans`; los valores iniciales salen de `config/billing.php`.
+- El `stripe_price_id` se configura por plan desde plataforma, con respaldo en la configuración del entorno.
 - Webhooks idempotentes, cancelación, impago, periodo de gracia y reactivación.
 
 ---
@@ -303,6 +304,7 @@ Catálogo actual: **50 características en 8 categorías**.
 - Reportes de terrazas y revisión manual.
 - Auditoría con `spatie/laravel-activitylog`.
 - Branding global.
+- Planes y features: límites, funcionalidades, precio de Stripe y estado activo.
 - Estado del sistema: cola, scheduler, trabajos fallidos.
 - Acceso protegido por permiso de plataforma y rol de superadmin.
 

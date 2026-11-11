@@ -5,6 +5,7 @@ import {
     CreditCard,
     Flag,
     History,
+    Layers,
     LayoutDashboard,
     Palette,
     Server,
@@ -42,6 +43,7 @@ const navigation = [
     { title: 'Cuentas', href: '/app/platform/accounts', icon: Users },
     { title: 'Usuarios', href: '/app/platform/users', icon: UserCog },
     { title: 'Terrazas', href: '/app/platform/listings', icon: Building2 },
+    { title: 'Planes', href: '/app/platform/plans', icon: Layers },
     {
         title: 'Suscripciones',
         href: '/app/platform/subscriptions',

@@ -4,6 +4,7 @@ namespace Modules\Billing\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Modules\Billing\Support\PlanCatalog;
 
 class CheckoutRequest extends FormRequest
 {
@@ -21,7 +22,7 @@ class CheckoutRequest extends FormRequest
             'plan' => [
                 'required',
                 'string',
-                Rule::in(array_keys((array) config('billing.plans', []))),
+                Rule::in(array_keys(app(PlanCatalog::class)->all())),
             ],
         ];
     }
