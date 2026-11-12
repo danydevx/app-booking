@@ -187,6 +187,16 @@ class BookingInquiryController extends Controller
                     'current_team' => $team->slug,
                     'inquiry' => $inquiry->id,
                 ]),
+                'quote_create' => route('bookings.quotes.create', [
+                    'current_team' => $team->slug,
+                    'listing' => $inquiry->listing_id,
+                    'customer' => $inquiry->customer_id,
+                    'inquiry' => $inquiry->id,
+                    'start_date' => $inquiry->start_date->toDateString(),
+                    'end_date' => $inquiry->end_date->toDateString(),
+                    'event_type' => $inquiry->event_type,
+                    'guests' => $inquiry->guests,
+                ]),
             ],
         ]);
     }

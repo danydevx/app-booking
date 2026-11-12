@@ -9,6 +9,7 @@ enum QuoteStatus: string
     case Accepted = 'accepted';
     case Declined = 'declined';
     case Expired = 'expired';
+    case Cancelled = 'cancelled';
 
     public function label(): string
     {
@@ -18,12 +19,13 @@ enum QuoteStatus: string
             self::Accepted => 'Aceptada',
             self::Declined => 'Rechazada',
             self::Expired => 'Vencida',
+            self::Cancelled => 'Cancelada',
         };
     }
 
     public function isEditable(): bool
     {
-        return in_array($this, [self::Draft, self::Sent], true);
+        return $this === self::Draft;
     }
 
     /**

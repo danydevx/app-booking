@@ -17,9 +17,12 @@ const props = defineProps<{
         status?: string;
         search?: string;
         listing?: string;
+        from?: string;
+        to?: string;
     };
     urls: {
         index: string;
+        create: string;
         bookings: string;
         customers: string;
         billing: string;
@@ -39,6 +42,8 @@ const form = reactive({
     status: props.filters.status ?? '',
     search: props.filters.search ?? '',
     listing: props.filters.listing ?? '',
+    from: props.filters.from ?? '',
+    to: props.filters.to ?? '',
 });
 
 function search(): void {
@@ -76,6 +81,9 @@ function statusVariant(
                 </p>
             </div>
             <div class="flex flex-wrap gap-2">
+                <Button as-child>
+                    <Link :href="urls.create">Nueva cotización</Link>
+                </Button>
                 <Button variant="outline" as-child>
                     <Link :href="urls.bookings">Solicitudes</Link>
                 </Button>
@@ -128,6 +136,14 @@ function statusVariant(
                     </option>
                 </select>
             </div>
+            <div class="grid gap-2">
+                <Label for="from">Desde</Label>
+                <Input id="from" v-model="form.from" type="date" />
+            </div>
+            <div class="grid gap-2">
+                <Label for="to">Hasta</Label>
+                <Input id="to" v-model="form.to" type="date" />
+            </div>
             <Button type="submit">Buscar</Button>
         </form>
 
@@ -137,8 +153,12 @@ function statusVariant(
         >
             <h2 class="font-medium">No hay cotizaciones</h2>
             <p class="mt-1 text-sm text-muted-foreground">
-                Crea una cotización desde la ficha de un cliente.
+                Crea tu primera cotización y genera un PDF profesional para tu
+                cliente.
             </p>
+            <Button class="mt-4" as-child>
+                <Link :href="urls.create">Nueva cotización</Link>
+            </Button>
         </div>
 
         <div v-else class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -150,7 +170,7 @@ function statusVariant(
                 <div class="flex flex-wrap items-start justify-between gap-2">
                     <h2 class="font-semibold">
                         <Link :href="quote.show_url" class="hover:underline">
-                            {{ quote.customer.name }}
+                            {{ quote.folio }} · {{ quote.customer.name }}
                         </Link>
                     </h2>
                     <Badge :variant="statusVariant(quote.status)">
@@ -164,14 +184,46 @@ function statusVariant(
                     {{ quote.start_date_label }} al
                     {{ quote.end_date_label }}
                 </p>
-                <p class="mt-1 text-sm text-muted-foreground">
-                    Total: {{ quote.subtotal_formatted }} {{ quote.currency }} ·
-                    Anticipo:
-                    {{ quote.deposit_formatted }}
+                <p class="mt-1 text-sm font-medium">
+                    Total: {{ quote.total_formatted }}
+                </p>
+                <p class="mt-1 text-xs text-muted-foreground">
+                    Vence:
+                    {{
+                        quote.expires_at
+                            ? new Date(quote.expires_at).toLocaleDateString(
+                                  'es-MX',
+                              )
+                            : 'Sin vencimiento'
+                    }}
                 </p>
                 <div class="mt-3 flex flex-wrap gap-2">
                     <Button size="sm" variant="outline" as-child>
                         <Link :href="quote.show_url">Ver</Link>
+                    </Button>
+                    <Button
+                        v-if="quote.can_edit"
+                        size="sm"
+                        variant="outline"
+                        as-child
+                    >
+                        <Link :href="quote.edit_url">Editar</Link>
+                    </Button>
+                    <Button
+                        v-if="quote.can_download_pdf"
+                        size="sm"
+                        variant="outline"
+                        as-child
+                    >
+                        <a :href="quote.pdf_url">PDF</a>
+                    </Button>
+                    <Button
+                        v-if="quote.can_duplicate"
+                        size="sm"
+                        variant="outline"
+                        @click="router.post(quote.duplicate_url)"
+                    >
+                        Duplicar
                     </Button>
                     <Button size="sm" variant="outline" as-child>
                         <a

@@ -703,6 +703,10 @@ class CustomerController extends Controller
                     'customer' => $customer->id,
                 ]),
                 'quotes_index' => route('bookings.quotes.index', ['current_team' => $team->slug]),
+                'quotes_create' => route('bookings.quotes.create', [
+                    'current_team' => $team->slug,
+                    'customer' => $customer->id,
+                ]),
                 'emails_send' => route('bookings.customers.emails.send', [
                     'current_team' => $team->slug,
                     'customer' => $customer->id,

@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 
 type PublicQuote = {
     id: number;
+    folio: string | null;
     status: string;
     status_label: string;
     customer_name: string;
     listing_name: string;
+    listing_logo_url: string | null;
     listing_location: string;
     start_date: string;
     end_date: string;
@@ -18,7 +20,20 @@ type PublicQuote = {
     end_date_label: string;
     event_type: string | null;
     guests: number | null;
+    items: Array<{
+        description: string;
+        details: string | null;
+        quantity: number;
+        unit: string;
+        unit_price_formatted: string;
+        amount_formatted: string;
+    }>;
+    tax_mode: 'none' | 'added' | 'included';
+    tax_rate_bps: number;
     subtotal_formatted: string;
+    discount_formatted: string;
+    tax_formatted: string;
+    total_formatted: string;
     deposit_formatted: string;
     currency: string;
     notes: string | null;
@@ -78,9 +93,20 @@ function decline(): void {
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <p class="text-sm text-muted-foreground">Cotización para</p>
-                    <h1 class="text-3xl font-semibold tracking-tight">
-                        {{ quote.listing_name }}
-                    </h1>
+                    <div class="flex items-center gap-3">
+                        <img
+                            v-if="quote.listing_logo_url"
+                            :src="quote.listing_logo_url"
+                            :alt="`Logotipo de ${quote.listing_name}`"
+                            class="h-12 w-12 rounded-md border object-contain p-1"
+                        />
+                        <h1 class="text-3xl font-semibold tracking-tight">
+                            {{ quote.listing_name }}
+                        </h1>
+                    </div>
+                    <p v-if="quote.folio" class="text-sm text-muted-foreground">
+                        Cotización {{ quote.folio }}
+                    </p>
                     <p class="text-muted-foreground">
                         {{
                             quote.listing_location || 'Ubicación por confirmar'
@@ -118,7 +144,7 @@ function decline(): void {
                     <div>
                         <p class="text-xs text-muted-foreground">Total</p>
                         <p class="text-xl font-semibold">
-                            {{ quote.subtotal_formatted }} {{ quote.currency }}
+                            {{ quote.total_formatted }} {{ quote.currency }}
                         </p>
                     </div>
                     <div>
@@ -127,6 +153,80 @@ function decline(): void {
                             {{ quote.deposit_formatted }} {{ quote.currency }}
                         </p>
                     </div>
+                </div>
+
+                <div v-if="quote.items.length" class="mt-5 overflow-x-auto">
+                    <h2 class="text-sm font-medium">Conceptos</h2>
+                    <table class="mt-2 w-full text-sm">
+                        <thead>
+                            <tr
+                                class="border-b text-left text-xs text-muted-foreground"
+                            >
+                                <th class="py-2 pr-3">Concepto</th>
+                                <th class="py-2 pr-3">Cantidad</th>
+                                <th class="py-2 text-right">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="(item, index) in quote.items"
+                                :key="index"
+                                class="border-b last:border-0"
+                            >
+                                <td class="py-2 pr-3">
+                                    <p class="font-medium">
+                                        {{ item.description }}
+                                    </p>
+                                    <p
+                                        v-if="item.details"
+                                        class="text-xs text-muted-foreground"
+                                    >
+                                        {{ item.details }}
+                                    </p>
+                                </td>
+                                <td class="py-2 pr-3">
+                                    {{ item.quantity }} {{ item.unit }}
+                                </td>
+                                <td class="py-2 text-right">
+                                    {{ item.amount_formatted }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <dl class="mt-3 ml-auto max-w-xs space-y-1 text-sm">
+                        <div class="flex justify-between gap-4">
+                            <dt class="text-muted-foreground">Subtotal</dt>
+                            <dd>{{ quote.subtotal_formatted }}</dd>
+                        </div>
+                        <div
+                            v-if="quote.discount_formatted !== '$0.00'"
+                            class="flex justify-between gap-4"
+                        >
+                            <dt class="text-muted-foreground">Descuento</dt>
+                            <dd>-{{ quote.discount_formatted }}</dd>
+                        </div>
+                        <div
+                            v-if="quote.tax_mode !== 'none'"
+                            class="flex justify-between gap-4"
+                        >
+                            <dt class="text-muted-foreground">
+                                IVA {{ (quote.tax_rate_bps / 100).toFixed(2) }}%
+                                {{
+                                    quote.tax_mode === 'included'
+                                        ? '(incluido)'
+                                        : ''
+                                }}
+                            </dt>
+                            <dd>{{ quote.tax_formatted }}</dd>
+                        </div>
+                        <div
+                            class="flex justify-between gap-4 border-t pt-1 font-semibold"
+                        >
+                            <dt>Total</dt>
+                            <dd>{{ quote.total_formatted }}</dd>
+                        </div>
+                    </dl>
                 </div>
 
                 <div v-if="quote.notes" class="mt-5">

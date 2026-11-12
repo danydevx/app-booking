@@ -15,6 +15,7 @@ use Inertia\Response;
 use Modules\Billing\Support\Entitlements;
 use Modules\Bookings\Actions\CreateManualBooking;
 use Modules\Bookings\Actions\RecordCustomerActivity;
+use Modules\Bookings\Actions\RecordQuoteStatusChange;
 use Modules\Bookings\Enums\CustomerActivityType;
 use Modules\Bookings\Enums\QuoteStatus;
 use Modules\Bookings\Http\Requests\StoreCustomerQuoteRequest;
@@ -23,6 +24,7 @@ use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Models\CustomerQuote;
 use Modules\Bookings\Notifications\CustomerQuoteSent;
 use Modules\Bookings\Support\CustomerQuotePresenter;
+use Modules\Bookings\Support\QuoteNumberGenerator;
 use Modules\Listings\Models\Listing;
 
 class CustomerQuoteController extends Controller
@@ -32,6 +34,8 @@ class CustomerQuoteController extends Controller
     public function __construct(
         private readonly Entitlements $entitlements,
         private readonly RecordCustomerActivity $activityLogger,
+        private readonly QuoteNumberGenerator $numbers,
+        private readonly RecordQuoteStatusChange $statusHistory,
     ) {}
 
     public function index(Request $request): Response|RedirectResponse
@@ -40,16 +44,18 @@ class CustomerQuoteController extends Controller
 
         Gate::authorize('viewAny', [CustomerQuote::class, $team]);
 
-        if (! $this->entitlements->allows($team, 'customers')) {
+        if (! $this->entitlements->allows($team, 'quotations')) {
             return $this->upgradeRedirect($team);
         }
 
         $status = $request->string('status')->toString();
         $search = $request->string('search')->toString();
         $listingSlug = $request->string('listing')->toString();
+        $from = $request->string('from')->toString();
+        $to = $request->string('to')->toString();
 
         $quotes = CustomerQuote::query()
-            ->with(['customer', 'listing'])
+            ->with(['customer', 'listing', 'items', 'statusHistories.changedBy'])
             ->where('team_id', $team->id)
             ->when($status !== '', fn ($query) => $query->where('status', $status))
             ->when($listingSlug !== '', fn ($query) => $query->whereHas(
@@ -62,6 +68,8 @@ class CustomerQuoteController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
+            ->when($from !== '', fn ($query) => $query->whereDate('start_date', '>=', $from))
+            ->when($to !== '', fn ($query) => $query->whereDate('start_date', '<=', $to))
             ->latest()
             ->paginate((int) config('bookings.per_page', 15))
             ->withQueryString();
@@ -81,6 +89,8 @@ class CustomerQuoteController extends Controller
                 'status' => $status,
                 'search' => $search,
                 'listing' => $listingSlug,
+                'from' => $from,
+                'to' => $to,
             ],
             'listings' => Listing::query()
                 ->where('team_id', $team->id)
@@ -94,6 +104,7 @@ class CustomerQuoteController extends Controller
                 ->all(),
             'urls' => [
                 'index' => route('bookings.quotes.index', ['current_team' => $team->slug]),
+                'create' => route('bookings.quotes.create', ['current_team' => $team->slug]),
                 'bookings' => route('bookings.index', ['current_team' => $team->slug]),
                 'customers' => route('bookings.customers.index', ['current_team' => $team->slug]),
                 'billing' => route('billing.index', ['current_team' => $team->slug]),
@@ -111,7 +122,7 @@ class CustomerQuoteController extends Controller
 
         Gate::authorize('create', [CustomerQuote::class, $team]);
 
-        if (! $this->entitlements->allows($team, 'customers')) {
+        if (! $this->entitlements->allows($team, 'quotations')) {
             return $this->upgradeRedirect($team);
         }
 
@@ -122,9 +133,12 @@ class CustomerQuoteController extends Controller
         $quote->customer_id = $customer->id;
         $quote->listing_id = (int) $validated['listing_id'];
         $quote->created_by = $request->user()->id;
+        $quote->folio = $this->numbers->next($team);
         $quote->status = QuoteStatus::Draft;
         $quote->currency = (string) config('bookings.deposit_currency', 'MXN');
         $quote->save();
+
+        $this->statusHistory->handle($quote, null, QuoteStatus::Draft, $request->user(), 'Cotización creada.');
 
         $this->activityLogger->handle(
             $customer,
@@ -153,11 +167,11 @@ class CustomerQuoteController extends Controller
 
         Gate::authorize('view', $quote);
 
-        if (! $this->entitlements->allows($team, 'customers')) {
+        if (! $this->entitlements->allows($team, 'quotations')) {
             return $this->upgradeRedirect($team);
         }
 
-        $quote->load(['customer', 'listing', 'convertedInquiry']);
+        $quote->load(['customer', 'listing', 'convertedInquiry', 'items', 'statusHistories.changedBy']);
 
         return Inertia::render('Bookings/Quotes/Show', [
             'quote' => CustomerQuotePresenter::present($quote, $team->slug),
@@ -189,7 +203,7 @@ class CustomerQuoteController extends Controller
 
         Gate::authorize('update', $quote);
 
-        if (! $this->entitlements->allows($team, 'customers')) {
+        if (! $this->entitlements->allows($team, 'quotations')) {
             return $this->upgradeRedirect($team);
         }
 
@@ -228,7 +242,7 @@ class CustomerQuoteController extends Controller
 
         Gate::authorize('send', $quote);
 
-        if (! $this->entitlements->allows($team, 'customers')) {
+        if (! $this->entitlements->allows($team, 'quotations')) {
             return $this->upgradeRedirect($team);
         }
 
@@ -238,10 +252,14 @@ class CustomerQuoteController extends Controller
             ]);
         }
 
+        $previous = $quote->status;
+
         $quote->forceFill([
             'status' => QuoteStatus::Sent,
             'sent_at' => now(),
         ])->save();
+
+        $this->statusHistory->handle($quote, $previous, QuoteStatus::Sent, $request->user(), 'Cotización enviada al cliente.');
 
         $quote->load(['customer', 'listing', 'team']);
 
@@ -273,7 +291,7 @@ class CustomerQuoteController extends Controller
 
         Gate::authorize('convert', $quote);
 
-        if (! $this->entitlements->allows($team, 'customers')) {
+        if (! $this->entitlements->allows($team, 'quotations')) {
             return $this->upgradeRedirect($team);
         }
 
@@ -337,14 +355,28 @@ class CustomerQuoteController extends Controller
             'end_date' => $data['end_date'],
             'event_type' => $data['event_type'] ?? null,
             'guests' => $data['guests'] ?? null,
-            'subtotal_cents' => (int) round(((float) $data['subtotal']) * 100),
-            'deposit_cents' => (int) round(((float) ($data['deposit'] ?? 0)) * 100),
+            'subtotal_cents' => $this->centsFromDecimal((string) $data['subtotal']),
+            'deposit_cents' => $this->centsFromDecimal((string) ($data['deposit'] ?? 0)),
             'notes' => $data['notes'] ?? null,
             'terms' => $data['terms'] ?? null,
             'expires_at' => $data['expires_at'] ?? null,
         ]);
 
         return $quote;
+    }
+
+    private function centsFromDecimal(string $value): int
+    {
+        $value = str_replace([',', ' '], '', trim($value));
+
+        if ($value === '' || ! is_numeric($value)) {
+            return 0;
+        }
+
+        [$units, $decimals] = array_pad(explode('.', $value, 2), 2, '');
+        $decimals = substr(str_pad($decimals, 2, '0'), 0, 2);
+
+        return ((int) $units) * 100 + (int) $decimals;
     }
 
     private function ensureOwnedCustomer(Customer $customer, int $teamId): void
@@ -361,7 +393,7 @@ class CustomerQuoteController extends Controller
     {
         Inertia::flash('toast', [
             'type' => 'error',
-            'message' => 'El CRM de clientes está disponible en el plan Pro.',
+            'message' => 'Las cotizaciones en PDF están disponibles en el plan Pro.',
         ]);
 
         return to_route('billing.index', ['current_team' => $team->slug]);

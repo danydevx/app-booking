@@ -85,6 +85,7 @@ const props = defineProps<{
         tags_sync: string;
         quotes_store: string;
         quotes_index: string;
+        quotes_create: string;
         emails_send: string;
         email_opt_in: string;
         pipeline_update: string;
@@ -1158,9 +1159,16 @@ function statusVariant(
                                 Propuestas enviadas a este cliente.
                             </p>
                         </div>
-                        <Button variant="outline" size="sm" as-child>
-                            <Link :href="urls.quotes_index">Ver todas</Link>
-                        </Button>
+                        <div class="flex flex-wrap gap-2">
+                            <Button size="sm" as-child>
+                                <Link :href="urls.quotes_create">
+                                    Nueva cotización
+                                </Link>
+                            </Button>
+                            <Button variant="outline" size="sm" as-child>
+                                <Link :href="urls.quotes_index">Ver todas</Link>
+                            </Button>
+                        </div>
                     </div>
 
                     <div v-if="quotes.length > 0" class="space-y-3">

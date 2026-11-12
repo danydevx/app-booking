@@ -31,6 +31,7 @@ return [
             ],
             'features' => [
                 'customers' => false,
+                'quotations' => false,
                 'ai_posts' => false,
             ],
         ],
@@ -49,6 +50,7 @@ return [
             ],
             'features' => [
                 'customers' => true,
+                'quotations' => true,
                 'ai_posts' => false,
             ],
         ],
@@ -62,6 +64,7 @@ return [
 
     'feature_labels' => [
         'customers' => 'CRM de clientes',
+        'quotations' => 'Cotizaciones en PDF',
         'ai_posts' => 'Publicaciones con IA',
     ],
 ];
