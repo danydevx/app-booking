@@ -87,6 +87,8 @@ class ListingController extends Controller
 
         return Inertia::render('Listings/Create', [
             'serviceGroups' => $this->formData->serviceGroups(),
+            'featuredCharacteristics' => $this->formData->featuredCharacteristics(),
+            'eventTypes' => $this->formData->eventTypes(),
             'detailFields' => $this->formData->detailFields(),
             'countries' => $this->formData->countries(),
             'locations' => $this->formData->locations(),
@@ -205,11 +207,13 @@ class ListingController extends Controller
 
         Gate::authorize('update', $listing);
 
-        $listing->load('media');
+        $listing->load(['media', 'eventTypes']);
 
         return Inertia::render('Listings/Edit', [
             'listing' => ListingPresenter::ownerForm($listing, $team->slug),
             'serviceGroups' => $this->formData->serviceGroups(),
+            'featuredCharacteristics' => $this->formData->featuredCharacteristics(),
+            'eventTypes' => $this->formData->eventTypes(),
             'detailFields' => $this->formData->detailFields(),
             'countries' => $this->formData->countries(),
             'locations' => $this->formData->locations(),

@@ -7,9 +7,11 @@ import {
     History,
     Layers,
     LayoutDashboard,
+    MapPinned,
     Palette,
     Server,
     Shield,
+    Tags,
     UserCog,
     Users,
 } from '@lucide/vue';
@@ -48,6 +50,16 @@ const navigation = [
         title: 'Suscripciones',
         href: '/app/platform/subscriptions',
         icon: CreditCard,
+    },
+    {
+        title: 'Cobertura geográfica',
+        href: '/app/platform/coverage',
+        icon: MapPinned,
+    },
+    {
+        title: 'Catálogos',
+        href: '/app/platform/catalogs',
+        icon: Tags,
     },
     { title: 'Reportes', href: '/app/platform/reports', icon: Flag },
     { title: 'Auditoría', href: '/app/platform/activity', icon: History },

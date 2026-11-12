@@ -40,6 +40,14 @@ final class PlatformPermission
 
     public const BRANDING_MANAGE = 'platform.branding.manage';
 
+    public const COVERAGE_VIEW = 'platform.coverage.view';
+
+    public const COVERAGE_MANAGE = 'platform.coverage.manage';
+
+    public const CATALOGS_VIEW = 'platform.catalogs.view';
+
+    public const CATALOGS_MANAGE = 'platform.catalogs.manage';
+
     /**
      * @return array<int, string>
      */
@@ -64,6 +72,10 @@ final class PlatformPermission
             self::REPORTS_VIEW,
             self::REPORTS_MANAGE,
             self::BRANDING_MANAGE,
+            self::COVERAGE_VIEW,
+            self::COVERAGE_MANAGE,
+            self::CATALOGS_VIEW,
+            self::CATALOGS_MANAGE,
         ];
     }
 }

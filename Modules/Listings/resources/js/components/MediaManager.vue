@@ -6,10 +6,11 @@ import {
     GripVertical,
     ImagePlus,
     LoaderCircle,
+    Pencil,
     Trash2,
     X,
 } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,6 +40,10 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const draggedIndex = ref<number | null>(null);
 const dragOverIndex = ref<number | null>(null);
 const selectedPreview = ref<string | null>(null);
+
+const editingId = ref<number | null>(null);
+const editForm = useForm<{ alt_text: string }>({ alt_text: '' });
+const editError = ref<string | null>(null);
 
 const uploadPercentage = computed(() => form.progress?.percentage ?? 0);
 const hasUploadProgress = computed(
@@ -189,6 +194,60 @@ function remove(media: ListingMedia): void {
 
     router.delete(media.delete_url, { preserveScroll: true });
 }
+
+function startEdit(item: ListingMedia): void {
+    editingId.value = item.id;
+    editForm.alt_text = item.alt_text ?? '';
+    editForm.clearErrors();
+    editError.value = null;
+
+    nextTick(() => {
+        document.getElementById(`media-alt-${item.id}`)?.focus();
+    });
+}
+
+function cancelEdit(): void {
+    editingId.value = null;
+    editForm.reset('alt_text');
+    editForm.clearErrors();
+    editError.value = null;
+}
+
+function saveAlt(item: ListingMedia): void {
+    if (!item.update_url) {
+        return;
+    }
+
+    editError.value = null;
+    let saved = false;
+
+    editForm.patch(item.update_url, {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            saved = true;
+
+            const altText = editForm.alt_text.trim();
+
+            items.value = items.value.map((entry) =>
+                entry.id === item.id
+                    ? {
+                          ...entry,
+                          alt_text: altText === '' ? null : altText,
+                      }
+                    : entry,
+            );
+            editingId.value = null;
+            editForm.reset('alt_text');
+        },
+        onFinish: () => {
+            if (!saved && !editForm.hasErrors) {
+                editError.value =
+                    'No se pudo guardar. Revisa tu conexión e inténtalo de nuevo.';
+            }
+        },
+    });
+}
 </script>
 
 <template>
@@ -237,7 +296,7 @@ function remove(media: ListingMedia): void {
             >
                 <img
                     :src="selectedPreview"
-                    :alt="form.file.name"
+                    alt=""
                     class="size-16 rounded-md object-cover"
                 />
                 <div class="min-w-0 flex-1">
@@ -382,42 +441,101 @@ function remove(media: ListingMedia): void {
                 </div>
 
                 <div class="space-y-3 p-3">
-                    <p
-                        v-if="item.alt_text"
-                        class="line-clamp-2 text-sm text-muted-foreground"
+                    <div
+                        v-if="editingId !== item.id"
+                        class="flex items-start justify-between gap-2"
                     >
-                        {{ item.alt_text }}
-                    </p>
-                    <p v-else class="text-sm text-muted-foreground">
-                        {{ item.type_label }}
-                    </p>
+                        <p class="min-w-0 flex-1 text-sm text-muted-foreground">
+                            {{ item.alt_text || 'Sin texto alternativo' }}
+                        </p>
+                        <Button
+                            v-if="item.update_url"
+                            type="button"
+                            size="icon-sm"
+                            variant="ghost"
+                            class="shrink-0"
+                            title="Editar texto alternativo"
+                            aria-label="Editar texto alternativo"
+                            :disabled="editForm.processing"
+                            @click="startEdit(item)"
+                        >
+                            <Pencil class="size-4" />
+                        </Button>
+                    </div>
 
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs text-muted-foreground">
-                            {{ item.type_label }}
-                        </span>
-                        <div class="flex gap-1">
-                            <Button
-                                type="button"
-                                size="icon-sm"
-                                variant="ghost"
-                                :disabled="index === 0"
-                                title="Mover antes"
-                                @click="move(index, -1)"
+                    <form
+                        v-else
+                        class="space-y-2"
+                        @submit.prevent="saveAlt(item)"
+                    >
+                        <div class="space-y-1.5">
+                            <Label
+                                :for="`media-alt-${item.id}`"
+                                class="text-xs"
                             >
-                                <ArrowUp class="size-4" />
+                                Texto alternativo
+                            </Label>
+                            <Input
+                                :id="`media-alt-${item.id}`"
+                                v-model="editForm.alt_text"
+                                maxlength="255"
+                                placeholder="Describe la imagen"
+                                :disabled="editForm.processing"
+                                @keydown.esc.prevent="cancelEdit"
+                            />
+                            <InputError :message="editForm.errors.alt_text" />
+                            <p
+                                v-if="editError && !editForm.errors.alt_text"
+                                class="text-xs text-destructive"
+                            >
+                                {{ editError }}
+                            </p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <Button
+                                type="submit"
+                                size="sm"
+                                :disabled="editForm.processing"
+                            >
+                                <LoaderCircle
+                                    v-if="editForm.processing"
+                                    class="size-4 animate-spin"
+                                />
+                                Guardar
                             </Button>
                             <Button
                                 type="button"
-                                size="icon-sm"
-                                variant="ghost"
-                                :disabled="index === items.length - 1"
-                                title="Mover después"
-                                @click="move(index, 1)"
+                                size="sm"
+                                variant="outline"
+                                :disabled="editForm.processing"
+                                @click="cancelEdit"
                             >
-                                <ArrowDown class="size-4" />
+                                Cancelar
                             </Button>
                         </div>
+                    </form>
+
+                    <div class="flex items-center justify-end gap-1">
+                        <Button
+                            type="button"
+                            size="icon-sm"
+                            variant="ghost"
+                            :disabled="index === 0"
+                            title="Mover antes"
+                            @click="move(index, -1)"
+                        >
+                            <ArrowUp class="size-4" />
+                        </Button>
+                        <Button
+                            type="button"
+                            size="icon-sm"
+                            variant="ghost"
+                            :disabled="index === items.length - 1"
+                            title="Mover después"
+                            @click="move(index, 1)"
+                        >
+                            <ArrowDown class="size-4" />
+                        </Button>
                     </div>
                 </div>
             </article>

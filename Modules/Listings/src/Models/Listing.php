@@ -9,13 +9,16 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Modules\Listings\Database\Factories\ListingFactory;
 use Modules\Listings\Enums\ListingMediaType;
 use Modules\Listings\Enums\ListingStatus;
 use Modules\Listings\Support\TerraceServiceCatalog;
+use Modules\Platform\Support\GeographicCoverageService;
 
 /**
  * @property int $id
@@ -28,6 +31,7 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property string|null $city
  * @property string|null $state
  * @property string|null $country
+ * @property string|null $logo_path
  * @property string|null $postal_code
  * @property string|null $latitude
  * @property string|null $longitude
@@ -70,6 +74,7 @@ use Modules\Listings\Support\TerraceServiceCatalog;
  * @property-read Collection<int, ListingService> $commercialServices
  * @property-read Collection<int, ListingPromotion> $promotions
  * @property-read Collection<int, ListingPriceRange> $priceRanges
+ * @property-read Collection<int, ListingEventType> $eventTypes
  * @property-read int $images_count
  * @property-read int $videos_count
  */
@@ -80,6 +85,7 @@ use Modules\Listings\Support\TerraceServiceCatalog;
     'city',
     'state',
     'country',
+    'logo_path',
     'postal_code',
     'latitude',
     'longitude',
@@ -164,6 +170,22 @@ class Listing extends Model
     }
 
     /**
+     * @return BelongsToMany<ListingEventType, $this>
+     */
+    public function eventTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            ListingEventType::class,
+            'listing_event_type_listing',
+            'listing_id',
+            'listing_event_type_id',
+        )
+            ->withTimestamps()
+            ->orderBy('listing_event_types.sort_order')
+            ->orderBy('listing_event_types.name');
+    }
+
+    /**
      * @return HasMany<ListingMedia, $this>
      */
     public function images(): HasMany
@@ -205,6 +227,16 @@ class Listing extends Model
         return $this->status === ListingStatus::Published && $this->published_at !== null;
     }
 
+    public function logoUrl(): ?string
+    {
+        if (blank($this->logo_path)) {
+            return null;
+        }
+
+        return Storage::disk((string) config('listings.media.disk', 'public'))
+            ->url((string) $this->logo_path);
+    }
+
     /**
      * Determine if the listing has been suspended by platform moderation.
      */
@@ -220,7 +252,11 @@ class Listing extends Model
     {
         return $this->isPublished()
             && $this->suspended_at === null
-            && ($this->team?->isPubliclyVisible() ?? false);
+            && ($this->team?->isPubliclyVisible() ?? false)
+            && app(GeographicCoverageService::class)->isEligible(
+                $this->state,
+                $this->city,
+            );
     }
 
     /**
@@ -231,11 +267,15 @@ class Listing extends Model
      */
     public function scopePubliclyVisible(Builder $query): Builder
     {
-        return $query->published()
+        $query->published()
             ->whereNull('suspended_at')
             ->whereHas('team', fn ($team) => $team
                 ->whereNull('suspended_at')
                 ->whereNull('deleted_at'));
+
+        app(GeographicCoverageService::class)->applyToQuery($query);
+
+        return $query;
     }
 
     public function getRouteKeyName(): string

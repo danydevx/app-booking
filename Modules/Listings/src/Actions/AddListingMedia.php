@@ -8,9 +8,14 @@ use Modules\Listings\Enums\ListingMediaType;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingMedia;
 use RuntimeException;
+use Throwable;
 
 final class AddListingMedia
 {
+    public function __construct(
+        private readonly GenerateListingMediaThumbnail $thumbnails,
+    ) {}
+
     public function handle(
         Listing $listing,
         UploadedFile $file,
@@ -40,7 +45,7 @@ final class AddListingMedia
 
         $sortOrder = (int) $listing->media()->max('sort_order') + 1;
 
-        return $listing->media()->create([
+        $media = $listing->media()->create([
             'type' => $type,
             'disk' => $disk,
             'path' => $path,
@@ -52,6 +57,16 @@ final class AddListingMedia
             'alt_text' => $altText,
             'sort_order' => $sortOrder,
         ]);
+
+        if ($media->isImage()) {
+            try {
+                $this->thumbnails->handle($media);
+            } catch (Throwable $exception) {
+                report($exception);
+            }
+        }
+
+        return $media;
     }
 
     private function ensureWithinLimits(Listing $listing, ListingMediaType $type): void

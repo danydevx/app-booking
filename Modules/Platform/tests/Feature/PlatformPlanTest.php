@@ -29,7 +29,7 @@ class PlatformPlanTest extends TestCase
                 ->where('plans.0.slug', 'free')
                 ->where('plans.1.slug', 'pro')
                 ->has('limitLabels', 3)
-                ->has('featureLabels', 2));
+                ->has('featureLabels', 3));
     }
 
     public function test_superadmin_can_update_plan_limits_and_features(): void

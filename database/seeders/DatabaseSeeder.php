@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Modules\Listings\Database\Seeders\ListingCatalogSeeder;
+use Modules\Platform\Database\Seeders\GeographicCatalogSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,6 +16,11 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->call(DemoUsersWithListingsSeeder::class);
+        $this->call([
+            GeographicCatalogSeeder::class,
+            ListingCatalogSeeder::class,
+            DemoUsersWithListingsSeeder::class,
+            JaliscoTerracesSeeder::class,
+        ]);
     }
 }

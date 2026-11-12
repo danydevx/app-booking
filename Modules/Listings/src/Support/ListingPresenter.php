@@ -55,11 +55,17 @@ final class ListingPresenter
             'city' => $listing->city,
             'state' => $listing->state,
             'country' => $listing->country,
+            'logo_url' => $listing->logoUrl(),
             'postal_code' => $listing->postal_code,
             'latitude' => $listing->latitude,
             'longitude' => $listing->longitude,
             'capacity' => $listing->capacity,
             'services' => $listing->services ?? [],
+            'event_types' => $listing->eventTypes
+                ->where('is_active', true)
+                ->pluck('id')
+                ->values()
+                ->all(),
             'details' => $listing->details ?? [],
             'rules' => $listing->rules,
             'contact_name' => $listing->contact_name,
@@ -90,7 +96,11 @@ final class ListingPresenter
             'capacity' => $listing->capacity,
             'price_from_formatted' => ListingCommercialPresenter::pricing($listing)['price_from_formatted'],
             'services' => $listing->serviceLabels(),
-            'cover_url' => $listing->coverImage?->url,
+            'cover_url' => $listing->coverImage === null
+                ? null
+                : ($listing->coverImage->hasThumbnail()
+                    ? $listing->coverImage->thumbnail_url
+                    : $listing->coverImage->url),
             'latitude' => $listing->latitude !== null ? (float) $listing->latitude : null,
             'longitude' => $listing->longitude !== null ? (float) $listing->longitude : null,
             'distance_km' => $distanceKm !== null ? round($distanceKm, 1) : null,
@@ -134,6 +144,7 @@ final class ListingPresenter
             'city' => $listing->city,
             'state' => $listing->state,
             'country' => $listing->country,
+            'logo_url' => $listing->logoUrl(),
             'postal_code' => $listing->postal_code,
             'latitude' => $listing->latitude !== null ? (float) $listing->latitude : null,
             'longitude' => $listing->longitude !== null ? (float) $listing->longitude : null,
@@ -146,6 +157,14 @@ final class ListingPresenter
                 ->values()
                 ->all(),
             'serviceGroups' => TerraceServiceCatalog::groupsFor($listing->services ?? []),
+            'event_types' => $listing->eventTypes
+                ->where('is_active', true)
+                ->map(fn ($eventType): array => [
+                    'slug' => $eventType->slug,
+                    'name' => $eventType->name,
+                ])
+                ->values()
+                ->all(),
             'pricing' => ListingCommercialPresenter::pricing($listing),
             'priceRanges' => $listing->priceRanges
                 ->filter(fn (ListingPriceRange $range): bool => $range->active && $range->isNotExpired())
@@ -211,6 +230,11 @@ final class ListingPresenter
     {
         return [
             ...self::publicMedia($media),
+            'update_url' => route('listings.media.update', [
+                'current_team' => $teamSlug,
+                'listing' => $listing->slug,
+                'media' => $media->id,
+            ]),
             'delete_url' => route('listings.media.destroy', [
                 'current_team' => $teamSlug,
                 'listing' => $listing->slug,
@@ -229,6 +253,7 @@ final class ListingPresenter
             'type' => $media->type->value,
             'type_label' => $media->type->label(),
             'url' => $media->url,
+            'thumb_url' => $media->thumbnail_url,
             'mime_type' => $media->mime_type,
             'alt_text' => $media->alt_text,
             'sort_order' => $media->sort_order,

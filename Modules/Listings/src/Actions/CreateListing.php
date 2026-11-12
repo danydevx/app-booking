@@ -3,6 +3,7 @@
 namespace Modules\Listings\Actions;
 
 use App\Models\Team;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Modules\Listings\Enums\ListingStatus;
 use Modules\Listings\Models\Listing;
@@ -11,6 +12,7 @@ final class CreateListing
 {
     public function __construct(
         private readonly GenerateListingSlug $generateSlug,
+        private readonly StoreListingLogo $storeLogo,
     ) {}
 
     /**
@@ -18,7 +20,12 @@ final class CreateListing
      */
     public function handle(Team $team, array $data): Listing
     {
-        return DB::transaction(function () use ($team, $data): Listing {
+        $eventTypeIds = array_map('intval', $data['event_types'] ?? []);
+        $logo = $data['logo'] ?? null;
+        $removeLogo = (bool) ($data['remove_logo'] ?? false);
+        unset($data['event_types'], $data['logo'], $data['remove_logo']);
+
+        return DB::transaction(function () use ($team, $data, $eventTypeIds, $logo, $removeLogo): Listing {
             $listing = new Listing($data);
 
             $listing->team_id = $team->id;
@@ -28,6 +35,18 @@ final class CreateListing
             $listing->status = ListingStatus::Draft;
             $listing->published_at = null;
             $listing->save();
+
+            if ($eventTypeIds !== []) {
+                $listing->eventTypes()->sync($eventTypeIds);
+            }
+
+            if ($logo !== null || $removeLogo) {
+                $this->storeLogo->handle(
+                    $listing,
+                    $logo instanceof UploadedFile ? $logo : null,
+                    $removeLogo,
+                );
+            }
 
             return $listing;
         });

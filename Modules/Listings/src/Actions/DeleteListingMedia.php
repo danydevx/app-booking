@@ -9,7 +9,14 @@ final class DeleteListingMedia
 {
     public function handle(ListingMedia $media): void
     {
-        Storage::disk($media->disk)->delete($media->path);
+        $disk = Storage::disk($media->disk);
+        $thumbnailPath = $media->thumbnailPath();
+
+        $disk->delete($media->path);
+
+        if ($thumbnailPath !== null) {
+            $disk->delete($thumbnailPath);
+        }
 
         $media->delete();
     }

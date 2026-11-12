@@ -14,6 +14,19 @@ import type {
 const props = defineProps<{
     listing: ListingFormData;
     serviceGroups: ServiceGroup[];
+    featuredCharacteristics: Array<{
+        key: string;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
+    eventTypes: Array<{
+        id: number;
+        slug: string;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
     detailFields: Record<string, ListingDetailField>;
     countries: LocationCountry[];
     locations: ListingLocations;
@@ -136,6 +149,8 @@ function destroy(): void {
                         mode="edit"
                         :listing="listing"
                         :service-groups="serviceGroups"
+                        :featured-characteristics="featuredCharacteristics"
+                        :event-types="eventTypes"
                         :detail-fields="detailFields"
                         :countries="countries"
                         :locations="locations"

@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use Modules\Platform\Http\Controllers\PlatformAccountController;
 use Modules\Platform\Http\Controllers\PlatformActivityController;
 use Modules\Platform\Http\Controllers\PlatformBrandingController;
+use Modules\Platform\Http\Controllers\PlatformCatalogController;
+use Modules\Platform\Http\Controllers\PlatformCoverageController;
 use Modules\Platform\Http\Controllers\PlatformDashboardController;
 use Modules\Platform\Http\Controllers\PlatformListingController;
 use Modules\Platform\Http\Controllers\PlatformPlanController;
@@ -126,4 +128,18 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::patch('branding', [PlatformBrandingController::class, 'update'])
             ->middleware('can:'.PlatformPermission::BRANDING_MANAGE)
             ->name('branding.update');
+
+        Route::get('coverage', [PlatformCoverageController::class, 'edit'])
+            ->middleware('can:'.PlatformPermission::COVERAGE_VIEW)
+            ->name('coverage.edit');
+        Route::patch('coverage', [PlatformCoverageController::class, 'update'])
+            ->middleware('can:'.PlatformPermission::COVERAGE_MANAGE)
+            ->name('coverage.update');
+
+        Route::get('catalogs', [PlatformCatalogController::class, 'edit'])
+            ->middleware('can:'.PlatformPermission::CATALOGS_VIEW)
+            ->name('catalogs.edit');
+        Route::patch('catalogs', [PlatformCatalogController::class, 'update'])
+            ->middleware('can:'.PlatformPermission::CATALOGS_MANAGE)
+            ->name('catalogs.update');
     });

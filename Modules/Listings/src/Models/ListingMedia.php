@@ -71,6 +71,47 @@ class ListingMedia extends Model
         return Attribute::get(fn (): string => Storage::disk($this->disk)->url($this->path));
     }
 
+    /**
+     * Deterministic path for the square WebP thumbnail derived from the
+     * original file. No database column is needed.
+     */
+    public function thumbnailPath(): ?string
+    {
+        if (! $this->isImage()) {
+            return null;
+        }
+
+        $directory = pathinfo($this->path, PATHINFO_DIRNAME);
+        $filename = pathinfo($this->path, PATHINFO_FILENAME);
+
+        return ($directory === '.' ? '' : $directory.'/')
+            .'thumbs/'.$filename.'.webp';
+    }
+
+    public function hasThumbnail(): bool
+    {
+        $thumbnailPath = $this->thumbnailPath();
+
+        return $thumbnailPath !== null
+            && Storage::disk($this->disk)->exists($thumbnailPath);
+    }
+
+    /**
+     * @return Attribute<string|null, never>
+     */
+    protected function thumbnailUrl(): Attribute
+    {
+        return Attribute::get(function (): ?string {
+            $thumbnailPath = $this->thumbnailPath();
+
+            if ($thumbnailPath === null || ! Storage::disk($this->disk)->exists($thumbnailPath)) {
+                return null;
+            }
+
+            return Storage::disk($this->disk)->url($thumbnailPath);
+        });
+    }
+
     protected static function newFactory(): ListingMediaFactory
     {
         return ListingMediaFactory::new();

@@ -4,6 +4,7 @@ namespace Modules\Listings;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Modules\Listings\Console\Commands\GenerateListingMediaThumbnails;
 use Modules\Listings\Contracts\Geocoder;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Policies\ListingPolicy;
@@ -14,6 +15,12 @@ final class ListingsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(Geocoder::class, NullGeocoder::class);
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                GenerateListingMediaThumbnails::class,
+            ]);
+        }
     }
 
     public function boot(): void

@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
+use Modules\Listings\Http\Controllers\GuidedSearchController;
 use Modules\Listings\Http\Controllers\ListingController;
 use Modules\Listings\Http\Controllers\ListingMediaController;
 use Modules\Listings\Http\Controllers\ListingPackageController;
@@ -14,6 +15,11 @@ use Modules\Listings\Http\Controllers\PublicListingController;
 Route::middleware('web')->group(function (): void {
     Route::get('/', [PublicListingController::class, 'home'])
         ->name('home');
+
+    Route::get('buscar', [GuidedSearchController::class, 'index'])
+        ->name('public.guided-search.index');
+    Route::get('buscar/resultados', [GuidedSearchController::class, 'results'])
+        ->name('public.guided-search.results');
 
     Route::get('terrazas', [PublicListingController::class, 'index'])
         ->name('public.listings.index');
@@ -60,5 +66,6 @@ Route::prefix('app/{current_team}/listings')
         Route::get('/{listing}/photos', [ListingMediaController::class, 'index'])->name('photos.index');
         Route::post('/{listing}/media', [ListingMediaController::class, 'store'])->name('media.store');
         Route::patch('/{listing}/media/reorder', [ListingMediaController::class, 'reorder'])->name('media.reorder');
+        Route::patch('/{listing}/media/{media}', [ListingMediaController::class, 'update'])->name('media.update');
         Route::delete('/{listing}/media/{media}', [ListingMediaController::class, 'destroy'])->name('media.destroy');
     });

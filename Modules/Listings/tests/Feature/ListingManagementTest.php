@@ -77,8 +77,8 @@ class ListingManagementTest extends TestCase
 
         $this->actingAs($owner)
             ->post(route('listings.store', ['current_team' => $team->slug]), $this->payload([
-                'city' => 'Guadalajara',
-                'state' => 'CDMX',
+                'city' => 'Cuauhtémoc',
+                'state' => 'Jalisco',
             ]))
             ->assertSessionHasErrors('city');
 
@@ -92,8 +92,8 @@ class ListingManagementTest extends TestCase
         $this->actingAs($owner)
             ->post(route('listings.store', ['current_team' => $team->slug]), $this->payload([
                 'country' => null,
-                'state' => 'CDMX',
-                'city' => 'Cuauhtémoc',
+                'state' => 'Jalisco',
+                'city' => 'Guadalajara',
             ]))
             ->assertSessionHasErrors('country');
 
@@ -433,12 +433,12 @@ class ListingManagementTest extends TestCase
             'name' => 'Terraza de Prueba',
             'description' => 'Una terraza para eventos.',
             'address' => 'Av. Reforma 123',
-            'city' => 'Cuauhtémoc',
-            'state' => 'CDMX',
+            'city' => 'Guadalajara',
+            'state' => 'Jalisco',
             'country' => 'México',
-            'postal_code' => '06000',
-            'latitude' => 19.4326,
-            'longitude' => -99.1332,
+            'postal_code' => '44100',
+            'latitude' => 20.6736,
+            'longitude' => -103.3440,
             'capacity' => 60,
             'services' => ['wifi', 'bathroom'],
             'rules' => 'No fumar.',

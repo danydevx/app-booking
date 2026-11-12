@@ -5,11 +5,13 @@ namespace Modules\Listings\Support;
 use App\Models\Team;
 use Modules\Billing\Support\Entitlements;
 use Modules\Listings\Models\Listing;
+use Modules\Platform\Support\GeographicCoverageService;
 
 final class ListingFormData
 {
     public function __construct(
         private readonly Entitlements $entitlements,
+        private readonly GeographicCoverageService $coverage,
     ) {}
 
     /**
@@ -17,7 +19,40 @@ final class ListingFormData
      */
     public function serviceGroups(): array
     {
-        return TerraceServiceCatalog::groups();
+        $featured = ListingPublicCatalog::featuredKeys();
+
+        if ($featured === []) {
+            return TerraceServiceCatalog::groups();
+        }
+
+        return collect(TerraceServiceCatalog::groups())
+            ->map(function (array $group) use ($featured): array {
+                $group['services'] = array_values(array_filter(
+                    $group['services'],
+                    fn (array $service): bool => ! in_array($service['value'], $featured, true),
+                ));
+
+                return $group;
+            })
+            ->filter(fn (array $group): bool => $group['services'] !== [])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<int, array{id: int, slug: string, name: string, description: string|null, icon: string|null}>
+     */
+    public function eventTypes(): array
+    {
+        return ListingPublicCatalog::activeEventTypes();
+    }
+
+    /**
+     * @return array<int, array{key: string, name: string, description: string|null, icon: string|null}>
+     */
+    public function featuredCharacteristics(): array
+    {
+        return ListingPublicCatalog::featuredCharacteristics();
     }
 
     /**
@@ -33,7 +68,7 @@ final class ListingFormData
      */
     public function countries(): array
     {
-        return MexicoLocationCatalog::countries();
+        return $this->coverage->countries();
     }
 
     /**
@@ -41,7 +76,7 @@ final class ListingFormData
      */
     public function locations(): array
     {
-        return MexicoLocationCatalog::all();
+        return $this->coverage->locations();
     }
 
     /**

@@ -2,6 +2,7 @@
 import { useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import RequiredFieldsHint from '@/components/RequiredFieldsHint.vue';
+import FeaturedCharacteristicsPicker from '@/components/public/FeaturedCharacteristicsPicker.vue';
 import LocationPickerMap from './LocationPickerMap.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -14,7 +15,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { computed, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { z } from 'zod';
 import { useFrontValidation } from '@/composables/useFrontValidation';
 import type {
@@ -29,6 +30,19 @@ const props = defineProps<{
     mode: 'create' | 'edit';
     listing?: ListingFormData | null;
     serviceGroups: ServiceGroup[];
+    featuredCharacteristics: Array<{
+        key: string;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
+    eventTypes: Array<{
+        id: number;
+        slug: string;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
     detailFields: Record<string, ListingDetailField>;
     countries: LocationCountry[];
     locations: ListingLocations;
@@ -58,6 +72,9 @@ const form = useForm({
     longitude: props.listing?.longitude ?? '',
     capacity: props.listing?.capacity ?? '',
     services: props.listing?.services ?? [],
+    event_types: props.listing?.event_types ?? [],
+    logo: null as File | null,
+    remove_logo: false,
     details: detailValues,
     rules: props.listing?.rules ?? '',
     contact_name: props.listing?.contact_name ?? '',
@@ -71,6 +88,46 @@ const countryOptions = computed(() => props.countries);
 const hasCountry = computed(() =>
     props.countries.some((country) => country.value === form.country),
 );
+
+const logoPreview = ref<string | null>(props.listing?.logo_url ?? null);
+let logoObjectUrl: string | null = null;
+
+function onLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    if (!file) {
+        return;
+    }
+
+    form.logo = file;
+    form.remove_logo = false;
+
+    if (logoObjectUrl !== null) {
+        URL.revokeObjectURL(logoObjectUrl);
+    }
+
+    logoObjectUrl = URL.createObjectURL(file);
+    logoPreview.value = logoObjectUrl;
+}
+
+function removeLogo(): void {
+    form.logo = null;
+    form.remove_logo = true;
+
+    if (logoObjectUrl !== null) {
+        URL.revokeObjectURL(logoObjectUrl);
+        logoObjectUrl = null;
+    }
+
+    logoPreview.value = null;
+}
+
+onBeforeUnmount(() => {
+    if (logoObjectUrl !== null) {
+        URL.revokeObjectURL(logoObjectUrl);
+    }
+});
 
 const stateOptions = computed(() => {
     if (!hasCountry.value) {
@@ -186,6 +243,7 @@ const listingSchema = z.object({
     longitude: decimalString('Indica una longitud válida.', -180, 180),
     capacity: decimalString('Indica una capacidad válida.', 1, 100000),
     services: z.array(z.string()),
+    event_types: z.array(z.number()),
     details: z.record(z.string()),
     rules: z
         .string()
@@ -219,6 +277,7 @@ const { validate } = useFrontValidation(listingSchema, () => ({
     longitude: String(form.longitude),
     capacity: String(form.capacity),
     services: form.services,
+    event_types: form.event_types,
     details: { ...form.details },
     rules: form.rules,
     contact_name: form.contact_name,
@@ -239,6 +298,12 @@ function toggleService(service: string): void {
         : [...form.services, service];
 }
 
+function toggleEventType(eventTypeId: number): void {
+    form.event_types = form.event_types.includes(eventTypeId)
+        ? form.event_types.filter((item) => item !== eventTypeId)
+        : [...form.event_types, eventTypeId];
+}
+
 function detailError(key: string): string | undefined {
     return (form.errors as Record<string, string | undefined>)[
         `details.${key}`
@@ -251,13 +316,17 @@ async function submit(): Promise<void> {
     }
 
     if (props.mode === 'create' && props.urls.store) {
-        form.post(props.urls.store);
+        form.post(props.urls.store, {
+            forceFormData: form.logo !== null,
+        });
 
         return;
     }
 
     if (props.urls.update) {
-        form.patch(props.urls.update);
+        form.patch(props.urls.update, {
+            forceFormData: form.logo !== null,
+        });
     }
 }
 </script>
@@ -451,7 +520,116 @@ async function submit(): Promise<void> {
 
         <section class="space-y-5 border-t pt-8">
             <div>
-                <h2 class="text-lg font-semibold">Características</h2>
+                <h2 class="text-lg font-semibold">Identidad del negocio</h2>
+                <p class="text-sm text-muted-foreground">
+                    Este logotipo aparecerá en tus cotizaciones. No se usa como
+                    portada de la terraza.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap items-start gap-4">
+                <div
+                    class="flex size-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted/30"
+                >
+                    <img
+                        v-if="logoPreview"
+                        :src="logoPreview"
+                        alt="Logotipo de la terraza"
+                        class="h-full w-full object-contain p-2"
+                    />
+                    <span
+                        v-else
+                        class="px-2 text-center text-[0.6875rem] font-medium text-muted-foreground"
+                    >
+                        Sin logotipo
+                    </span>
+                </div>
+
+                <div class="grid min-w-64 flex-1 gap-2">
+                    <Label for="logo">Logotipo de la terraza</Label>
+                    <input
+                        id="logo"
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        class="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-secondary file:px-3 file:py-2 file:text-sm file:font-medium file:text-secondary-foreground hover:file:bg-secondary/80"
+                        @change="onLogoSelected"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        PNG, JPG o WebP. Máximo 5 MB y 4000 × 4000 px.
+                    </p>
+                    <Button
+                        v-if="logoPreview"
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        class="w-fit"
+                        @click="removeLogo"
+                    >
+                        Eliminar logotipo
+                    </Button>
+                    <InputError :message="form.errors.logo" />
+                </div>
+            </div>
+        </section>
+
+        <section
+            v-if="featuredCharacteristics.length > 0"
+            class="space-y-5 border-t pt-8"
+        >
+            <div>
+                <h2 class="text-lg font-semibold">Espacios y entorno</h2>
+                <p class="text-sm text-muted-foreground">
+                    Selecciona las cualidades principales que describen tu
+                    espacio. Puedes elegir varias.
+                </p>
+            </div>
+
+            <FeaturedCharacteristicsPicker
+                v-model="form.services"
+                :options="featuredCharacteristics"
+            />
+            <InputError :message="form.errors.services" />
+        </section>
+
+        <section v-if="eventTypes.length > 0" class="space-y-5 border-t pt-8">
+            <div>
+                <h2 class="text-lg font-semibold">Tipos de evento</h2>
+                <p class="text-sm text-muted-foreground">
+                    ¿Qué tipos de eventos aceptas en este espacio? Selecciona
+                    todos los que apliquen.
+                </p>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <label
+                    v-for="eventType in eventTypes"
+                    :key="eventType.id"
+                    class="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm hover:bg-accent/40"
+                >
+                    <Checkbox
+                        :model-value="form.event_types.includes(eventType.id)"
+                        class="mt-0.5"
+                        @update:model-value="toggleEventType(eventType.id)"
+                    />
+                    <span class="min-w-0">
+                        <span class="block font-medium">
+                            {{ eventType.name }}
+                        </span>
+                        <span
+                            v-if="eventType.description"
+                            class="mt-0.5 block text-xs text-muted-foreground"
+                        >
+                            {{ eventType.description }}
+                        </span>
+                    </span>
+                </label>
+            </div>
+            <InputError :message="form.errors.event_types" />
+        </section>
+
+        <section class="space-y-5 border-t pt-8">
+            <div>
+                <h2 class="text-lg font-semibold">Instalaciones y servicios</h2>
                 <p class="text-sm text-muted-foreground">
                     Selecciona lo que ya está disponible en el espacio.
                 </p>

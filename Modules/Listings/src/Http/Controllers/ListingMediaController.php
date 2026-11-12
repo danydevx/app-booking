@@ -15,9 +15,11 @@ use Modules\Billing\Support\Entitlements;
 use Modules\Listings\Actions\AddListingMedia;
 use Modules\Listings\Actions\DeleteListingMedia;
 use Modules\Listings\Actions\ReorderListingMedia;
+use Modules\Listings\Actions\UpdateListingMediaAltText;
 use Modules\Listings\Enums\ListingMediaType;
 use Modules\Listings\Http\Requests\ReorderListingMediaRequest;
 use Modules\Listings\Http\Requests\StoreListingMediaRequest;
+use Modules\Listings\Http\Requests\UpdateListingMediaRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingMedia;
 use Modules\Listings\Support\ListingFormData;
@@ -97,6 +99,30 @@ class ListingMediaController extends Controller
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => 'Archivo agregado.',
+        ]);
+
+        return back();
+    }
+
+    public function update(
+        UpdateListingMediaRequest $request,
+        string $currentTeam,
+        Listing $listing,
+        ListingMedia $media,
+        UpdateListingMediaAltText $updateListingMediaAltText,
+    ): RedirectResponse {
+        $team = $this->currentTeam($request);
+        $this->ensureOwned($listing, $team);
+
+        abort_unless($media->listing_id === $listing->id, 404);
+
+        Gate::authorize('update', $listing);
+
+        $updateListingMediaAltText->handle($media, $request->validated('alt_text'));
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => 'Texto alternativo actualizado.',
         ]);
 
         return back();

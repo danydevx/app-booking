@@ -11,6 +11,26 @@ export type ServiceGroup = {
     services: ServiceOption[];
 };
 
+export type FeaturedCharacteristic = {
+    key: string;
+    name: string;
+    description: string | null;
+    icon: string | null;
+};
+
+export type ListingEventTypeOption = {
+    id: number;
+    slug: string;
+    name: string;
+    description: string | null;
+    icon: string | null;
+};
+
+export type ListingEventTypeSummary = {
+    slug: string;
+    name: string;
+};
+
 export type ListingDetailField = {
     label: string;
     type: 'text' | 'select';
@@ -149,9 +169,11 @@ export type ListingMedia = {
     type: 'image' | 'video';
     type_label: string;
     url: string;
+    thumb_url: string | null;
     mime_type: string;
     alt_text: string | null;
     sort_order: number;
+    update_url?: string;
     delete_url?: string;
 };
 
@@ -164,11 +186,13 @@ export type ListingFormData = {
     city: string | null;
     state: string | null;
     country: string | null;
+    logo_url: string | null;
     postal_code: string | null;
     latitude: string | number | null;
     longitude: string | number | null;
     capacity: number | null;
     services: string[];
+    event_types: number[];
     details: Record<string, string | null>;
     rules: string | null;
     contact_name: string | null;
@@ -224,6 +248,7 @@ export type ListingPublicDetail = {
     city: string | null;
     state: string | null;
     country: string | null;
+    logo_url: string | null;
     postal_code: string | null;
     latitude: number | null;
     longitude: number | null;
@@ -234,6 +259,7 @@ export type ListingPublicDetail = {
         label: string;
         services: ServiceOption[];
     }>;
+    event_types: ListingEventTypeSummary[];
     pricing: ListingPricing;
     priceRanges: ListingPriceRangePublic[];
     packages: ListingPackagePublic[];
@@ -281,6 +307,9 @@ export type PublicFilters = {
     postal_code?: string | null;
     capacity?: string | number | null;
     service?: string | null;
+    features?: string[] | null;
+    event?: string | null;
+    events?: string[] | null;
     price_min?: string | number | null;
     price_max?: string | number | null;
     lat?: string | number | null;
