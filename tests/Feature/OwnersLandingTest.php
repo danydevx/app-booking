@@ -20,6 +20,10 @@ class OwnersLandingTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Owners')
                 ->has('plans', 2)
+                ->has('video')
+                ->has('video.src')
+                ->has('video.poster')
+                ->has('video.tracks')
                 ->where('plans.0.slug', 'free')
                 ->where('plans.0.price_cents', 0)
                 ->where('plans.0.price_formatted', '$0 MXN')

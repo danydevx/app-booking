@@ -2,10 +2,15 @@
 import '@/homeSite';
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import FeatureShowcaseSlider from '@/components/public/FeatureShowcaseSlider.vue';
 import FeatureIcon from '@/components/public/FeatureIcon.vue';
+import FeatureListItem from '@/components/public/FeatureListItem.vue';
+import HeroImageSlider from '@/components/public/HeroImageSlider.vue';
+import ProductFeatureTabs from '@/components/public/ProductFeatureTabs.vue';
+import VideoShowcase from '@/components/public/VideoShowcase.vue';
 import type { FeatureIconName } from '@/components/public/featureIcon';
-import type { FeatureSlide } from '@/components/public/featureShowcase';
+import type { HeroSlide } from '@/components/public/heroSlider';
+import type { ProductFeatureTab } from '@/components/public/productFeatureTabs';
+import type { VideoShowcaseMedia } from '@/components/public/videoShowcase';
 
 type OwnerPlan = {
     slug: string;
@@ -29,6 +34,7 @@ type OwnerPlan = {
 
 const props = defineProps<{
     plans: OwnerPlan[];
+    video: VideoShowcaseMedia;
     urls: {
         register: string;
         login: string;
@@ -88,78 +94,220 @@ const freePhotosLabel = computed(() => {
     return `${count} ${count === 1 ? 'fotografía' : 'fotografías'}`;
 });
 
-const crmSlides: FeatureSlide[] = [
+const productTabs: ProductFeatureTab[] = [
+    {
+        id: 'dashboard',
+        label: 'Dashboard',
+        eyebrow: 'Panel general',
+        title: 'Todo tu negocio en un solo lugar.',
+        description:
+            'Visualiza la actividad de tus espacios, las solicitudes recibidas y los indicadores más importantes de tu negocio desde un panel centralizado.',
+        features: [
+            { text: 'Resumen general de actividad.', icon: 'chart-column' },
+            {
+                text: 'Indicadores de solicitudes y reservas.',
+                icon: 'inbox',
+            },
+            {
+                text: 'Accesos rápidos a las principales herramientas.',
+                icon: 'layout-dashboard',
+            },
+            {
+                text: 'Información organizada para tomar decisiones.',
+                icon: 'trending-up',
+            },
+        ],
+        // Captura pendiente: /images/showcase/plataforma/dashboard.webp
+        screenshot: null,
+        screenshotAlt:
+            'Panel general con actividad, solicitudes y reservas del negocio',
+    },
+    {
+        id: 'espacios',
+        label: 'Espacios',
+        eyebrow: 'Terrazas y salones',
+        title: 'Administra todos tus espacios fácilmente.',
+        description:
+            'Organiza la información de tus terrazas y salones desde una sola plataforma.',
+        features: [
+            {
+                text: 'Administración de múltiples espacios.',
+                icon: 'store',
+            },
+            { text: 'Galerías de fotografías.', icon: 'images' },
+            {
+                text: 'Características e instalaciones.',
+                icon: 'clipboard-list',
+            },
+            {
+                text: 'Servicios, paquetes y precios.',
+                icon: 'file-text',
+            },
+            {
+                text: 'Configuración de información comercial.',
+                icon: 'signature',
+            },
+        ],
+        // Captura pendiente: /images/showcase/plataforma/espacios.webp
+        screenshot: null,
+        screenshotAlt:
+            'Administración de terrazas con fotografías, servicios y precios',
+    },
+    {
+        id: 'solicitudes',
+        label: 'Solicitudes',
+        eyebrow: 'Bandeja de entrada',
+        title: 'Cada solicitud es una nueva oportunidad.',
+        description:
+            'Centraliza las solicitudes de tus clientes y administra su seguimiento sin perder información importante.',
+        features: [
+            { text: 'Solicitudes organizadas.', icon: 'inbox' },
+            {
+                text: 'Información del cliente y del evento.',
+                icon: 'users',
+            },
+            { text: 'Estados de seguimiento.', icon: 'list-todo' },
+            { text: 'Historial de cada solicitud.', icon: 'clipboard-list' },
+        ],
+        // Captura pendiente: /images/showcase/plataforma/solicitudes.webp
+        screenshot: null,
+        screenshotAlt:
+            'Bandeja de solicitudes con datos del cliente y del evento',
+    },
     {
         id: 'clientes',
-        eyebrow: 'Clientes',
-        icon: 'users',
-        title: 'Clientes organizados',
+        label: 'Clientes',
+        eyebrow: 'CRM',
+        title: 'Conoce mejor a cada cliente.',
+        description:
+            'Construye una base de clientes organizada y consulta toda la información relevante desde un mismo lugar.',
         features: [
-            'Base de clientes con búsqueda y filtros.',
-            'Etiquetas y segmentos para ordenar tu cartera.',
-            'Historial de interacciones y notas.',
-            'Ficha 360 con solicitudes, reservas, cotizaciones y contratos.',
+            { text: 'Directorio de clientes.', icon: 'users' },
+            { text: 'Búsqueda y filtros.', icon: 'list-todo' },
+            {
+                text: 'Historial de interacciones.',
+                icon: 'message-square',
+            },
+            {
+                text: 'Información relacionada con solicitudes y reservas.',
+                icon: 'calendar-days',
+            },
         ],
-        // Captura pendiente: /images/showcase/crm/clientes.webp
-        image: null,
-        imageAlt: 'Listado y ficha de clientes del CRM',
+        // Captura pendiente: /images/showcase/plataforma/clientes.webp
+        screenshot: null,
+        screenshotAlt:
+            'Directorio de clientes con búsqueda e historial de interacciones',
     },
     {
         id: 'seguimiento',
-        eyebrow: 'Seguimiento',
-        icon: 'kanban',
-        title: 'Seguimiento comercial',
+        label: 'Seguimiento',
+        eyebrow: 'Pipeline comercial',
+        title: 'Convierte más solicitudes en contrataciones.',
+        description:
+            'Organiza tus oportunidades comerciales y da seguimiento a cada etapa del proceso.',
         features: [
-            'Pipeline por etapas para cada oportunidad.',
-            'Tareas con recordatorios y responsables.',
-            'Tablero Hoy para saber qué atender primero.',
-            'Asignación de clientes al equipo.',
+            { text: 'Pipeline comercial.', icon: 'kanban' },
+            { text: 'Estados de oportunidad.', icon: 'badge-check' },
+            {
+                text: 'Notas e historial de actividades.',
+                icon: 'message-square',
+            },
+            {
+                text: 'Seguimiento desde el primer contacto.',
+                icon: 'handshake',
+            },
         ],
-        // Captura pendiente: /images/showcase/crm/seguimiento.webp
-        image: null,
-        imageAlt: 'Pipeline y tablero Hoy del CRM',
+        // Captura pendiente: /images/showcase/plataforma/seguimiento.webp
+        screenshot: null,
+        screenshotAlt:
+            'Pipeline comercial con estados y seguimiento de oportunidades',
     },
     {
         id: 'cotizaciones',
-        eyebrow: 'Cotizaciones',
-        icon: 'signature',
-        title: 'Cotizaciones y contratos',
+        label: 'Cotizaciones',
+        eyebrow: 'Propuestas',
+        title: 'Prepara propuestas profesionales.',
+        description:
+            'Gestiona las propuestas comerciales para tus clientes de forma organizada.',
         features: [
-            'Crea y envía cotizaciones desde la ficha del cliente.',
-            'Aceptación o rechazo mediante enlace público.',
-            'Contratos con publicación y aceptación de términos.',
+            {
+                text: 'Cotizaciones vinculadas a cada cliente y terraza.',
+                icon: 'file-text',
+            },
+            {
+                text: 'Fechas del evento, invitados, total y anticipo.',
+                icon: 'calendar-days',
+            },
+            {
+                text: 'Notas y términos para el cliente.',
+                icon: 'signature',
+            },
+            {
+                text: 'Envío, aceptación y conversión en reserva.',
+                icon: 'send',
+            },
         ],
-        // Captura pendiente: /images/showcase/crm/cotizaciones.webp
-        image: null,
-        imageAlt: 'Cotizador y contrato del CRM',
+        // Captura pendiente: /images/showcase/plataforma/cotizaciones.webp
+        screenshot: null,
+        screenshotAlt:
+            'Cotización con fechas, total, anticipo y términos para el cliente',
     },
     {
-        id: 'comunicacion',
-        eyebrow: 'Comunicación',
-        icon: 'chart-column',
-        title: 'Comunicación y reportes',
+        id: 'reservas',
+        label: 'Reservas',
+        eyebrow: 'Operación',
+        title: 'Mantén tus eventos bajo control.',
+        description:
+            'Consulta y administra las reservas de tus espacios desde una interfaz centralizada.',
         features: [
-            'Plantillas de correo y envíos desde el CRM.',
-            'Historial de interacciones con cada cliente.',
-            'Reportes y métricas comerciales.',
-            'Atribución de leads para saber de dónde llegan.',
+            {
+                text: 'Reservas manuales y solicitudes aceptadas.',
+                icon: 'calendar-days',
+            },
+            {
+                text: 'Fechas, espacios y datos del evento.',
+                icon: 'map-pin',
+            },
+            { text: 'Estado de cada reserva.', icon: 'badge-check' },
+            {
+                text: 'Vinculadas al cliente y a su solicitud.',
+                icon: 'users',
+            },
         ],
-        // Captura pendiente: /images/showcase/crm/reportes.webp
-        image: null,
-        imageAlt: 'Reportes y métricas comerciales del CRM',
+        // Captura pendiente: /images/showcase/plataforma/reservas.webp
+        screenshot: null,
+        screenshotAlt:
+            'Reservas con fechas, espacio, estado y cliente relacionado',
     },
     {
-        id: 'experiencia',
-        eyebrow: 'Experiencia',
-        icon: 'heart-handshake',
-        title: 'Experiencia del cliente',
+        id: 'contratos',
+        label: 'Contratos',
+        eyebrow: 'Documentación',
+        title: 'Organiza tus contrataciones.',
+        description:
+            'Mantén la documentación comercial vinculada con cada cliente y reserva.',
         features: [
-            'Portal del cliente con la información de su evento.',
-            'Opiniones y reseñas mediante enlace público.',
+            {
+                text: 'Contratos vinculados a cada reserva.',
+                icon: 'signature',
+            },
+            {
+                text: 'Título y contenido editables.',
+                icon: 'file-text',
+            },
+            {
+                text: 'Publicación en el portal del cliente.',
+                icon: 'send',
+            },
+            {
+                text: 'Aceptación del contrato en línea.',
+                icon: 'badge-check',
+            },
         ],
-        // Captura pendiente: /images/showcase/crm/portal-cliente.webp
-        image: null,
-        imageAlt: 'Portal del cliente y opiniones',
+        // Captura pendiente: /images/showcase/plataforma/contratos.webp
+        screenshot: null,
+        screenshotAlt:
+            'Contrato vinculado a una reserva, listo para publicar en el portal',
     },
 ];
 
@@ -259,31 +407,37 @@ const operationItems: OperationItem[] = [
 ];
 
 const steps: Array<{
-    icon: FeatureIconName;
     number: string;
     title: string;
     description: string;
+    image: string;
+    imageAlt: string;
 }> = [
     {
-        icon: 'store',
         number: '01',
         title: 'Publica tu espacio',
         description:
             'Crea tu cuenta y agrega la información y fotografías de tu terraza.',
+        image: '/images/owners/como-funciona/paso-1-publica.webp',
+        imageAlt:
+            'Salón de eventos preparado con mesas y sillas para recibir clientes',
     },
     {
-        icon: 'inbox',
         number: '02',
         title: 'Recibe solicitudes',
         description:
             'Los visitantes encuentran tu espacio y pueden enviarte solicitudes.',
+        image: '/images/owners/como-funciona/paso-2-recibe.webp',
+        imageAlt:
+            'Propietario revisando solicitudes en una computadora portátil',
     },
     {
-        icon: 'layout-dashboard',
         number: '03',
         title: 'Organiza tu negocio',
         description:
             'Gestiona disponibilidad y reservas. Cuando necesites herramientas comerciales avanzadas, puedes contratar Pro.',
+        image: '/images/owners/como-funciona/paso-3-organiza.webp',
+        imageAlt: 'Persona organizando reservaciones y tareas en una libreta',
     },
 ];
 
@@ -368,9 +522,25 @@ const faqs = computed(() => [
 const unsplash = (id: string, width = 1200): string =>
     `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=80`;
 
+// Open Graph keeps an absolute URL; the visible hero uses local assets.
 const heroImage = unsplash('1561501900-3701fa6a0864', 1800);
 const visibilityImage = unsplash('1519225421980-715cb0215aed', 1200);
 const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
+
+const heroSlides: HeroSlide[] = [
+    {
+        src: '/images/owners/hero/slide-1.webp',
+        alt: 'Terraza con alberca y camastros rodeada de palmeras',
+    },
+    {
+        src: '/images/owners/hero/slide-2.webp',
+        alt: 'Salón de eventos elegante con mesas redondas y candelabros',
+    },
+    {
+        src: '/images/owners/hero/slide-3.webp',
+        alt: 'Terraza al atardecer con camastros y vista al mar',
+    },
+];
 </script>
 
 <template>
@@ -391,60 +561,75 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
         <meta property="og:image" :content="heroImage" />
     </Head>
 
-    <section class="home-container py-12 sm:py-16 lg:py-20">
-        <div
-            class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16"
-        >
-            <div>
-                <p class="home-eyebrow">Para propietarios y administradores</p>
-                <h1
-                    class="mt-3 max-w-3xl text-[2.5rem] leading-[1.06] font-extrabold text-[color:var(--home-dark)] sm:text-5xl lg:text-[3.5rem]"
-                >
-                    Tu terraza es un negocio. Adminístrala como tal.
-                </h1>
-                <p
-                    class="mt-5 max-w-2xl text-lg leading-relaxed text-[color:var(--home-secondary)]"
-                >
-                    Publica tu espacio, recibe solicitudes, organiza tus
-                    reservas y administra tus clientes desde una sola
-                    plataforma.
-                </p>
-                <div class="mt-7 flex flex-wrap gap-3">
-                    <Link :href="startUrl" class="home-btn home-btn--dark">
-                        {{ startLabel }}
-                    </Link>
-                    <a href="#herramientas" class="home-btn home-btn--outline">
-                        Conoce las herramientas
-                    </a>
-                </div>
-                <p
-                    v-if="showFreeNote"
-                    class="mt-4 flex items-center gap-2 text-sm font-medium text-[color:var(--home-secondary)]"
-                >
-                    <FeatureIcon name="check" size="sm" variant="plain" />
-                    Publica tu primera terraza gratis.
-                </p>
-                <p
-                    v-if="!authenticated"
-                    class="mt-3 text-sm text-[color:var(--home-muted)]"
-                >
-                    ¿Ya tienes cuenta?
-                    <a
-                        :href="urls.login"
-                        class="font-semibold text-[color:var(--home-primary-deep)] hover:text-[color:var(--home-primary-hover)]"
-                    >
-                        Inicia sesión
-                    </a>
-                </p>
-            </div>
+    <section
+        class="section-hero relative overflow-hidden bg-[color:var(--home-bg)]"
+    >
+        <div class="absolute inset-0" aria-hidden="true">
+            <img
+                src="/images/owners/hero/fondo.webp"
+                alt=""
+                class="h-full w-full object-cover"
+                fetchpriority="low"
+                decoding="async"
+            />
+            <div class="home-owners-hero-wash absolute inset-0"></div>
+        </div>
 
+        <div class="home-container relative py-12 sm:py-16 lg:py-20">
             <div
-                class="home-media aspect-[4/3] overflow-hidden rounded-[1.25rem]"
+                class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16"
             >
-                <img
-                    :src="heroImage"
-                    alt="Terraza preparada para un evento con mesas y sombrillas"
-                    fetchpriority="high"
+                <div>
+                    <p class="home-eyebrow">
+                        Para propietarios y administradores
+                    </p>
+                    <h1
+                        class="mt-3 max-w-3xl text-[2.5rem] leading-[1.06] font-extrabold text-[color:var(--home-dark)] sm:text-5xl lg:text-[3.5rem]"
+                    >
+                        Tu terraza es un negocio. Adminístrala como tal.
+                    </h1>
+                    <p
+                        class="mt-5 max-w-2xl text-lg leading-relaxed text-[color:var(--home-secondary)]"
+                    >
+                        Publica tu espacio, recibe solicitudes, organiza tus
+                        reservas y administra tus clientes desde una sola
+                        plataforma.
+                    </p>
+                    <div class="mt-7 flex flex-wrap gap-3">
+                        <Link :href="startUrl" class="home-btn home-btn--dark">
+                            {{ startLabel }}
+                        </Link>
+                        <a
+                            href="#herramientas"
+                            class="home-btn home-btn--outline"
+                        >
+                            Conoce las herramientas
+                        </a>
+                    </div>
+                    <p
+                        v-if="showFreeNote"
+                        class="mt-4 flex items-center gap-2 text-sm font-medium text-[color:var(--home-secondary)]"
+                    >
+                        <FeatureIcon name="check" size="sm" variant="plain" />
+                        Publica tu primera terraza gratis.
+                    </p>
+                    <p
+                        v-if="!authenticated"
+                        class="mt-3 text-sm text-[color:var(--home-muted)]"
+                    >
+                        ¿Ya tienes cuenta?
+                        <a
+                            :href="urls.login"
+                            class="font-semibold text-[color:var(--home-primary-deep)] hover:text-[color:var(--home-primary-hover)]"
+                        >
+                            Inicia sesión
+                        </a>
+                    </p>
+                </div>
+
+                <HeroImageSlider
+                    :slides="heroSlides"
+                    aria-label="Espacios para eventos"
                 />
             </div>
         </div>
@@ -452,7 +637,7 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
 
     <section
         id="herramientas"
-        class="border-t border-[color:var(--home-border)] bg-white"
+        class="section-features border-t border-[color:var(--home-border)] bg-white"
     >
         <div class="home-container py-16 sm:py-20">
             <div class="max-w-3xl">
@@ -488,15 +673,12 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
                         <li
                             v-for="item in publishTools"
                             :key="item.label"
-                            class="flex items-start gap-2.5 border-b border-[color:var(--home-border)] pb-3 last:border-0 last:pb-0"
+                            class="border-b border-[color:var(--home-border)] pb-3 last:border-0 last:pb-0"
                         >
-                            <FeatureIcon
-                                :name="item.icon"
-                                size="sm"
-                                variant="plain"
-                                class="mt-0.5"
+                            <FeatureListItem
+                                :icon="item.icon"
+                                :text="item.label"
                             />
-                            <span>{{ item.label }}</span>
                         </li>
                     </ul>
                 </div>
@@ -519,17 +701,13 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
                         <li
                             v-for="item in manageTools"
                             :key="item.label"
-                            class="flex items-start justify-between gap-3 border-b border-[color:var(--home-border)] pb-3 last:border-0 last:pb-0"
+                            class="flex items-center justify-between gap-3 border-b border-[color:var(--home-border)] pb-3 last:border-0 last:pb-0"
                         >
-                            <span class="flex items-start gap-2.5">
-                                <FeatureIcon
-                                    :name="item.icon"
-                                    size="sm"
-                                    variant="plain"
-                                    class="mt-0.5"
-                                />
-                                <span>{{ item.label }}</span>
-                            </span>
+                            <FeatureListItem
+                                :icon="item.icon"
+                                :text="item.label"
+                                class="min-w-0 flex-1"
+                            />
                             <span v-if="item.pro" class="home-chip shrink-0">
                                 PRO
                             </span>
@@ -540,7 +718,7 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
         </div>
     </section>
 
-    <section class="home-container py-16 sm:py-24">
+    <section class="section-visibility home-container py-16 sm:py-24">
         <div
             class="grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16"
         >
@@ -564,15 +742,9 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
                     <li
                         v-for="item in visibilityItems"
                         :key="item.label"
-                        class="flex items-start gap-2.5 border-t border-[color:var(--home-border)] pt-3"
+                        class="border-t border-[color:var(--home-border)] pt-3"
                     >
-                        <FeatureIcon
-                            :name="item.icon"
-                            size="sm"
-                            variant="plain"
-                            class="mt-0.5"
-                        />
-                        <span>{{ item.label }}</span>
+                        <FeatureListItem :icon="item.icon" :text="item.label" />
                     </li>
                 </ul>
                 <p
@@ -597,7 +769,7 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
         </div>
     </section>
 
-    <section class="home-alt-section">
+    <section class="section-operations home-alt-section">
         <div class="home-container py-16 sm:py-24">
             <div
                 class="grid gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-16"
@@ -634,17 +806,13 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
                         <li
                             v-for="item in operationItems"
                             :key="item.label"
-                            class="flex items-start justify-between gap-4 border-b border-[color:var(--home-border)] pb-3 last:border-0 last:pb-0"
+                            class="flex items-center justify-between gap-4 border-b border-[color:var(--home-border)] pb-3 last:border-0 last:pb-0"
                         >
-                            <span class="flex items-start gap-2.5">
-                                <FeatureIcon
-                                    :name="item.icon"
-                                    size="sm"
-                                    variant="plain"
-                                    class="mt-0.5"
-                                />
-                                <span>{{ item.label }}</span>
-                            </span>
+                            <FeatureListItem
+                                :icon="item.icon"
+                                :text="item.label"
+                                class="min-w-0 flex-1"
+                            />
                             <span class="home-chip shrink-0">
                                 {{ item.tier }}
                             </span>
@@ -655,7 +823,10 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
         </div>
     </section>
 
-    <section v-if="hasCrm" class="home-container py-16 sm:py-24">
+    <section
+        v-if="hasCrm"
+        class="section-crm-pro home-container py-16 sm:py-24"
+    >
         <div class="max-w-4xl">
             <span
                 class="home-chip border-[color:var(--home-primary)]/40 bg-[color:var(--home-soft)] text-[color:var(--home-primary-deep)]"
@@ -676,13 +847,6 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
             </p>
         </div>
 
-        <div class="mt-10">
-            <FeatureShowcaseSlider
-                :slides="crmSlides"
-                aria-label="Funcionalidades del CRM Pro"
-            />
-        </div>
-
         <div class="mt-8 flex flex-wrap items-center gap-4">
             <Link :href="proUrl" class="home-btn home-btn--dark">
                 {{ proLabel }}
@@ -695,7 +859,7 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
         </div>
     </section>
 
-    <section class="home-container py-16 sm:py-24">
+    <section class="section-steps home-container py-16 sm:py-24">
         <div class="max-w-3xl">
             <p class="home-eyebrow">Cómo funciona</p>
             <h2
@@ -705,35 +869,79 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
             </h2>
         </div>
 
-        <ol
-            class="mt-8 grid gap-8 border-t border-[color:var(--home-border)] pt-8 sm:grid-cols-3"
-        >
-            <li v-for="step in steps" :key="step.number">
-                <div class="flex items-center gap-3">
-                    <FeatureIcon
-                        :name="step.icon"
-                        size="md"
-                        variant="primary"
-                    />
-                    <p
-                        class="text-sm font-extrabold text-[color:var(--home-primary-deep)]"
-                    >
-                        {{ step.number }}
-                    </p>
-                </div>
-                <h3 class="mt-2 text-lg font-extrabold">{{ step.title }}</h3>
-                <p
-                    class="mt-2 text-base leading-relaxed text-[color:var(--home-secondary)]"
-                >
-                    {{ step.description }}
-                </p>
+        <ol class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+            <li v-for="step in steps" :key="step.number" class="h-full">
+                <article class="home-card h-full">
+                    <div class="home-media relative aspect-[4/3]">
+                        <img
+                            :src="step.image"
+                            :alt="step.imageAlt"
+                            loading="lazy"
+                            decoding="async"
+                        />
+                        <div
+                            class="absolute inset-0 bg-[color:var(--home-dark)]/35"
+                            aria-hidden="true"
+                        ></div>
+                        <span
+                            class="absolute top-5 left-5 text-6xl leading-none font-extrabold tracking-tight text-white sm:text-7xl"
+                            aria-hidden="true"
+                        >
+                            {{ step.number }}
+                        </span>
+                    </div>
+                    <div class="flex flex-1 flex-col p-6">
+                        <h3 class="text-xl font-extrabold">{{ step.title }}</h3>
+                        <p
+                            class="mt-2 text-base leading-relaxed text-[color:var(--home-secondary)]"
+                        >
+                            {{ step.description }}
+                        </p>
+                    </div>
+                </article>
             </li>
         </ol>
     </section>
 
+    <section class="section-product-tabs home-alt-section">
+        <div class="home-container py-16 sm:py-24">
+            <div class="max-w-3xl">
+                <p class="home-eyebrow">La plataforma</p>
+                <h2
+                    class="mt-3 text-[2rem] leading-tight font-extrabold sm:text-[2.5rem]"
+                >
+                    Todo lo que puedes hacer desde tu panel
+                </h2>
+                <p
+                    class="mt-4 text-lg leading-relaxed text-[color:var(--home-secondary)]"
+                >
+                    Explora las herramientas que te ayudan a publicar, atender
+                    solicitudes, dar seguimiento y cerrar más eventos.
+                </p>
+            </div>
+
+            <ProductFeatureTabs
+                :tabs="productTabs"
+                class="mt-10"
+                aria-label="Funcionalidades de la plataforma para propietarios"
+            />
+        </div>
+    </section>
+
+    <VideoShowcase
+        class="section-video"
+        title="Conoce cómo funciona nuestra plataforma"
+        description="Descubre lo fácil que es publicar tu espacio, administrar tus reservas y gestionar tu negocio desde un solo lugar."
+        :src="video.src"
+        :poster="video.poster"
+        :tracks="video.tracks"
+        fallback="Tu navegador no admite la reproducción de video. Actualízalo para ver la demostración."
+        unavailable="El video demostrativo estará disponible muy pronto."
+    />
+
     <section
         id="planes"
-        class="border-t border-[color:var(--home-border)] bg-white"
+        class="section-plans border-t border-[color:var(--home-border)] bg-white"
     >
         <div class="home-container py-16 sm:py-24">
             <div class="max-w-3xl">
@@ -777,52 +985,28 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
                     <ul
                         class="mt-5 space-y-2 text-base text-[color:var(--home-secondary)]"
                     >
-                        <li class="flex items-start gap-2.5">
-                            <FeatureIcon
-                                name="check"
-                                size="sm"
-                                variant="plain"
-                                class="mt-0.5"
-                            />
-                            <span>
+                        <li>
+                            <FeatureListItem icon="check">
                                 {{ freePlan.limits.listings }} terraza para
                                 publicar.
-                            </span>
+                            </FeatureListItem>
                         </li>
-                        <li class="flex items-start gap-2.5">
-                            <FeatureIcon
-                                name="check"
-                                size="sm"
-                                variant="plain"
-                                class="mt-0.5"
-                            />
-                            <span>
+                        <li>
+                            <FeatureListItem icon="check">
                                 {{ freePlan.limits.photos_per_listing }}
                                 fotografías por terraza.
-                            </span>
+                            </FeatureListItem>
                         </li>
-                        <li class="flex items-start gap-2.5">
-                            <FeatureIcon
-                                name="check"
-                                size="sm"
-                                variant="plain"
-                                class="mt-0.5"
-                            />
-                            <span>
+                        <li>
+                            <FeatureListItem icon="check">
                                 Directorio público, solicitudes, calendario y
                                 reservas manuales.
-                            </span>
+                            </FeatureListItem>
                         </li>
-                        <li class="flex items-start gap-2.5">
-                            <FeatureIcon
-                                name="minus"
-                                size="sm"
-                                variant="muted"
-                                class="mt-0.5"
-                            />
-                            <span>
+                        <li>
+                            <FeatureListItem icon="minus">
                                 Sin CRM ni herramientas comerciales avanzadas.
-                            </span>
+                            </FeatureListItem>
                         </li>
                     </ul>
                     <Link
@@ -865,51 +1049,29 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
                     <ul
                         class="mt-5 space-y-2 text-base text-[color:var(--home-secondary)]"
                     >
-                        <li class="flex items-start gap-2.5">
-                            <FeatureIcon
-                                name="check"
-                                size="sm"
-                                variant="plain"
-                                class="mt-0.5"
-                            />
-                            <span>
+                        <li>
+                            <FeatureListItem icon="check">
                                 {{ proPlan.limits.listings }} terrazas y
                                 {{ proPlan.limits.photos_per_listing }} fotos
                                 por terraza.
-                            </span>
+                            </FeatureListItem>
                         </li>
-                        <li class="flex items-start gap-2.5">
-                            <FeatureIcon
-                                name="check"
-                                size="sm"
-                                variant="plain"
-                                class="mt-0.5"
-                            />
-                            <span>
+                        <li>
+                            <FeatureListItem icon="check">
                                 {{ proPlan.limits.videos_per_listing }} videos
                                 por terraza.
-                            </span>
+                            </FeatureListItem>
                         </li>
-                        <li class="flex items-start gap-2.5">
-                            <FeatureIcon
-                                name="check"
-                                size="sm"
-                                variant="plain"
-                                class="mt-0.5"
-                            />
-                            <span>Todo lo del plan Gratis.</span>
+                        <li>
+                            <FeatureListItem icon="check">
+                                Todo lo del plan Gratis.
+                            </FeatureListItem>
                         </li>
-                        <li class="flex items-start gap-2.5">
-                            <FeatureIcon
-                                name="check"
-                                size="sm"
-                                variant="plain"
-                                class="mt-0.5"
-                            />
-                            <span>
+                        <li>
+                            <FeatureListItem icon="check">
                                 CRM, pipeline, tareas, cotizaciones, contratos,
                                 reportes y portal del cliente.
-                            </span>
+                            </FeatureListItem>
                         </li>
                     </ul>
                     <Link
@@ -1017,7 +1179,7 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
         </div>
     </section>
 
-    <section class="home-container py-16 sm:py-24">
+    <section class="section-faq home-container py-16 sm:py-24">
         <div class="max-w-3xl">
             <div class="flex items-center gap-3">
                 <FeatureIcon
@@ -1060,7 +1222,7 @@ const operationsImage = unsplash('1540541338287-41700207dee6', 1200);
         </div>
     </section>
 
-    <section class="home-alt-section">
+    <section class="section-cta home-alt-section">
         <div class="home-container py-16 sm:py-20">
             <div
                 class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between"

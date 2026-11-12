@@ -74,10 +74,14 @@ onMounted(() => {
     <div class="w-full">
         <Swiper
             :modules="modules"
+            effect="slide"
             :slides-per-view="1"
-            :space-between="0"
-            :speed="reducedMotion ? 0 : 400"
+            :slides-per-group="1"
+            :space-between="24"
+            :speed="reducedMotion ? 0 : 650"
             :loop="false"
+            :allow-touch-move="true"
+            :auto-height="false"
             :watch-overflow="true"
             :keyboard="{ enabled: true, onlyInViewport: true }"
             tabindex="0"
@@ -102,9 +106,7 @@ onMounted(() => {
                 <div
                     class="grid gap-8 lg:grid-cols-[32fr_68fr] lg:items-center lg:gap-10"
                 >
-                    <div
-                        class="feature-showcase-copy flex min-w-0 flex-col justify-center"
-                    >
+                    <div class="flex min-w-0 flex-col justify-center">
                         <div
                             v-if="slide.eyebrow || slide.icon"
                             class="flex items-center gap-3"
@@ -132,12 +134,9 @@ onMounted(() => {
                         </p>
                         <ul class="mt-5 space-y-2.5">
                             <li
-                                v-for="(
-                                    feature, featureIndex
-                                ) in slide.features"
+                                v-for="feature in slide.features"
                                 :key="feature"
-                                class="feature-showcase-item flex gap-2.5 text-base leading-relaxed text-[color:var(--home-secondary)]"
-                                :style="{ '--feature-index': featureIndex }"
+                                class="flex gap-2.5 text-base leading-relaxed text-[color:var(--home-secondary)]"
                             >
                                 <span
                                     class="mt-2 size-1.5 shrink-0 rounded-full bg-[color:var(--home-primary)]"
@@ -149,7 +148,7 @@ onMounted(() => {
                     </div>
 
                     <div
-                        class="feature-showcase-media flex aspect-[16/10] min-w-0 items-center justify-center overflow-hidden rounded-[1.125rem] border border-[color:var(--home-border)] bg-[color:var(--home-bg-alt)]"
+                        class="flex aspect-[16/10] min-w-0 items-center justify-center overflow-hidden rounded-[1.125rem] border border-[color:var(--home-border)] bg-[color:var(--home-bg-alt)]"
                     >
                         <img
                             v-if="hasImage(slide)"
@@ -286,69 +285,11 @@ onMounted(() => {
 </template>
 
 <style scoped>
-@keyframes feature-showcase-copy-in {
-    from {
-        opacity: 0.45;
-        transform: translateY(14px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes feature-showcase-media-in {
-    from {
-        opacity: 0.45;
-        transform: scale(0.985);
-    }
-
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-@keyframes feature-showcase-item-in {
-    from {
-        opacity: 0.55;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.feature-showcase-swiper :deep(.swiper-slide-active) .feature-showcase-copy {
-    animation: feature-showcase-copy-in 420ms cubic-bezier(0.22, 0.61, 0.36, 1)
-        both;
-}
-
-.feature-showcase-swiper :deep(.swiper-slide-active) .feature-showcase-media {
-    animation: feature-showcase-media-in 480ms cubic-bezier(0.22, 0.61, 0.36, 1)
-        50ms both;
-}
-
-.feature-showcase-swiper :deep(.swiper-slide-active) .feature-showcase-item {
-    animation: feature-showcase-item-in 380ms cubic-bezier(0.22, 0.61, 0.36, 1)
-        both;
-    animation-delay: calc(40ms + var(--feature-index, 0) * 45ms);
+.feature-showcase-swiper {
+    --swiper-wrapper-transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .feature-showcase-swiper :deep(.swiper-slide-active) .feature-showcase-copy,
-    .feature-showcase-swiper
-        :deep(.swiper-slide-active)
-        .feature-showcase-media,
-    .feature-showcase-swiper
-        :deep(.swiper-slide-active)
-        .feature-showcase-item {
-        animation: none;
-    }
-
     .feature-showcase-progress {
         transition: none;
     }

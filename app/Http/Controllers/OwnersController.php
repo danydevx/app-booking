@@ -13,6 +13,18 @@ use Throwable;
 
 class OwnersController extends Controller
 {
+    /**
+     * Local media for the owners landing video. Drop the files in `public/`
+     * with these names and they are exposed automatically; while they are
+     * missing the page renders a neutral placeholder instead of a broken
+     * player.
+     */
+    private const DEMO_VIDEO = 'videos/plataforma-demo.mp4';
+
+    private const DEMO_POSTER = 'images/showcase/plataforma/portada-demo.webp';
+
+    private const DEMO_CAPTIONS = 'videos/plataforma-demo.es.vtt';
+
     public function __invoke(Request $request, PlanCatalog $catalog): Response
     {
         $free = $catalog->get('free') ?? $catalog->default();
@@ -33,6 +45,7 @@ class OwnersController extends Controller
 
         return Inertia::render('Owners', [
             'plans' => $plans,
+            'video' => $this->demoVideo(),
             'urls' => [
                 'register' => route('register'),
                 'login' => route('login'),
@@ -44,6 +57,37 @@ class OwnersController extends Controller
                     : null,
             ],
         ]);
+    }
+
+    /**
+     * @return array{
+     *     src: string|null,
+     *     poster: string|null,
+     *     tracks: array<int, array{src: string, label: string, lang: string, kind: string, default: bool}>
+     * }
+     */
+    private function demoVideo(): array
+    {
+        $captions = $this->publicAsset(self::DEMO_CAPTIONS);
+
+        return [
+            'src' => $this->publicAsset(self::DEMO_VIDEO),
+            'poster' => $this->publicAsset(self::DEMO_POSTER),
+            'tracks' => $captions === null
+                ? []
+                : [[
+                    'src' => $captions,
+                    'label' => 'Español',
+                    'lang' => 'es',
+                    'kind' => 'subtitles',
+                    'default' => true,
+                ]],
+        ];
+    }
+
+    private function publicAsset(string $path): ?string
+    {
+        return is_file(public_path($path)) ? '/'.$path : null;
     }
 
     /**
