@@ -83,6 +83,8 @@ composer production:check # preflight de configuración de producción
 composer ssr        # servidor Inertia SSR (requiere build:ssr)
 composer ssr:check  # health check del SSR
 
+php artisan listings:media:thumbnails --dry-run # miniaturas 400x400 de fotos existentes
+
 npm run build       # build cliente
 npm run build:ssr   # build cliente + SSR
 npm run check       # formato + lint + type-aware checks
@@ -96,6 +98,31 @@ DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3307 \
 DB_DATABASE=app_booking_test DB_USERNAME=app_booking DB_PASSWORD=secret \
 php artisan test
 ```
+
+## Acceso desde otra máquina (red local)
+
+Ejemplo con Apache sirviendo el sitio en `http://booking.local` (puerto 80) y
+Vite en el puerto 5173:
+
+1. En la máquina de pruebas, apunta `APP_URL` al hostname que usará el navegador
+   remoto (en esta máquina `.env` ya tiene `APP_URL=http://booking.local`).
+2. En la otra máquina agrega el hostname a su archivo `hosts` con la IP de la
+   máquina de pruebas (`192.168.1.105` en este ejemplo):
+    - Linux/macOS: `/etc/hosts`
+    - Windows: `C:\Windows\System32\drivers\etc\hosts`
+
+    ```text
+    192.168.1.105 booking.local
+    ```
+
+3. Levanta Vite (`npm run dev` o `composer dev`) y abre
+   `http://booking.local` desde la otra máquina.
+
+Cuando `APP_URL` no es `localhost`, Vite escucha en `0.0.0.0:5173`, publica los
+assets con ese mismo hostname y acepta CORS desde el origen de `APP_URL`; no hay
+que tocar `vite.config.ts`. Si hay firewall en la máquina de pruebas, permite el
+puerto 5173. Si cambia la IP de la máquina de pruebas, actualiza el `hosts`
+remoto y `APP_URL`.
 
 ## Base de datos
 

@@ -6,6 +6,7 @@
 | [0002](0002-data-platform.md)         | MySQL 8.4 primary, SQLite legacy       | Accepted                            |
 | [0003](0003-production-operations.md) | Production operations and launch gates | Proposed — no deployment authorized |
 | [0004](0004-open-decisions.md)        | Open product and operational decisions | Open                                |
+| [0005](0005-commercial-quotations.md) | Commercial quotations in PDF           | Implemented (RC1 candidate)         |
 
 ## When to add an ADR
 

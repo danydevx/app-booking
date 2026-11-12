@@ -71,8 +71,10 @@ Tokens live on `.home-site` in `resources/css/home.css`.
 - On white, small pink text uses `--home-primary-deep` for contrast; `#F50557`
   is for fills, icons and active states.
 - No decorative gradients on sections, cards, CTAs or banners. Photography keeps
-  its natural color; only a flat translucent overlay is allowed over a hero
-  image for legibility.
+  its natural color; the owners hero may use one functional white wash
+  (`.home-owners-hero-wash`, top-left to bottom-right) over its background photo
+  for legibility, while the main landing keeps the flat dark
+  `.home-hero-overlay`. Avoid any other gradient.
 - No additional palettes without an explicit design decision. Admin colors never
   apply to public pages.
 
@@ -143,10 +145,15 @@ important content.
 - Purpose: recruit new owners and explain the product as a complete business
   tool (publish → receive requests → organize bookings → manage clients →
   quote/contract).
-- Composition, in order: split hero (copy left, venue photography right),
-  "Todo tu negocio, mejor organizado", visibility, operations, **CRM Pro**
-  benefits grouped by business outcome, three compact steps, plan comparison,
-  FAQ and a final conversion band.
+- Composition, in order: split hero (copy left, three-image slider right) over a
+  washed venue background, "Todo tu negocio, mejor organizado", visibility,
+  operations, **CRM Pro** benefits grouped by business outcome, three
+  photographic step cards, product feature tabs, video walkthrough, plan
+  comparison, FAQ and a final conversion band.
+- Section classes for styling/analytics: `.section-hero`, `.section-features`,
+  `.section-visibility`, `.section-operations`, `.section-crm-pro`,
+  `.section-steps`, `.section-product-tabs`, `.section-video`, `.section-plans`,
+  `.section-faq` and `.section-cta`.
 - CTA hierarchy: primary dark "Comenzar gratis" (register or panel), secondary
   outline "Conoce las herramientas" (anchor), pink/dark Pro CTA that uses the
   real registration/billing flow. Never implement a parallel checkout.
@@ -187,13 +194,17 @@ catalog cards, pagination) and `resources/js/components/public/` (search bar).
 | `GeoResultsMap`         | Leaflet map, clustering, selection, bounds callback                                 |
 | `ListingMap`            | Single-listing map on the detail page                                               |
 | `FeatureShowcaseSlider` | Reusable Swiper product carousel: 32% copy / 68% screenshot, arrows + progress      |
+| `ProductFeatureTabs`    | Tabbed product tour: pill tabs, 35/65 panel, feature list and expandable screenshot |
+| `HeroImageSlider`       | Owners hero: 3-image Swiper, loop, 700 ms, pagination pills below                   |
+| `VideoShowcase`         | Reusable video section: heading + 16:9 native player, poster and optional captions  |
+| `FeatureListItem`       | Feature/benefit row: primary circle, 20px icon, centered against text; solid/soft   |
 | `FeatureIcon`           | Public Lucide icon with token-based size, variant and optional accessible label     |
 
 **Feature Showcase Slider**
 
-- Purpose: present software capabilities as a product walkthrough. First use is
-  the CRM Pro section of `/propietarios`; the same component can present
-  bookings, calendar, quotes or any other feature set.
+- Purpose: present software capabilities as a product carousel. The owners
+  landing now uses `ProductFeatureTabs` for the full software tour; this
+  component remains available for other pages and shorter feature sets.
 - File: `resources/js/components/public/FeatureShowcaseSlider.vue`; data type:
   `FeatureSlide` in `resources/js/components/public/featureShowcase.ts`.
 - Props:
@@ -205,18 +216,20 @@ catalog cards, pagination) and `resources/js/components/public/` (search bar).
   16:10 with `object-contain`, neutral `--home-bg-alt` background, 18px radius
   and a subtle border. Tablet keeps the two columns while there is room; below
   `lg` the order is category/title → features → image → arrows/progress.
-- Navigation: Swiper 11 with one visible slide, no loop, no autoplay, no 3D or
-  coverflow, 400 ms transition. Arrows sit under the copy, next to the progress
-  bar; the bar and `01 / 05` counter reflect the active slide. Arrows disable at
-  the ends; touch and keyboard (arrow keys when the region is focused) work.
+- Navigation: Swiper 11 with one visible slide, `effect: 'slide'`, 24px gap,
+  no loop, no autoplay, no 3D or coverflow, 650 ms transition with a standard
+  ease-in-out curve. Arrows sit under the copy, next to the progress bar; the
+  bar and `01 / 05` counter reflect the active slide. Arrows disable at the
+  ends; touch and keyboard (arrow keys when the region is focused) work.
 - Screenshots: store real captures in `public/images/showcase/crm/` with
   descriptive names (`clientes.webp`, `seguimiento.webp`, `cotizaciones.webp`,
   `reportes.webp`, `portal-cliente.webp`). Pass the public path in `image`.
   Missing or broken images render the neutral placeholder (image icon +
   “Captura próximamente”). Never fabricate dashboards, tables or metrics.
-- Animation: active slide copy, media and feature items fade/slide in (≤ 480 ms)
-  with a small stagger. `prefers-reduced-motion: reduce` disables the entrance
-  animation and the Swiper transition.
+- Animation: text and screenshot live in the same `SwiperSlide` and move
+  together with the native wrapper transform; no per-element entrance
+  animations. `prefers-reduced-motion: reduce` disables the Swiper transition
+  and the progress-bar width animation.
 - Accessibility: region with `aria-label`/`aria-roledescription`, slides as
   groups with “N de M”, non-active slides `aria-hidden` + `inert`, arrows with
   `aria-label` and disabled states, progressbar values, and a polite live region
@@ -229,6 +242,63 @@ catalog cards, pagination) and `resources/js/components/public/` (search bar).
         aria-label="Funcionalidades de reservas"
     />
     ```
+
+**Product Feature Tabs**
+
+- Purpose: interactive product tour on `/propietarios` covering dashboard,
+  spaces, requests, customers, pipeline, quotes, bookings and contracts.
+- File: `resources/js/components/public/ProductFeatureTabs.vue`; tab types in
+  `resources/js/components/public/productFeatureTabs.ts`.
+- Props: `tabs: ProductFeatureTab[]`, `ariaLabel?` and
+  `screenshotPlaceholder?`. Each tab: `id`, `label`, `eyebrow`, `title`,
+  `description`, `features[]` (`text`, `icon`), `screenshot` (`string | null`)
+  and `screenshotAlt`.
+- Data and screenshots stay in the page. Screenshots live under
+  `public/images/showcase/plataforma/`; when `screenshot` is `null` the
+  component renders a neutral “Captura próximamente” surface. When present, the
+  image is lazy-loaded, contained at 16:10 and opens full size in a new tab.
+- Behavior: ARIA tabs with roving focus and Arrow/Home/End keys; 35/65 columns
+  from `md`, stacked on mobile; horizontal tab scrolling with the active tab
+  kept in view; 180 ms fade/slide transition disabled by
+  `prefers-reduced-motion`; no autoplay.
+- Feature icons use `FeatureListItem variant="soft"` for the low-opacity
+  primary circle, while benefit lists keep the solid circle.
+
+**Video Showcase**
+
+- Purpose: present a locally hosted product walkthrough, first used on
+  `/propietarios` between “Cómo funciona” and the plans section.
+- File: `resources/js/components/public/VideoShowcase.vue`; media types in
+  `resources/js/components/public/videoShowcase.ts`.
+- Props: `title`, `description`, `src` (`string | null`), `poster`
+  (`string | null`), `fallback`, `unavailable` and optional `tracks`
+  (`VideoShowcaseTrack[]`). Copy always comes from the page.
+- Media: MP4 at `public/videos/plataforma-demo.mp4`, poster at
+  `public/images/showcase/plataforma/portada-demo.webp` and optional WebVTT at
+  `public/videos/plataforma-demo.es.vtt`. `OwnersController` exposes each file
+  only when it exists, so dropping the files in is enough to enable the player.
+- Player: native HTML5 `<video>` with `controls`, `preload="metadata"`,
+  `playsinline`, no autoplay and no loop. The 16:9 surface reserves layout
+  space and uses the card radius, border and subtle shadow tokens. If the
+  source is missing or fails, the component renders a neutral placeholder
+  instead of a broken player.
+
+**Hero Image Slider**
+
+- Purpose: rotate three venue photographs in the owners hero (`/propietarios`).
+- File: `resources/js/components/public/HeroImageSlider.vue`; type `HeroSlide`
+  (`src`, `alt`) in `resources/js/components/public/heroSlider.ts`.
+- Props: `slides: HeroSlide[]` and `ariaLabel?`.
+- Media: local images at `public/images/owners/hero/slide-1.webp`,
+  `slide-2.webp` and `slide-3.webp`; the hero background is `fondo.webp`.
+  Replace the files to change the photos without touching the page.
+- Behavior: Swiper `slide` effect, one visible slide, loop, 700 ms, 7 s
+  autoplay that pauses on hover and stops after interaction. Pagination sits
+  below the image in a small white pill. `prefers-reduced-motion` disables
+  autoplay and the horizontal transition.
+- Layout: 4:3 with 20px radius, same footprint as the old hero image; two
+  columns from `lg`, stacked below. The hero uses `.home-owners-hero-wash` for
+  the white top-left to transparent bottom-right wash.
 
 ### Iconografía pública
 
@@ -249,12 +319,20 @@ catalog cards, pagination) and `resources/js/components/public/` (search bar).
       (`--home-primary`).
     - `neutral`: alt surface (`--home-bg-alt`), border (`--home-border`) and dark
       icon (`--home-dark`).
-    - `plain`: no container, brand icon; for lists, checks and inline meaning.
+    - `plain`: no container, brand icon; for inline meaning, standalone checks
+      and the comparison table.
     - `muted`: no container, muted icon (`--home-muted`); for “not included” or
       secondary states.
-- Use circular containers for section-level benefits, process steps and CRM
-  categories. Use plain icons inside lists and pricing rows; never add a large
-  circle to every price row.
+- Feature and benefit lists use `FeatureListItem` (`icon` + `text` or default
+  slot). The default `solid` variant is a 36px `--home-primary` circle with a
+  white 20px Lucide icon; `soft` uses primary at low opacity with a primary
+  icon for the product tabs. Both use a 12px gap and `items-center`, so the
+  circle stays centered against one, two or three lines of text. Do not rebuild
+  the row with `FeatureIcon variant="plain"` plus margin offsets.
+- Use circular containers for section-level benefits and CRM categories.
+  Process steps use photographic cards with large numerals and no icons.
+  Pricing card lists use `FeatureListItem`; the comparison table keeps inline
+  `plain`/`muted` icons next to Sí/No.
 - Keep icons purposeful: not every heading, paragraph or button needs one.
   Avoid three identical icon cards when an editorial list communicates better.
 - Decorative icons are `aria-hidden="true"` by default. If an icon conveys
@@ -328,7 +406,8 @@ paragraph. The public header/footer use no decorative iconography.
 ## G. Visual rules
 
 - Page background is white (`#FFFFFF`); alternate sections may use `#FAFAFA`.
-- No decorative gradients in sections, cards, CTAs or banners.
+- No decorative gradients in sections, cards, CTAs or banners. The owners hero
+  uses the functional `.home-owners-hero-wash` white wash for text legibility.
 - No glassmorphism, oversized shadows, floating decorative cards or invented
   statistics.
 - One accent (pink) + one contrast CTA (dark). Never multiple accent colors.
