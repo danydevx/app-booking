@@ -6,8 +6,9 @@ use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
-use Modules\Listings\Support\MexicoLocationCatalog;
+use Modules\Listings\Support\ListingPublicCatalog;
 use Modules\Listings\Support\TerraceServiceCatalog;
+use Modules\Platform\Support\GeographicCoverageService;
 
 class PublicListingSearchRequest extends FormRequest
 {
@@ -22,37 +23,55 @@ class PublicListingSearchRequest extends FormRequest
     public function rules(): array
     {
         $services = array_keys(TerraceServiceCatalog::all());
+        $eventSlugs = ListingPublicCatalog::activeEventSlugs();
         $maxRadius = (int) config('listings.search.max_radius_km', 100);
+        $coverage = app(GeographicCoverageService::class);
 
         return [
             'q' => ['nullable', 'string', 'max:120'],
-            'state' => ['nullable', 'string', Rule::in(MexicoLocationCatalog::stateValues())],
+            'state' => [
+                'nullable',
+                'string',
+                function (string $attribute, mixed $value, Closure $fail) use ($coverage): void {
+                    if (! is_string($value) || $value === '') {
+                        return;
+                    }
+
+                    if (! $coverage->isStateEnabled($value)) {
+                        $fail('Selecciona un estado habilitado.');
+                    }
+                },
+            ],
             'city' => [
                 'nullable',
                 'string',
                 'max:120',
-                function (string $attribute, mixed $value, Closure $fail): void {
+                function (string $attribute, mixed $value, Closure $fail) use ($coverage): void {
                     if (! is_string($value) || $value === '') {
                         return;
                     }
 
                     $state = (string) $this->input('state');
 
-                    if (
-                        $state === '' ||
-                        ! in_array($state, MexicoLocationCatalog::stateValues(), true)
-                    ) {
+                    if ($state === '') {
+                        $fail('Selecciona un estado antes del municipio.');
+
                         return;
                     }
 
-                    if (! in_array($value, MexicoLocationCatalog::municipalities($state), true)) {
-                        $fail('Selecciona un municipio o alcaldía válido para el estado.');
+                    if (! $coverage->isMunicipalityEnabled($state, $value)) {
+                        $fail('Selecciona un municipio habilitado para el estado.');
                     }
                 },
             ],
             'postal_code' => ['nullable', 'string', 'max:10', 'regex:/^\d{4,6}$/'],
             'capacity' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'service' => ['nullable', 'string', Rule::in($services)],
+            'features' => ['nullable', 'array', 'max:10'],
+            'features.*' => ['string', 'distinct', Rule::in($services)],
+            'event' => ['nullable', 'string', Rule::in($eventSlugs)],
+            'events' => ['nullable', 'array', 'max:10'],
+            'events.*' => ['string', 'distinct', Rule::in($eventSlugs)],
             'price_min' => ['nullable', 'integer', 'min:0', 'max:1000000'],
             'price_max' => ['nullable', 'integer', 'min:0', 'max:1000000'],
             'lat' => ['nullable', 'numeric', 'between:-90,90'],
@@ -114,6 +133,26 @@ class PublicListingSearchRequest extends FormRequest
                 && (int) $min > (int) $max
             ) {
                 $validator->errors()->add('price_max', 'El precio máximo debe ser mayor o igual al mínimo.');
+            }
+
+            $featureValues = array_values(array_filter(
+                (array) $this->input('features', []),
+                fn (mixed $feature): bool => is_string($feature) && $feature !== '',
+            ));
+            $service = $this->input('service');
+
+            if (is_string($service) && $service !== '') {
+                $featureValues[] = $service;
+            }
+
+            if (
+                ! $validator->errors()->has('features')
+                && count(array_unique($featureValues)) > 10
+            ) {
+                $validator->errors()->add(
+                    'features',
+                    'Puedes seleccionar hasta 10 características.',
+                );
             }
         });
     }

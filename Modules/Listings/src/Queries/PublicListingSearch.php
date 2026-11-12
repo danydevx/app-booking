@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Support\ListingPresenter;
+use Modules\Platform\Support\GeographicCoverageService;
 
 final class PublicListingSearch
 {
@@ -142,7 +143,12 @@ final class PublicListingSearch
     private function applyFilters(Builder $query, array $filters): void
     {
         if (! empty($filters['state'])) {
-            $query->where('state', $filters['state']);
+            $states = app(GeographicCoverageService::class)
+                ->stateValues((string) $filters['state']);
+
+            $states === []
+                ? $query->whereRaw('1 = 0')
+                : $query->whereIn('state', $states);
         }
 
         if (! empty($filters['city'])) {
@@ -159,6 +165,32 @@ final class PublicListingSearch
 
         if (! empty($filters['service'])) {
             $query->whereJsonContains('services', $filters['service']);
+        }
+
+        $features = array_values(array_filter(
+            (array) ($filters['features'] ?? []),
+            fn (mixed $feature): bool => is_string($feature) && $feature !== '',
+        ));
+
+        foreach ($features as $feature) {
+            $query->whereJsonContains('services', $feature);
+        }
+
+        $eventSlugs = array_values(array_filter(
+            array_merge(
+                [$filters['event'] ?? null],
+                (array) ($filters['events'] ?? []),
+            ),
+            fn (mixed $slug): bool => is_string($slug) && $slug !== '',
+        ));
+
+        if ($eventSlugs !== []) {
+            $query->whereHas(
+                'eventTypes',
+                fn (Builder $eventTypeQuery): Builder => $eventTypeQuery
+                    ->whereIn('listing_event_types.slug', $eventSlugs)
+                    ->where('listing_event_types.is_active', true),
+            );
         }
 
         if (isset($filters['price_min']) && is_numeric($filters['price_min'])) {

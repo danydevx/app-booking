@@ -29,9 +29,16 @@ const props = defineProps<{
     cities: HomeCity[];
     totalListings: number;
     locations: Record<string, { label: string; municipalities: string[] }>;
-    services: Array<{ value: string; label: string }>;
+    featuredCharacteristics: Array<{
+        key: string;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
+    eventTypes: Array<{ value: string; label: string }>;
     urls: {
         index: string;
+        guidedSearch: string;
     };
 }>();
 
@@ -52,42 +59,23 @@ const ownerImage = unsplash('1540541338287-41700207dee6', 1400);
 const cityUrl = (city: HomeCity): string =>
     `${props.urls.index}?state=${encodeURIComponent(city.state)}&city=${encodeURIComponent(city.city)}`;
 
-const spaceTypeDefinitions = [
-    {
-        value: 'garden',
-        title: 'Jardines',
-        copy: 'Mesas al aire libre',
-        image: unsplash('1519225421980-715cb0215aed', 900),
-    },
-    {
-        value: 'pool',
-        title: 'Con alberca',
-        copy: 'Para días de calor',
-        image: unsplash('1572331165267-854da2b10ccc', 900),
-    },
-    {
-        value: 'covered_terrace',
-        title: 'Terrazas techadas',
-        copy: 'Lluvia o sol',
-        image: unsplash('1519167758481-83f550bb49b3', 900),
-    },
-    {
-        value: 'green_areas',
-        title: 'Áreas verdes',
-        copy: 'Verdes y sombra',
-        image: unsplash('1558904541-efa843a96f01', 900),
-    },
-];
+const featureImages: Record<string, string> = {
+    garden: unsplash('1519225421980-715cb0215aed', 900),
+    pool: unsplash('1572331165267-854da2b10ccc', 900),
+    covered_terrace: unsplash('1519167758481-83f550bb49b3', 900),
+    green_areas: unsplash('1558904541-efa843a96f01', 900),
+};
+
+const fallbackFeatureImage = unsplash('1464366400600-7168b8af9bc3', 900);
 
 const spaceTypes = computed(() =>
-    spaceTypeDefinitions
-        .filter((type) =>
-            props.services.some((service) => service.value === type.value),
-        )
-        .map((type) => ({
-            ...type,
-            href: `${props.urls.index}?service=${encodeURIComponent(type.value)}`,
-        })),
+    props.featuredCharacteristics.map((feature) => ({
+        key: feature.key,
+        title: feature.name,
+        copy: feature.description ?? '',
+        image: featureImages[feature.key] ?? fallbackFeatureImage,
+        href: `${props.urls.index}?${encodeURIComponent('features[]')}=${encodeURIComponent(feature.key)}`,
+    })),
 );
 
 const steps = [
@@ -148,17 +136,27 @@ const steps = [
         <HomeSearch
             :action="urls.index"
             :locations="locations"
-            :services="services"
+            :event-types="eventTypes"
+            :featured-characteristics="featuredCharacteristics"
         />
-        <p class="mt-4 text-sm font-medium text-[color:var(--home-secondary)]">
-            {{ totalListings }}
-            {{
-                totalListings === 1
-                    ? 'espacio publicado'
-                    : 'espacios publicados'
-            }}
-            · Sin costo para el visitante
-        </p>
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-sm font-medium text-[color:var(--home-secondary)]">
+                {{ totalListings }}
+                {{
+                    totalListings === 1
+                        ? 'espacio publicado'
+                        : 'espacios publicados'
+                }}
+                · Sin costo para el visitante
+            </p>
+            <Link
+                :href="urls.guidedSearch"
+                class="home-btn home-btn--outline home-btn--sm"
+            >
+                Encuentra tu espacio ideal
+                <span aria-hidden="true">→</span>
+            </Link>
+        </div>
     </div>
 
     <section class="home-container pt-16 pb-16 sm:pt-24 sm:pb-20">
@@ -269,7 +267,7 @@ const steps = [
         <div class="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
             <Link
                 v-for="type in spaceTypes"
-                :key="type.value"
+                :key="type.key"
                 :href="type.href"
                 class="home-tile"
             >

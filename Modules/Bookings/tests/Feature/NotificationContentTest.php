@@ -38,6 +38,15 @@ class NotificationContentTest extends TestCase
         $this->assertTrue($body->contains($listing->name));
         $this->assertTrue($body->contains('ana@example.test'));
         $this->assertTrue($body->contains('Quiero reservar para un cumpleaños.'));
+        $this->assertTrue($body->contains('Invitados:'));
+        $this->assertTrue($body->contains('Tipo de evento: Cumpleaños.'));
         $this->assertSame('ana@example.test', $mail->replyTo[0][0] ?? null);
+        $this->assertSame(
+            route('bookings.show', [
+                'current_team' => $listing->team->slug,
+                'inquiry' => $inquiry->id,
+            ]),
+            $mail->actionUrl,
+        );
     }
 }

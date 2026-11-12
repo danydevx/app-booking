@@ -32,7 +32,7 @@ class InquiryReceivedVisitorNotification extends Notification implements ShouldQ
             ->subject('Recibimos tu solicitud de reserva')
             ->greeting("Hola {$inquiry->name}")
             ->line("Recibimos tu interés por {$inquiry->listing->name}.")
-            ->line("Fechas solicitadas: {$inquiry->start_date->format('d/m/Y')} al {$inquiry->end_date->format('d/m/Y')}.")
+            ->line("Fecha del evento: {$inquiry->dateSummary()}.")
             ->line('El anfitrión revisará la disponibilidad y se pondrá en contacto contigo.');
     }
 }

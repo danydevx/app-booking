@@ -26,6 +26,17 @@ const props = defineProps<{
     priorityServices: ServiceOption[];
     additionalServices: ServiceOption[];
     services: ServiceOption[];
+    featuredCharacteristics: Array<{
+        key: string;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
+    eventTypes: Array<{
+        value: string;
+        label: string;
+        description: string | null;
+    }>;
     locations: ListingLocations;
     urls: {
         index: string;
@@ -108,6 +119,37 @@ const serviceLabel = computed(() => {
     );
 });
 
+const eventLabel = computed(() => {
+    if (!props.filters.event) {
+        return null;
+    }
+
+    return (
+        props.eventTypes.find((option) => option.value === props.filters.event)
+            ?.label ?? String(props.filters.event)
+    );
+});
+
+const featureLabels = computed(() => {
+    const selected = Array.isArray(props.filters.features)
+        ? props.filters.features
+        : [];
+
+    return selected
+        .map((key) => {
+            const featured = props.featuredCharacteristics.find(
+                (option) => option.key === key,
+            );
+
+            return (
+                featured?.name ??
+                props.services.find((option) => option.value === key)?.label ??
+                key
+            );
+        })
+        .filter((label) => label !== '');
+});
+
 const activeFilters = computed(() => {
     const entries: Array<{ label: string; value: string }> = [];
 
@@ -129,6 +171,14 @@ const activeFilters = computed(() => {
     if (serviceLabel.value) {
         entries.push({ label: 'Característica', value: serviceLabel.value });
     }
+
+    if (eventLabel.value) {
+        entries.push({ label: 'Evento', value: eventLabel.value });
+    }
+
+    featureLabels.value.forEach((label) => {
+        entries.push({ label: 'Característica', value: label });
+    });
 
     if (hasZone.value) {
         entries.push({ label: 'Zona', value: 'Área visible del mapa' });
@@ -342,6 +392,8 @@ watch(
                         :suggestions-url="urls.locations"
                         :filters="filters"
                         :services="services"
+                        :event-types="eventTypes"
+                        :featured-characteristics="featuredCharacteristics"
                         :locations="locations"
                     />
                     <p

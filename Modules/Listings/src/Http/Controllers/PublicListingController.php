@@ -3,6 +3,7 @@
 namespace Modules\Listings\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Support\Branding;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Bookings\Support\AvailabilityService;
+use Modules\Bookings\Support\BookingOptionCatalog;
 use Modules\Bookings\Support\LeadAttribution;
 use Modules\Listings\Actions\ResolveSearchLocation;
 use Modules\Listings\Http\Requests\PublicListingSearchRequest;
@@ -19,11 +21,16 @@ use Modules\Listings\Http\Requests\PublicLocationSuggestionsRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Queries\PublicListingSearch;
 use Modules\Listings\Support\ListingPresenter;
-use Modules\Listings\Support\MexicoLocationCatalog;
+use Modules\Listings\Support\ListingPublicCatalog;
 use Modules\Listings\Support\TerraceServiceCatalog;
+use Modules\Platform\Support\GeographicCoverageService;
 
 class PublicListingController extends Controller
 {
+    public function __construct(
+        private readonly GeographicCoverageService $coverage,
+    ) {}
+
     public function home(): Response
     {
         $featured = Listing::query()
@@ -57,11 +64,14 @@ class PublicListingController extends Controller
         return Inertia::render('Listings/Public/Home', [
             'listings' => $featured,
             'cities' => $cities,
-            'locations' => MexicoLocationCatalog::all(),
+            'locations' => $this->coverage->locations(),
             'services' => TerraceServiceCatalog::options(),
+            'featuredCharacteristics' => ListingPublicCatalog::featuredCharacteristics(),
+            'eventTypes' => ListingPublicCatalog::eventTypeOptions(),
             'totalListings' => Listing::query()->publiclyVisible()->count(),
             'urls' => [
                 'index' => route('public.listings.index'),
+                'guidedSearch' => route('public.guided-search.index'),
             ],
         ]);
     }
@@ -104,7 +114,9 @@ class PublicListingController extends Controller
             'priorityServices' => TerraceServiceCatalog::priorityOptions(),
             'additionalServices' => TerraceServiceCatalog::additionalOptions(),
             'services' => TerraceServiceCatalog::options(),
-            'locations' => MexicoLocationCatalog::all(),
+            'featuredCharacteristics' => ListingPublicCatalog::featuredCharacteristics(),
+            'eventTypes' => ListingPublicCatalog::eventTypeOptions(),
+            'locations' => $this->coverage->locations(),
             'urls' => [
                 'index' => route('public.listings.index'),
                 'locations' => route('public.listings.locations'),
@@ -117,7 +129,7 @@ class PublicListingController extends Controller
         $query = trim((string) $request->string('q'));
 
         $suggestions = Cache::remember(
-            'public:location-suggestions:'.md5(Str::lower(Str::ascii($query))),
+            'public:location-suggestions:'.GeographicCoverageService::cacheVersion().':'.md5(Str::lower(Str::ascii($query))),
             now()->addSeconds((int) config('listings.search.suggestions_cache_seconds', 60)),
             fn (): array => $this->locationSuggestions($query),
         );
@@ -133,7 +145,7 @@ class PublicListingController extends Controller
         $normalized = Str::lower(Str::ascii($query));
         $suggestions = [];
 
-        foreach (MexicoLocationCatalog::all() as $value => $state) {
+        foreach ($this->coverage->locations() as $value => $state) {
             foreach ($state['municipalities'] as $city) {
                 $candidate = Str::lower(Str::ascii($city));
 
@@ -215,7 +227,7 @@ class PublicListingController extends Controller
     {
         abort_unless($listing->isPubliclyVisible(), 404);
 
-        $listing->load(['media', 'packages', 'commercialServices', 'promotions', 'priceRanges']);
+        $listing->load(['media', 'packages', 'commercialServices', 'promotions', 'priceRanges', 'eventTypes']);
 
         LeadAttribution::capture($request, $listing);
 
@@ -232,6 +244,16 @@ class PublicListingController extends Controller
             'urls' => [
                 'index' => route('public.listings.index'),
                 'report' => route('public.reports.create', ['listing' => $listing->slug]),
+            ],
+            'contact' => [
+                'store_url' => route('public.listings.contact.store', ['listing' => $listing->slug]),
+                'guest_ranges' => BookingOptionCatalog::guestRanges(),
+                'privacy_url' => Branding::legalLinks()['privacy'] ?? null,
+                'default_message' => (string) config('bookings.contact_default_message'),
+                'max_message_length' => 2000,
+                'today' => CarbonImmutable::now($listing->timezone)->toDateString(),
+                'current_month' => CarbonImmutable::now($listing->timezone)->format('Y-m'),
+                'capacity' => $listing->capacity,
             ],
         ]);
     }

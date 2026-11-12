@@ -256,9 +256,11 @@ function statusVariant(
                             </h2>
                             <p class="text-sm text-muted-foreground">
                                 {{ inquiry.listing.name }} ·
-                                {{ inquiry.start_date_label }} al
-                                {{ inquiry.end_date_label }}
-                                <span v-if="inquiry.guests">
+                                {{ inquiry.date_summary }}
+                                <span v-if="inquiry.guest_range_label">
+                                    · {{ inquiry.guest_range_label }} invitados
+                                </span>
+                                <span v-else-if="inquiry.guests">
                                     · {{ inquiry.guests }} invitados
                                 </span>
                             </p>

@@ -4,10 +4,12 @@ namespace Modules\Listings\Tests\Feature;
 
 use App\Models\Team;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Modules\Bookings\Enums\AvailabilityStatus;
 use Modules\Bookings\Models\ListingUnavailability;
 use Modules\Listings\Models\Listing;
+use Modules\Listings\Models\ListingMedia;
 use Tests\TestCase;
 
 class PublicListingTest extends TestCase
@@ -64,6 +66,30 @@ class PublicListingTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_public_gallery_falls_back_to_the_original_when_the_thumbnail_is_missing(): void
+    {
+        Storage::fake('public');
+
+        $team = Team::factory()->create();
+        $listing = Listing::factory()->forTeam($team)->published()->create();
+        $media = ListingMedia::factory()->for($listing)->create([
+            'disk' => 'public',
+            'path' => 'listings/'.$listing->id.'/fallback.jpg',
+            'sort_order' => 0,
+        ]);
+
+        Storage::disk('public')->put($media->path, 'image-content');
+
+        $this->get(route('public.listings.show', ['listing' => $listing->slug]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('listing.media.0.thumb_url', null)
+                ->where(
+                    'listing.media.0.url',
+                    Storage::disk('public')->url($media->path),
+                ));
+    }
+
     public function test_public_detail_exposes_next_unavailable_dates(): void
     {
         $team = Team::factory()->create();
@@ -88,24 +114,24 @@ class PublicListingTest extends TestCase
     {
         $team = Team::factory()->create();
         $match = Listing::factory()->forTeam($team)->published()->create([
-            'name' => 'Terraza Cuauhtémoc',
-            'state' => 'CDMX',
-            'city' => 'Cuauhtémoc',
-        ]);
-        Listing::factory()->forTeam($team)->published()->create([
-            'name' => 'Terraza Coyoacán',
-            'state' => 'CDMX',
-            'city' => 'Coyoacán',
-        ]);
-        Listing::factory()->forTeam($team)->published()->create([
             'name' => 'Terraza Guadalajara',
             'state' => 'Jalisco',
             'city' => 'Guadalajara',
         ]);
-
-        $this->get(route('public.listings.index', [
+        Listing::factory()->forTeam($team)->published()->create([
+            'name' => 'Terraza Zapopan',
+            'state' => 'Jalisco',
+            'city' => 'Zapopan',
+        ]);
+        Listing::factory()->forTeam($team)->published()->create([
+            'name' => 'Terraza CDMX',
             'state' => 'CDMX',
             'city' => 'Cuauhtémoc',
+        ]);
+
+        $this->get(route('public.listings.index', [
+            'state' => 'Jalisco',
+            'city' => 'Guadalajara',
         ]))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -116,8 +142,8 @@ class PublicListingTest extends TestCase
     public function test_public_catalog_rejects_a_municipality_from_another_state(): void
     {
         $this->get(route('public.listings.index', [
-            'state' => 'CDMX',
-            'city' => 'Guadalajara',
+            'state' => 'Jalisco',
+            'city' => 'Cuauhtémoc',
         ]))
             ->assertSessionHasErrors('city');
     }
@@ -304,8 +330,8 @@ class PublicListingTest extends TestCase
         $team = Team::factory()->create();
         $published = Listing::factory()->forTeam($team)->published()->create([
             'name' => 'Terraza Portada',
-            'city' => 'Cuauhtémoc',
-            'state' => 'CDMX',
+            'city' => 'Guadalajara',
+            'state' => 'Jalisco',
         ]);
         Listing::factory()->forTeam($team)->create(['name' => 'Terraza Borrador']);
         Listing::factory()->forTeam($team)->suspended()->create(['name' => 'Terraza Suspendida']);
@@ -319,8 +345,8 @@ class PublicListingTest extends TestCase
                 ->where('listings.0.url', route('public.listings.show', ['listing' => $published->slug]))
                 ->where('totalListings', 1)
                 ->has('cities', 1)
-                ->where('cities.0.state', 'CDMX')
-                ->where('cities.0.city', 'Cuauhtémoc')
+                ->where('cities.0.state', 'Jalisco')
+                ->where('cities.0.city', 'Guadalajara')
                 ->where('cities.0.count', 1)
                 ->has('locations')
                 ->has('services'));

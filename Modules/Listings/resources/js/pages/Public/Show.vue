@@ -2,6 +2,8 @@
 import '@/homeSite';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import ListingSectionNav from '@/components/public/ListingSectionNav.vue';
+import ListingContactModal from '../../components/ListingContactModal.vue';
 import ListingMap from '../../components/ListingMap.vue';
 import type { ListingMedia, ListingPublicDetail } from '../../types';
 
@@ -17,9 +19,20 @@ const props = defineProps<{
         index: string;
         report: string;
     };
+    contact: {
+        store_url: string;
+        guest_ranges: Array<{ value: string; label: string }>;
+        privacy_url: string | null;
+        default_message: string;
+        max_message_length: number;
+        today: string;
+        current_month: string;
+        capacity: number | null;
+    };
 }>();
 
 const activeIndex = ref(0);
+const contactOpen = ref(false);
 const images = computed(() =>
     props.listing.media.filter((media) => media.type === 'image'),
 );
@@ -29,6 +42,18 @@ const videos = computed(() =>
 const activeImage = computed<ListingMedia | null>(
     () => images.value[activeIndex.value] ?? images.value[0] ?? null,
 );
+
+const failedThumbnails = ref<Record<number, boolean>>({});
+
+function thumbnailUrl(image: ListingMedia): string {
+    return image.thumb_url && !failedThumbnails.value[image.id]
+        ? image.thumb_url
+        : image.url;
+}
+
+function markThumbnailFailed(id: number): void {
+    failedThumbnails.value = { ...failedThumbnails.value, [id]: true };
+}
 
 const lightboxOpen = ref(false);
 const lightboxIndex = ref(0);
@@ -56,15 +81,65 @@ const location = computed(
         'Ubicación por confirmar',
 );
 
-const contactEmail = computed(
-    () => props.listing.contact_email ?? props.listing.account.contact_email,
-);
 const contactPhone = computed(
     () => props.listing.contact_phone ?? props.listing.account.contact_phone,
 );
 const whatsappUrl = computed(
     () => props.listing.whatsapp_url ?? props.listing.account.whatsapp_url,
 );
+
+const sectionNavItems = computed(() => [
+    {
+        id: 'descripcion',
+        label: 'Descripción',
+        icon: 'file-text',
+        visible: Boolean(props.listing.description),
+        targetId: 'descripcion',
+    },
+    {
+        id: 'eventos',
+        label: 'Tipos de evento',
+        icon: 'calendar',
+        visible: props.listing.event_types.length > 0,
+        targetId: 'eventos',
+    },
+    {
+        id: 'caracteristicas',
+        label: 'Características',
+        icon: 'sparkles',
+        visible: props.listing.serviceGroups.length > 0,
+        targetId: 'caracteristicas',
+    },
+    {
+        id: 'promociones',
+        label: 'Promociones',
+        icon: 'tag',
+        visible: props.listing.promotions.length > 0,
+        targetId: 'promociones',
+    },
+    {
+        id: 'servicios',
+        label: 'Servicios',
+        icon: 'wrench',
+        visible: props.listing.commercialServices.length > 0,
+        targetId: 'servicios',
+    },
+    {
+        id: 'paquetes',
+        label: 'Paquetes',
+        icon: 'package',
+        visible: props.listing.packages.length > 0,
+        targetId: 'paquetes',
+    },
+    {
+        id: 'ubicacion',
+        label: 'Ubicación',
+        icon: 'map-pin',
+        visible:
+            props.listing.latitude !== null && props.listing.longitude !== null,
+        targetId: 'ubicacion',
+    },
+]);
 
 function formatDate(value: string): string {
     const [year, month, day] = value.split('-').map(Number);
@@ -209,6 +284,7 @@ onBeforeUnmount(() => {
                     v-if="activeImage"
                     :src="activeImage.url"
                     :alt="activeImage.alt_text ?? listing.name"
+                    class="absolute inset-0 h-full w-full object-cover"
                     fetchpriority="high"
                 />
                 <div
@@ -223,30 +299,33 @@ onBeforeUnmount(() => {
                 </div>
             </button>
 
-            <div
-                v-if="images.length > 1"
-                class="grid grid-cols-3 gap-3 lg:max-h-[27rem] lg:grid-cols-2 lg:overflow-y-auto"
-            >
-                <button
-                    v-for="(image, index) in images"
-                    :key="image.id"
-                    type="button"
-                    class="home-media aspect-square overflow-hidden rounded-[0.75rem]"
-                    :class="
-                        index === activeIndex
-                            ? 'ring-2 ring-[color:var(--home-primary)] ring-offset-2 ring-offset-[color:var(--home-bg)]'
-                            : 'opacity-85 hover:opacity-100'
-                    "
-                    :aria-label="`Ver fotografía ${index + 1}`"
-                    @click="openLightbox(index)"
-                >
-                    <img
-                        :src="image.url"
-                        :alt="image.alt_text ?? ''"
-                        loading="lazy"
-                        decoding="async"
-                    />
-                </button>
+            <div v-if="images.length > 1" class="relative lg:min-h-0">
+                <div class="lg:absolute lg:inset-0 lg:overflow-y-auto">
+                    <div class="grid grid-cols-3 gap-3 lg:grid-cols-2">
+                        <button
+                            v-for="(image, index) in images"
+                            :key="image.id"
+                            type="button"
+                            class="home-media aspect-square overflow-hidden rounded-[0.75rem]"
+                            :class="
+                                index === activeIndex
+                                    ? 'ring-2 ring-[color:var(--home-primary)] ring-offset-2 ring-offset-[color:var(--home-bg)]'
+                                    : 'opacity-85 hover:opacity-100'
+                            "
+                            :aria-label="`Ver fotografía ${index + 1}`"
+                            @click="openLightbox(index)"
+                        >
+                            <img
+                                :src="thumbnailUrl(image)"
+                                :alt="image.alt_text ?? ''"
+                                class="absolute inset-0 h-full w-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                                @error="markThumbnailFailed(image.id)"
+                            />
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
         <p
@@ -272,9 +351,15 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
+        <ListingSectionNav :sections="sectionNavItems" class="mt-8" />
+
         <div class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div class="min-w-0 space-y-10">
-                <section v-if="listing.description">
+                <section
+                    v-if="listing.description"
+                    id="descripcion"
+                    class="home-listing-section"
+                >
                     <p class="home-eyebrow">El espacio</p>
                     <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
                         Sobre el lugar
@@ -287,8 +372,29 @@ onBeforeUnmount(() => {
                 </section>
 
                 <section
+                    v-if="listing.event_types.length > 0"
+                    id="eventos"
+                    class="home-listing-section border-t border-[color:var(--home-border)] pt-8"
+                >
+                    <p class="home-eyebrow">Eventos</p>
+                    <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
+                        Ideal para tus eventos
+                    </h2>
+                    <div class="mt-5 flex flex-wrap gap-2">
+                        <span
+                            v-for="eventType in listing.event_types"
+                            :key="eventType.slug"
+                            class="rounded-full border border-[color:var(--home-border)] bg-white px-4 py-2 text-sm font-semibold text-[color:var(--home-secondary)]"
+                        >
+                            {{ eventType.name }}
+                        </span>
+                    </div>
+                </section>
+
+                <section
                     v-if="listing.serviceGroups.length > 0"
-                    class="border-t border-[color:var(--home-border)] pt-8"
+                    id="caracteristicas"
+                    class="home-listing-section border-t border-[color:var(--home-border)] pt-8"
                 >
                     <p class="home-eyebrow">Características</p>
                     <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
@@ -485,7 +591,7 @@ onBeforeUnmount(() => {
                             <article
                                 v-for="range in listing.priceRanges"
                                 :key="range.id"
-                                class="rounded-[1.125rem] border border-[color:var(--home-border)] bg-white p-4"
+                                class="min-w-0 rounded-[1.125rem] border border-[color:var(--home-border)] bg-white p-4"
                             >
                                 <div
                                     class="flex flex-wrap items-center justify-between gap-2"
@@ -643,7 +749,8 @@ onBeforeUnmount(() => {
 
                 <section
                     v-if="listing.promotions.length > 0"
-                    class="border-t border-[color:var(--home-border)] pt-8"
+                    id="promociones"
+                    class="home-listing-section border-t border-[color:var(--home-border)] pt-8"
                 >
                     <p class="home-eyebrow">Promociones</p>
                     <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
@@ -704,7 +811,8 @@ onBeforeUnmount(() => {
 
                 <section
                     v-if="listing.commercialServices.length > 0"
-                    class="border-t border-[color:var(--home-border)] pt-8"
+                    id="servicios"
+                    class="home-listing-section border-t border-[color:var(--home-border)] pt-8"
                 >
                     <p class="home-eyebrow">Servicios</p>
                     <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
@@ -762,7 +870,8 @@ onBeforeUnmount(() => {
 
                 <section
                     v-if="listing.packages.length > 0"
-                    class="border-t border-[color:var(--home-border)] pt-8"
+                    id="paquetes"
+                    class="home-listing-section border-t border-[color:var(--home-border)] pt-8"
                 >
                     <p class="home-eyebrow">Paquetes</p>
                     <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
@@ -865,7 +974,8 @@ onBeforeUnmount(() => {
                 </section>
 
                 <section
-                    class="border-t border-[color:var(--home-border)] pt-8"
+                    id="ubicacion"
+                    class="home-listing-section border-t border-[color:var(--home-border)] pt-8"
                 >
                     <p class="home-eyebrow">Ubicación</p>
                     <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
@@ -897,7 +1007,7 @@ onBeforeUnmount(() => {
             </div>
 
             <aside
-                class="order-first min-w-0 space-y-4 lg:sticky lg:top-24 lg:order-none lg:h-fit"
+                class="listing-detail-aside order-first min-w-0 space-y-4 lg:sticky lg:order-none lg:h-fit"
             >
                 <div
                     class="rounded-[1.125rem] border border-[color:var(--home-border)] bg-white p-5"
@@ -966,13 +1076,13 @@ onBeforeUnmount(() => {
                         >
                             Abrir WhatsApp
                         </a>
-                        <a
-                            v-if="contactEmail"
-                            :href="`mailto:${contactEmail}`"
+                        <button
+                            type="button"
                             class="home-btn home-btn--outline w-full"
+                            @click="contactOpen = true"
                         >
                             Enviar correo
-                        </a>
+                        </button>
                         <a
                             v-if="contactPhone"
                             :href="`tel:${contactPhone}`"
@@ -1037,6 +1147,19 @@ onBeforeUnmount(() => {
             </aside>
         </div>
     </div>
+
+    <ListingContactModal
+        v-model:open="contactOpen"
+        :listing-name="listing.name"
+        :store-url="contact.store_url"
+        :guest-ranges="contact.guest_ranges"
+        :privacy-url="contact.privacy_url"
+        :default-message="contact.default_message"
+        :max-message-length="contact.max_message_length"
+        :today="contact.today"
+        :current-month="contact.current_month"
+        :capacity="contact.capacity"
+    />
 
     <Teleport to="body">
         <div

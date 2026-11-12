@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, ref } from 'vue';
+import { ChevronDown, SlidersHorizontal } from '@lucide/vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import FeatureMultiSelect from '@/components/public/FeatureMultiSelect.vue';
+import FeaturedCharacteristicsPicker from '@/components/public/FeaturedCharacteristicsPicker.vue';
 
 type PublicFilters = {
     q?: string | null;
@@ -9,6 +12,9 @@ type PublicFilters = {
     postal_code?: string | null;
     capacity?: string | number | null;
     service?: string | null;
+    features?: string[] | null;
+    event?: string | null;
+    events?: string[] | null;
     price_min?: string | number | null;
     price_max?: string | number | null;
     lat?: string | number | null;
@@ -33,6 +39,13 @@ const props = defineProps<{
     suggestionsUrl: string;
     filters: PublicFilters;
     services: ServiceOption[];
+    eventTypes: Array<{ value: string; label: string }>;
+    featuredCharacteristics: Array<{
+        key: string;
+        name: string;
+        description: string | null;
+        icon: string | null;
+    }>;
     locations: Record<string, { label: string; municipalities: string[] }>;
 }>();
 
@@ -85,11 +98,26 @@ const suggestionsOpen = ref(false);
 const suggestionsLoading = ref(false);
 const activeIndex = ref(-1);
 const capacity = ref<string | number>(props.filters.capacity ?? '');
-const service = ref<string>((props.filters.service as string) ?? '');
+const event = ref<string>((props.filters.event as string) ?? '');
+const features = ref<string[]>(featuresFromFilters(props.filters));
 const price = ref(priceFromFilters());
-const filtersOpen = ref(
-    capacity.value !== '' || service.value !== '' || price.value !== '',
-);
+const filtersOpen = ref(false);
+
+const panelFilterCount = computed(() => features.value.length);
+
+function featuresFromFilters(filters: PublicFilters): string[] {
+    const selected = Array.isArray(filters.features)
+        ? filters.features.filter(
+              (value): value is string => typeof value === 'string',
+          )
+        : [];
+
+    if (typeof filters.service === 'string' && filters.service !== '') {
+        selected.push(filters.service);
+    }
+
+    return [...new Set(selected)].slice(0, 10);
+}
 
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 let controller: AbortController | null = null;
@@ -125,27 +153,24 @@ function priceFromFilters(): string {
     return '';
 }
 
-const activeFilterCount = computed(() => {
-    let count = 0;
-
-    if (capacity.value !== '' && capacity.value !== null) {
-        count++;
-    }
-
-    if (price.value !== '') {
-        count++;
-    }
-
-    if (service.value !== '') {
-        count++;
-    }
-
-    return count;
-});
-
 function clearSelection(): void {
     selected.value = null;
 }
+
+function clearPanelFilters(): void {
+    features.value = [];
+}
+
+watch(
+    () => props.filters,
+    (filters) => {
+        features.value = featuresFromFilters(filters);
+        event.value = (filters.event as string) ?? '';
+        capacity.value = filters.capacity ?? '';
+        price.value = priceFromFilters();
+    },
+    { deep: true },
+);
 
 function scheduleSuggestions(): void {
     clearTimeout(debounceTimer);
@@ -245,7 +270,7 @@ function onKeydown(event: KeyboardEvent): void {
 }
 
 function submit(): void {
-    const params: Record<string, string | number> = {};
+    const params: Record<string, string | number | string[]> = {};
 
     if (selected.value) {
         Object.assign(params, selected.value.params);
@@ -269,8 +294,12 @@ function submit(): void {
         }
     }
 
-    if (service.value !== '') {
-        params.service = service.value;
+    if (event.value !== '') {
+        params.event = event.value;
+    }
+
+    if (features.value.length > 0) {
+        params.features = features.value;
     }
 
     router.get(props.action, params);
@@ -288,7 +317,7 @@ onBeforeUnmount(() => {
         @submit.prevent="submit"
     >
         <div
-            class="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,0.6fr)_minmax(0,0.75fr)_minmax(0,0.85fr)_auto] lg:items-end"
+            class="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,0.6fr)_minmax(0,0.7fr)_auto] lg:items-end"
         >
             <div class="relative">
                 <label class="home-field-label" for="geo-location">
@@ -358,6 +387,22 @@ onBeforeUnmount(() => {
                 </ul>
             </div>
 
+            <div>
+                <label class="home-field-label" for="geo-event">
+                    Tipo de evento
+                </label>
+                <select id="geo-event" v-model="event" class="home-select">
+                    <option value="">Cualquier evento</option>
+                    <option
+                        v-for="option in eventTypes"
+                        :key="option.value"
+                        :value="option.value"
+                    >
+                        {{ option.label }}
+                    </option>
+                </select>
+            </div>
+
             <div :class="filtersOpen ? 'block' : 'hidden lg:block'">
                 <label class="home-field-label" for="geo-capacity">
                     Invitados
@@ -386,33 +431,29 @@ onBeforeUnmount(() => {
                 </select>
             </div>
 
-            <div :class="filtersOpen ? 'block' : 'hidden lg:block'">
-                <label class="home-field-label" for="geo-service">
-                    Característica
-                </label>
-                <select id="geo-service" v-model="service" class="home-select">
-                    <option value="">Cualquier característica</option>
-                    <option
-                        v-for="option in services"
-                        :key="option.value"
-                        :value="option.value"
-                    >
-                        {{ option.label }}
-                    </option>
-                </select>
-            </div>
-
             <div class="flex items-end gap-2">
                 <button
                     type="button"
-                    class="home-btn home-btn--outline home-btn--sm lg:hidden"
+                    class="home-btn home-btn--outline home-btn--sm gap-2"
                     :aria-expanded="filtersOpen"
+                    aria-controls="geo-filters-panel"
                     @click="filtersOpen = !filtersOpen"
                 >
-                    Filtros
-                    <span v-if="activeFilterCount > 0">
-                        ({{ activeFilterCount }})
+                    <SlidersHorizontal
+                        class="size-4 shrink-0"
+                        aria-hidden="true"
+                    />
+                    <span>
+                        Filtros
+                        <span v-if="panelFilterCount > 0">
+                            ({{ panelFilterCount }})
+                        </span>
                     </span>
+                    <ChevronDown
+                        class="size-4 shrink-0 transition-transform duration-200 motion-reduce:transition-none"
+                        :class="{ 'rotate-180': filtersOpen }"
+                        aria-hidden="true"
+                    />
                 </button>
                 <button
                     type="submit"
@@ -420,6 +461,52 @@ onBeforeUnmount(() => {
                 >
                     Buscar
                 </button>
+            </div>
+        </div>
+
+        <div
+            id="geo-filters-panel"
+            class="grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none"
+            :class="
+                filtersOpen
+                    ? 'grid-rows-[1fr] opacity-100'
+                    : 'grid-rows-[0fr] opacity-0'
+            "
+            :inert="filtersOpen ? undefined : true"
+            :aria-hidden="!filtersOpen"
+        >
+            <div
+                class="min-h-0"
+                :class="filtersOpen ? 'overflow-visible' : 'overflow-hidden'"
+            >
+                <div
+                    class="mt-3 space-y-3 border-t border-[color:var(--home-border)] pt-3"
+                >
+                    <div class="flex items-center justify-end">
+                        <button
+                            type="button"
+                            class="text-sm font-semibold text-[color:var(--home-primary-deep)] transition-colors hover:text-[color:var(--home-primary-hover)] disabled:cursor-not-allowed disabled:opacity-50"
+                            :disabled="panelFilterCount === 0"
+                            @click="clearPanelFilters"
+                        >
+                            Limpiar
+                        </button>
+                    </div>
+
+                    <FeaturedCharacteristicsPicker
+                        v-if="featuredCharacteristics.length > 0"
+                        v-model="features"
+                        :options="featuredCharacteristics"
+                        :show-descriptions="false"
+                        :max="10"
+                    />
+
+                    <FeatureMultiSelect
+                        v-model="features"
+                        :options="services"
+                        :max="10"
+                    />
+                </div>
             </div>
         </div>
     </form>

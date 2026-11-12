@@ -6,7 +6,9 @@
  | Scoped to `.home-site` and imported ONLY by the landing page. The catalog
  | still uses `public.css` and the admin uses its shadcn-vue tokens.
  |
- | Solid surfaces only: no gradients in sections, cards, CTAs or banners.
+ | Solid surfaces only: no decorative gradients in sections, cards, CTAs or
+ | banners. The main hero uses a flat dark overlay; the owners hero uses one
+ | functional white wash for legibility.
  |
  */
 
@@ -30,7 +32,8 @@
         --home-shadow-card: 0 1px 2px rgb(17 24 39 / 0.04);
         --home-shadow-float: 0 24px 60px -32px rgb(17 24 39 / 0.35);
         --home-shadow-hover: 0 18px 42px -24px rgb(17 24 39 / 0.22);
-
+        --home-header-height: 4.3125rem;
+        --home-section-nav-height: 3.25rem;
         color-scheme: light;
         background-color: var(--home-bg);
         color: var(--home-dark);
@@ -101,6 +104,34 @@
 
     .home-alt-section {
         background: var(--home-bg-alt);
+    }
+
+    /* White diagonal wash that keeps the hero copy legible while letting the
+       background photography breathe toward the bottom-right. */
+    .home-owners-hero-wash {
+        background: linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.96) 0%,
+            rgba(255, 255, 255, 0.88) 22%,
+            rgba(255, 255, 255, 0.55) 48%,
+            rgba(255, 255, 255, 0.18) 72%,
+            rgba(255, 255, 255, 0) 100%
+        );
+    }
+
+    /* Narrow screens stack the copy over a taller section, so the same
+       diagonal needs more white through the middle to keep the text legible. */
+    @media (max-width: 639px) {
+        .home-owners-hero-wash {
+            background: linear-gradient(
+                135deg,
+                rgba(255, 255, 255, 0.98) 0%,
+                rgba(255, 255, 255, 0.95) 30%,
+                rgba(255, 255, 255, 0.82) 55%,
+                rgba(255, 255, 255, 0.55) 75%,
+                rgba(255, 255, 255, 0.25) 100%
+            );
+        }
     }
 
     /* ------- Buttons ------- */
@@ -371,6 +402,7 @@
         color: #ffffff;
     }
 
+    /* Dark flat overlay for the main landing hero (white copy on photography). */
     .home-hero-overlay {
         background: rgb(17 24 39 / 0.4);
     }
@@ -419,6 +451,71 @@
     .home-footer {
         border-top: 1px solid var(--home-border);
         background: var(--home-bg);
+    }
+
+    .listing-section-nav {
+        position: sticky;
+        top: var(--home-header-height);
+        z-index: 30;
+        border-bottom: 1px solid var(--home-border);
+        background: var(--home-surface);
+    }
+
+    .listing-section-nav-scroll {
+        display: flex;
+        align-items: stretch;
+        gap: 0.25rem;
+        height: var(--home-section-nav-height);
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .listing-section-nav-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .listing-section-link {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        gap: 0.4rem;
+        height: 100%;
+        padding-inline: 0.875rem;
+        border-bottom: 2px solid transparent;
+        color: var(--home-secondary);
+        font-size: 0.875rem;
+        font-weight: 600;
+        white-space: nowrap;
+        transition:
+            color 150ms ease,
+            border-color 150ms ease;
+    }
+
+    .listing-section-link:hover {
+        color: var(--home-dark);
+    }
+
+    .listing-section-link[aria-current='location'] {
+        border-bottom-color: var(--home-primary);
+        color: var(--home-primary-deep);
+        font-weight: 700;
+    }
+
+    .home-listing-section {
+        scroll-margin-top: calc(
+            var(--home-header-height) + var(--home-section-nav-height) + 1.25rem
+        );
+    }
+
+    @media (min-width: 1024px) {
+        .listing-detail-aside {
+            top: calc(
+                var(--home-header-height) + var(--home-section-nav-height) +
+                    1rem
+            );
+        }
     }
 }
 

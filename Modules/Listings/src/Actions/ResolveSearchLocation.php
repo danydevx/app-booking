@@ -3,10 +3,14 @@
 namespace Modules\Listings\Actions;
 
 use Illuminate\Support\Str;
-use Modules\Listings\Support\MexicoLocationCatalog;
+use Modules\Platform\Support\GeographicCoverageService;
 
 final class ResolveSearchLocation
 {
+    public function __construct(
+        private readonly GeographicCoverageService $coverage,
+    ) {}
+
     /**
      * Resolve a free-text location into structured filters.
      *
@@ -32,11 +36,11 @@ final class ResolveSearchLocation
         $cityPart = $parts[0] !== '' ? $parts[0] : null;
         $statePart = $parts[1] ?? null;
 
-        $states = MexicoLocationCatalog::all();
+        $states = $this->coverage->locations();
 
         if ($statePart !== null) {
             foreach ($states as $value => $state) {
-                if (! $this->matches($statePart, [$value, $state['label']])) {
+                if (! $this->matches($statePart, $this->stateCandidates($value, $state['label']))) {
                     continue;
                 }
 
@@ -78,7 +82,7 @@ final class ResolveSearchLocation
         }
 
         foreach ($states as $value => $state) {
-            if ($this->matches($query, [$value, $state['label']])) {
+            if ($this->matches($query, $this->stateCandidates($value, $state['label']))) {
                 return ['state' => $value];
             }
         }
@@ -86,12 +90,23 @@ final class ResolveSearchLocation
         return null;
     }
 
+    /**
+     * @return array<int, string>
+     */
+    private function stateCandidates(string $state, string $label): array
+    {
+        return array_values(array_unique(array_merge(
+            [$state, $label],
+            $this->coverage->stateValues($state),
+        )));
+    }
+
     private function findCity(string $query, string $stateValue): ?string
     {
         $normalized = $this->normalize($query);
         $candidates = [];
 
-        foreach (MexicoLocationCatalog::municipalities($stateValue) as $city) {
+        foreach ($this->coverage->locations()[$stateValue]['municipalities'] ?? [] as $city) {
             $normalizedCity = $this->normalize($city);
 
             if ($normalizedCity === $normalized) {

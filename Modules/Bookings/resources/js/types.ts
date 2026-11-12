@@ -29,7 +29,14 @@ export type InquiryCard = {
     end_date: string;
     start_date_label: string;
     end_date_label: string;
+    date_summary: string;
+    date_mode: string;
+    event_month: string | null;
     guests: number | null;
+    guest_range: string | null;
+    guest_range_label: string | null;
+    source: string;
+    source_label: string;
     status: InquiryStatus;
     status_label: string;
     created_at: string | null;
@@ -133,28 +140,77 @@ export type CustomerDetail = CustomerCard & {
     inquiries: InquiryCard[];
 };
 
+export type QuoteItem = {
+    id: number;
+    type: 'rental' | 'service' | 'package' | 'product' | 'custom';
+    type_label: string;
+    description: string;
+    details: string | null;
+    unit: string;
+    unit_label: string;
+    quantity: number;
+    unit_price_cents: number;
+    amount_cents: number;
+    unit_price_formatted: string;
+    amount_formatted: string;
+    sort_order: number;
+};
+
+export type QuoteHistoryEntry = {
+    id: number;
+    from_status: string | null;
+    from_status_label: string | null;
+    to_status: string;
+    to_status_label: string | null;
+    note: string | null;
+    changed_by: string | null;
+    created_at: string | null;
+};
+
 export type CustomerQuoteCard = {
     id: number;
+    folio: string;
     status: string;
     status_label: string;
     start_date: string;
     end_date: string;
     start_date_label: string;
     end_date_label: string;
+    rental_mode: 'hour' | 'day' | 'fixed';
+    start_time: string | null;
+    end_time: string | null;
+    billing_quantity: number | null;
     event_type: string | null;
     guests: number | null;
     subtotal_cents: number;
+    tax_base_cents: number;
+    discount_type: 'none' | 'fixed' | 'percent';
+    discount_value: number;
+    discount_cents: number;
+    tax_mode: 'none' | 'added' | 'included';
+    tax_rate_bps: number;
+    tax_cents: number;
+    total_cents: number;
     deposit_cents: number;
     subtotal_formatted: string;
+    discount_formatted: string;
+    tax_base_formatted: string;
+    tax_formatted: string;
+    total_formatted: string;
     deposit_formatted: string;
     currency: string;
     notes: string | null;
     terms: string | null;
     expires_at: string | null;
+    issued_at: string | null;
+    pdf_generated_at: string | null;
     sent_at: string | null;
     accepted_at: string | null;
     declined_at: string | null;
+    cancelled_at: string | null;
     converted_inquiry_id: number | null;
+    items: QuoteItem[];
+    history: QuoteHistoryEntry[];
     customer: {
         id: number;
         name: string;
@@ -165,16 +221,75 @@ export type CustomerQuoteCard = {
         id: number;
         name: string;
         slug: string;
+        logo_url: string | null;
+        address: string | null;
+        city: string | null;
+        state: string | null;
+        contact_email: string | null;
+        contact_phone: string | null;
     };
     public_url: string;
     show_url: string;
+    edit_url: string;
     update_url: string;
+    preview_url: string;
+    pdf_url: string;
     send_url: string;
     convert_url: string;
+    issue_url: string;
+    duplicate_url: string;
+    cancel_url: string;
     can_edit: boolean;
+    can_issue: boolean;
     can_send: boolean;
     can_convert: boolean;
+    can_duplicate: boolean;
+    can_cancel: boolean;
+    can_download_pdf: boolean;
     created_at: string | null;
+};
+
+export type QuotationListing = {
+    id: number;
+    name: string;
+    slug: string;
+    logo_url: string | null;
+    address: string | null;
+    city: string | null;
+    state: string | null;
+    contact_email: string | null;
+    contact_phone: string | null;
+    timezone: string;
+    price_from_cents: number | null;
+    event_types: string[];
+    services: Array<{
+        id: number;
+        key: string;
+        label: string;
+        description: string | null;
+        price_cents: number;
+        price_unit: string;
+        unit_label: string;
+        is_included: boolean;
+        pricing_mode: string;
+    }>;
+    packages: Array<{
+        id: number;
+        name: string;
+        description: string | null;
+        price_cents: number;
+        duration_hours: number;
+        included_people: number;
+        conditions: string | null;
+        services: Array<{ key: string; label: string }>;
+    }>;
+};
+
+export type QuotationCustomerOption = {
+    id: number;
+    name: string;
+    email: string;
+    phone: string | null;
 };
 
 export type CustomerActivity = {

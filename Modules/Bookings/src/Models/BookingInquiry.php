@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use Modules\Bookings\Database\Factories\BookingInquiryFactory;
 use Modules\Bookings\Enums\InquiryStatus;
+use Modules\Bookings\Support\BookingOptionCatalog;
 use Modules\Listings\Models\Listing;
 
 /**
@@ -27,8 +28,11 @@ use Modules\Listings\Models\Listing;
  * @property string|null $whatsapp_phone
  * @property CarbonImmutable $start_date
  * @property CarbonImmutable $end_date
+ * @property string $date_mode
+ * @property string|null $event_month
  * @property string|null $event_type
  * @property int|null $guests
+ * @property string|null $guest_range
  * @property string|null $message
  * @property InquiryStatus $status
  * @property string $source
@@ -68,8 +72,11 @@ use Modules\Listings\Models\Listing;
     'whatsapp_phone',
     'start_date',
     'end_date',
+    'date_mode',
+    'event_month',
     'event_type',
     'guests',
+    'guest_range',
     'message',
     'source_detail',
     'utm_source',
@@ -144,6 +151,26 @@ class BookingInquiry extends Model
         }
 
         return route('public.bookings.portal', ['token' => $this->portal_token]);
+    }
+
+    public function dateSummary(): string
+    {
+        if ($this->date_mode === 'approximate' && filled($this->event_month)) {
+            $month = new CarbonImmutable((string) $this->event_month.'-01');
+
+            return ucfirst($month->translatedFormat('F Y'));
+        }
+
+        if ($this->start_date->equalTo($this->end_date)) {
+            return $this->start_date->format('d/m/Y');
+        }
+
+        return $this->start_date->format('d/m/Y').' al '.$this->end_date->format('d/m/Y');
+    }
+
+    public function guestRangeLabel(): ?string
+    {
+        return BookingOptionCatalog::guestRangeLabel($this->guest_range);
     }
 
     public function canBeConfirmedByCustomer(): bool

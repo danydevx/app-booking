@@ -33,10 +33,7 @@ class NewInquiryOwnerNotification extends Notification implements ShouldQueue
         return [
             'title' => 'Nueva solicitud',
             'message' => "{$inquiry->name} quiere rentar {$inquiry->listing->name}.",
-            'url' => route('bookings.show', [
-                'current_team' => $inquiry->listing->team->slug,
-                'inquiry' => $inquiry->id,
-            ]),
+            'url' => $this->panelUrl(),
             'kind' => 'inquiry',
         ];
     }
@@ -44,6 +41,9 @@ class NewInquiryOwnerNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $inquiry = $this->inquiry;
+        $guests = $inquiry->guestRangeLabel()
+            ?? ($inquiry->guests !== null ? (string) $inquiry->guests : 'No indicado');
+        $phone = filled($inquiry->phone) ? ' · '.$inquiry->phone : '';
 
         return (new MailMessage)
             ->from(Branding::fromAddress(), Branding::appName())
@@ -51,8 +51,23 @@ class NewInquiryOwnerNotification extends Notification implements ShouldQueue
             ->subject('Nueva solicitud de reserva')
             ->greeting('Nueva solicitud')
             ->line("{$inquiry->name} quiere rentar {$inquiry->listing->name}.")
-            ->line("Fechas: {$inquiry->start_date->format('d/m/Y')} al {$inquiry->end_date->format('d/m/Y')}.")
-            ->line("Contacto: {$inquiry->email} · {$inquiry->phone}")
-            ->line($inquiry->message ?: 'Sin mensaje adicional.');
+            ->line("Fechas: {$inquiry->dateSummary()}.")
+            ->when(
+                filled($inquiry->event_type),
+                fn (MailMessage $mail): MailMessage => $mail
+                    ->line("Tipo de evento: {$inquiry->event_type}."),
+            )
+            ->line("Invitados: {$guests}.")
+            ->line("Contacto: {$inquiry->email}{$phone}")
+            ->line($inquiry->message ?: 'Sin mensaje adicional.')
+            ->action('Ver solicitud', $this->panelUrl());
+    }
+
+    private function panelUrl(): string
+    {
+        return route('bookings.show', [
+            'current_team' => $this->inquiry->listing->team->slug,
+            'inquiry' => $this->inquiry->id,
+        ]);
     }
 }

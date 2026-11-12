@@ -21,7 +21,9 @@ use Modules\Bookings\Http\Controllers\ManualBookingController;
 use Modules\Bookings\Http\Controllers\PublicAvailabilityController;
 use Modules\Bookings\Http\Controllers\PublicBookingPortalController;
 use Modules\Bookings\Http\Controllers\PublicCustomerEmailController;
+use Modules\Bookings\Http\Controllers\PublicListingContactController;
 use Modules\Bookings\Http\Controllers\PublicQuoteController;
+use Modules\Bookings\Http\Controllers\QuotationBuilderController;
 
 Route::middleware('web')->group(function (): void {
     Route::get('terrazas/{listing:slug}/disponibilidad', [PublicAvailabilityController::class, 'show'])
@@ -29,6 +31,9 @@ Route::middleware('web')->group(function (): void {
     Route::post('terrazas/{listing:slug}/solicitud', [PublicAvailabilityController::class, 'store'])
         ->middleware('throttle:5,1')
         ->name('public.bookings.inquiries.store');
+    Route::post('terrazas/{listing:slug}/contacto', [PublicListingContactController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('public.listings.contact.store');
 
     Route::get('cotizaciones/{token}', [PublicQuoteController::class, 'show'])
         ->name('public.quotes.show');
@@ -144,8 +149,16 @@ Route::prefix('app')->group(function (): void {
                 ->name('customers.quotes.store');
 
             Route::get('/quotes', [CustomerQuoteController::class, 'index'])->name('quotes.index');
+            Route::get('/quotes/create', [QuotationBuilderController::class, 'create'])->name('quotes.create');
+            Route::post('/quotes', [QuotationBuilderController::class, 'store'])->name('quotes.store');
+            Route::get('/quotes/{quote}/edit', [QuotationBuilderController::class, 'edit'])->name('quotes.edit');
+            Route::get('/quotes/{quote}/preview', [QuotationBuilderController::class, 'preview'])->name('quotes.preview');
+            Route::get('/quotes/{quote}/pdf', [QuotationBuilderController::class, 'pdf'])->name('quotes.pdf');
+            Route::post('/quotes/{quote}/issue', [QuotationBuilderController::class, 'issue'])->name('quotes.issue');
+            Route::post('/quotes/{quote}/duplicate', [QuotationBuilderController::class, 'duplicate'])->name('quotes.duplicate');
+            Route::post('/quotes/{quote}/cancel', [QuotationBuilderController::class, 'cancel'])->name('quotes.cancel');
             Route::get('/quotes/{quote}', [CustomerQuoteController::class, 'show'])->name('quotes.show');
-            Route::patch('/quotes/{quote}', [CustomerQuoteController::class, 'update'])->name('quotes.update');
+            Route::patch('/quotes/{quote}', [QuotationBuilderController::class, 'update'])->name('quotes.update');
             Route::post('/quotes/{quote}/send', [CustomerQuoteController::class, 'send'])->name('quotes.send');
             Route::post('/quotes/{quote}/convert', [CustomerQuoteController::class, 'convert'])->name('quotes.convert');
             Route::patch('/customers/{customer}', [CustomerController::class, 'update'])->name('customers.update');

@@ -31,6 +31,7 @@ const props = defineProps<{
         cancel: string;
         deposits_store: string;
         contract_store: string;
+        quote_create: string;
     };
 }>();
 
@@ -184,13 +185,14 @@ function formatActivityDate(value: string | null): string {
                     </Badge>
                 </div>
                 <p class="text-sm text-muted-foreground">
-                    {{ inquiry.listing.name }} ·
-                    {{ inquiry.start_date_label }} al
-                    {{ inquiry.end_date_label }}
+                    {{ inquiry.listing.name }} · {{ inquiry.date_summary }}
                 </p>
             </div>
 
             <div class="flex flex-wrap gap-2">
+                <Button variant="outline" as-child>
+                    <Link :href="urls.quote_create">Crear cotización</Link>
+                </Button>
                 <Button variant="outline" as-child>
                     <a
                         :href="inquiry.portal_url"
@@ -259,14 +261,23 @@ function formatActivityDate(value: string | null): string {
                         <div>
                             <dt class="text-muted-foreground">Fechas</dt>
                             <dd class="font-medium">
-                                {{ inquiry.start_date_label }} al
-                                {{ inquiry.end_date_label }}
+                                {{ inquiry.date_summary }}
+                                <span
+                                    v-if="inquiry.date_mode === 'approximate'"
+                                    class="ml-1 text-xs font-normal text-muted-foreground"
+                                >
+                                    (aproximada)
+                                </span>
                             </dd>
                         </div>
                         <div>
                             <dt class="text-muted-foreground">Invitados</dt>
                             <dd class="font-medium">
-                                {{ inquiry.guests ?? 'No indicado' }}
+                                {{
+                                    inquiry.guest_range_label ??
+                                    inquiry.guests ??
+                                    'No indicado'
+                                }}
                             </dd>
                         </div>
                         <div>
@@ -278,7 +289,10 @@ function formatActivityDate(value: string | null): string {
                         <div>
                             <dt class="text-muted-foreground">Origen</dt>
                             <dd class="font-medium">
-                                {{ inquiry.source_detail ?? inquiry.source }}
+                                {{
+                                    inquiry.source_detail ??
+                                    inquiry.source_label
+                                }}
                             </dd>
                         </div>
                         <div v-if="inquiry.utm_source || inquiry.utm_campaign">
