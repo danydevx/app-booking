@@ -4,17 +4,21 @@ namespace Modules\Billing\Http\Controllers;
 
 use App\Concerns\ResolvesCurrentTeam;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\RedirectResponse;
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Billing\Actions\CreateCheckoutSession;
+use Modules\Billing\Actions\SyncTeamSubscription;
 use Modules\Billing\Http\Requests\CheckoutRequest;
 use Modules\Billing\Support\BillingPageData;
 use Modules\Billing\Support\Entitlements;
 use Modules\Billing\Support\PlanCatalog;
 use Stripe\Exception\ApiErrorException;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
+use Throwable;
 
 class BillingController extends Controller
 {
@@ -24,6 +28,8 @@ class BillingController extends Controller
         private readonly Entitlements $entitlements,
         private readonly PlanCatalog $catalog,
         private readonly BillingPageData $pageData,
+        private readonly CreateCheckoutSession $createCheckoutSession,
+        private readonly SyncTeamSubscription $syncTeamSubscription,
     ) {}
 
     public function index(Request $request): Response
@@ -32,17 +38,46 @@ class BillingController extends Controller
 
         Gate::authorize('manageBilling', $team);
 
+        $checkoutResult = $request->string('checkout')->toString();
+
+        if ($checkoutResult === 'success') {
+            $this->syncMissingSubscription($team);
+        }
+
         return Inertia::render('Billing/Index', $this->pageData->for(
             $team,
-            $request->string('checkout')->toString(),
+            $checkoutResult,
         ));
     }
 
-    public function checkout(CheckoutRequest $request): RedirectResponse
+    /**
+     * Cashier normally creates the local subscription from the Stripe webhook.
+     * If the webhook is delayed or never delivered, this fallback mirrors the
+     * paid subscription so the team is not left on the free plan and does not
+     * pay twice by starting another checkout.
+     */
+    private function syncMissingSubscription(Team $team): void
+    {
+        if ($team->subscribed('default')) {
+            return;
+        }
+
+        try {
+            $this->syncTeamSubscription->handle($team);
+
+            $team->unsetRelation('subscriptions');
+        } catch (Throwable $exception) {
+            report($exception);
+        }
+    }
+
+    public function checkout(CheckoutRequest $request): SymfonyResponse
     {
         $team = $this->currentTeam($request);
 
         Gate::authorize('manageBilling', $team);
+
+        $this->syncMissingSubscription($team);
 
         $plan = $this->catalog->get((string) $request->validated('plan'));
 
@@ -71,20 +106,7 @@ class BillingController extends Controller
         }
 
         try {
-            $checkout = $team->newSubscription('default', $plan->stripePriceId)
-                ->withMetadata([
-                    'team_id' => (string) $team->id,
-                    'plan' => $plan->slug,
-                ])
-                ->checkout([
-                    'success_url' => route('billing.index', [
-                        'current_team' => $team->slug,
-                    ]).'?checkout=success',
-                    'cancel_url' => route('billing.index', [
-                        'current_team' => $team->slug,
-                    ]).'?checkout=cancelled',
-                    'client_reference_id' => (string) $team->id,
-                ]);
+            $url = $this->createCheckoutSession->handle($team, $plan);
         } catch (ApiErrorException $exception) {
             report($exception);
 
@@ -93,10 +115,10 @@ class BillingController extends Controller
             ]);
         }
 
-        return $checkout->redirect();
+        return Inertia::location($url);
     }
 
-    public function portal(Request $request): RedirectResponse
+    public function portal(Request $request): SymfonyResponse
     {
         $team = $this->currentTeam($request);
 
@@ -115,9 +137,11 @@ class BillingController extends Controller
         }
 
         try {
-            return $team->redirectToBillingPortal(route('billing.index', [
+            $redirect = $team->redirectToBillingPortal(route('billing.index', [
                 'current_team' => $team->slug,
             ]));
+
+            return Inertia::location($redirect->getTargetUrl());
         } catch (ApiErrorException $exception) {
             report($exception);
 

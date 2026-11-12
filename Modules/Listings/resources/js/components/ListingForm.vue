@@ -471,8 +471,12 @@ async function submit(): Promise<void> {
                             class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm hover:bg-accent/40"
                         >
                             <Checkbox
-                                :checked="form.services.includes(service.value)"
-                                @update:checked="toggleService(service.value)"
+                                :model-value="
+                                    form.services.includes(service.value)
+                                "
+                                @update:model-value="
+                                    toggleService(service.value)
+                                "
                             />
                             <span>{{ service.label }}</span>
                         </label>

@@ -73,8 +73,8 @@ function render(): void {
 
         L.circleMarker(center, {
             radius: 7,
-            color: '#0f766e',
-            fillColor: '#0f766e',
+            color: '#f50557',
+            fillColor: '#f50557',
             fillOpacity: 1,
             weight: 2,
         })
@@ -84,8 +84,8 @@ function render(): void {
         if (props.radius) {
             L.circle(center, {
                 radius: props.radius * 1000,
-                color: '#0f766e',
-                fillColor: '#0f766e',
+                color: '#f50557',
+                fillColor: '#f50557',
                 fillOpacity: 0.06,
                 weight: 1,
             }).addTo(markers);
@@ -103,22 +103,24 @@ function render(): void {
         const popup = document.createElement('div');
         const link = document.createElement('a');
         link.href = listing.url;
-        link.className =
-            'font-medium text-primary underline-offset-4 hover:underline';
+        link.className = 'text-base font-bold';
+        link.style.color = '#111827';
+        link.style.textDecoration = 'none';
         link.textContent = listing.name;
         popup.append(link);
 
         if (listing.distance_km !== null) {
             const distance = document.createElement('p');
-            distance.className = 'mt-1 text-xs text-muted-foreground';
+            distance.className = 'mt-1 text-xs';
+            distance.style.color = '#6b7280';
             distance.textContent = `${listing.distance_km} km de distancia`;
             popup.append(distance);
         }
 
         L.circleMarker(position, {
             radius: 8,
-            color: '#1d4ed8',
-            fillColor: '#3b82f6',
+            color: '#ffffff',
+            fillColor: '#1f2937',
             fillOpacity: 0.9,
             weight: 2,
         })
@@ -135,7 +137,7 @@ function render(): void {
 <template>
     <div
         ref="mapElement"
-        class="z-0 overflow-hidden rounded-xl border"
+        class="z-0 overflow-hidden rounded-[1.125rem] border border-[color:var(--home-border)]"
         :style="{ height: height ?? '26rem' }"
         role="img"
         aria-label="Mapa de terrazas"

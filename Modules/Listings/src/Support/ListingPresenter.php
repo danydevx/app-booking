@@ -88,11 +88,34 @@ final class ListingPresenter
             'city' => $listing->city,
             'state' => $listing->state,
             'capacity' => $listing->capacity,
+            'price_from_formatted' => ListingCommercialPresenter::pricing($listing)['price_from_formatted'],
             'services' => $listing->serviceLabels(),
             'cover_url' => $listing->coverImage?->url,
             'latitude' => $listing->latitude !== null ? (float) $listing->latitude : null,
             'longitude' => $listing->longitude !== null ? (float) $listing->longitude : null,
             'distance_km' => $distanceKm !== null ? round($distanceKm, 1) : null,
+            'url' => self::publicUrl($listing),
+        ];
+    }
+
+    /**
+     * Minimal payload for map markers (no private owner data).
+     *
+     * @return array<string, mixed>
+     */
+    public static function publicMapPoint(Listing $listing): array
+    {
+        return [
+            'id' => $listing->id,
+            'name' => $listing->name,
+            'slug' => $listing->slug,
+            'city' => $listing->city,
+            'state' => $listing->state,
+            'capacity' => $listing->capacity,
+            'price_from_formatted' => ListingCommercialPresenter::pricing($listing)['price_from_formatted'],
+            'cover_url' => $listing->coverImage?->url,
+            'latitude' => $listing->latitude !== null ? (float) $listing->latitude : null,
+            'longitude' => $listing->longitude !== null ? (float) $listing->longitude : null,
             'url' => self::publicUrl($listing),
         ];
     }
@@ -146,11 +169,16 @@ final class ListingPresenter
                 ->all(),
             'details' => collect(TerraceDetailCatalog::keys())
                 ->filter(fn (string $key): bool => filled(($listing->details ?? [])[$key] ?? null))
-                ->map(fn (string $key): array => [
-                    'key' => $key,
-                    'label' => TerraceDetailCatalog::label($key),
-                    'value' => (string) (($listing->details ?? [])[$key] ?? ''),
-                ])
+                ->map(function (string $key) use ($listing): array {
+                    $value = (string) (($listing->details ?? [])[$key] ?? '');
+                    $options = (array) (TerraceDetailCatalog::all()[$key]['options'] ?? []);
+
+                    return [
+                        'key' => $key,
+                        'label' => TerraceDetailCatalog::label($key),
+                        'value' => $options[$value] ?? $value,
+                    ];
+                })
                 ->values()
                 ->all(),
             'rules' => $listing->rules,

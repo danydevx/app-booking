@@ -12,8 +12,13 @@ use Modules\Listings\Http\Controllers\ListingServiceController;
 use Modules\Listings\Http\Controllers\PublicListingController;
 
 Route::middleware('web')->group(function (): void {
+    Route::get('/', [PublicListingController::class, 'home'])
+        ->name('home');
+
     Route::get('terrazas', [PublicListingController::class, 'index'])
         ->name('public.listings.index');
+    Route::get('terrazas/ubicaciones', [PublicListingController::class, 'locations'])
+        ->name('public.listings.locations');
     Route::get('terrazas/{listing:slug}', [PublicListingController::class, 'show'])
         ->name('public.listings.show');
 });

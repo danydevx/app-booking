@@ -606,8 +606,11 @@ function intervalLabel(interval: string): string {
                                     class="flex items-center gap-3 rounded-lg border px-3 py-2 text-sm"
                                 >
                                     <Checkbox
-                                        v-model:checked="form.active"
+                                        :model-value="form.active"
                                         :disabled="editing?.is_free === true"
+                                        @update:model-value="
+                                            form.active = $event === true
+                                        "
                                     />
                                     {{
                                         editing?.is_free
@@ -712,8 +715,12 @@ function intervalLabel(interval: string): string {
                                             class="flex items-center gap-3 text-sm"
                                         >
                                             <Checkbox
-                                                v-model:checked="
+                                                :model-value="
                                                     form.features[key]
+                                                "
+                                                @update:model-value="
+                                                    form.features[key] =
+                                                        $event === true
                                                 "
                                             />
                                             {{ label }}

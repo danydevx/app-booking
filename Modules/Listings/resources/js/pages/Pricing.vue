@@ -444,11 +444,21 @@ const { validate } = useFrontValidation(rangeSchema, () => ({
     name: rangeForm.name,
     starts_at: rangeForm.starts_at,
     ends_at: rangeForm.ends_at,
-    daily_pricing: rangeForm.daily_pricing,
-    included_people: rangeForm.included_people,
-    extra_hour: rangeForm.extra_hour,
-    extra_person: rangeForm.extra_person,
-    deposit_required: rangeForm.deposit_required,
+    daily_pricing: Object.fromEntries(
+        Object.entries(rangeForm.daily_pricing).map(([day, row]) => [
+            day,
+            {
+                hours: String(row?.hours ?? ''),
+                entry_time: row?.entry_time ?? '',
+                exit_time: row?.exit_time ?? '',
+                price: String(row?.price ?? ''),
+            },
+        ]),
+    ),
+    included_people: String(rangeForm.included_people ?? ''),
+    extra_hour: String(rangeForm.extra_hour ?? ''),
+    extra_person: String(rangeForm.extra_person ?? ''),
+    deposit_required: String(rangeForm.deposit_required ?? ''),
     conditions: rangeForm.conditions,
     active: rangeForm.active,
 }));
@@ -1653,7 +1663,12 @@ function formatRangePrice(value: string | null): string {
                         </div>
 
                         <label class="flex items-center gap-3 text-sm">
-                            <Checkbox v-model:checked="rangeForm.active" />
+                            <Checkbox
+                                :model-value="rangeForm.active"
+                                @update:model-value="
+                                    rangeForm.active = $event === true
+                                "
+                            />
                             Tarifa activa
                         </label>
 

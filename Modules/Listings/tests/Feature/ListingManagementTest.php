@@ -384,7 +384,8 @@ class ListingManagementTest extends TestCase
                 ->component('Listings/Public/Show')
                 ->has('listing.details', 2)
                 ->where('listing.details.0.key', 'space_type')
-                ->where('listing.details.0.label', 'Tipo de espacio'));
+                ->where('listing.details.0.label', 'Tipo de espacio')
+                ->where('listing.details.0.value', 'Rooftop'));
     }
 
     /**

@@ -163,13 +163,13 @@ const packageSchema = z.object({
 const { validate } = useFrontValidation(packageSchema, () => ({
     name: form.name,
     description: form.description,
-    price: form.price,
+    price: String(form.price ?? ''),
     duration_hours: form.duration_hours,
     included_people: form.included_people,
     included_services: form.included_services,
     conditions: form.conditions,
     active: form.active,
-    sort_order: form.sort_order,
+    sort_order: String(form.sort_order ?? ''),
 }));
 
 function formatCurrency(
@@ -852,12 +852,12 @@ function destroy(item: ListingPackage): void {
                                                 class="flex cursor-pointer items-center gap-2 text-sm"
                                             >
                                                 <Checkbox
-                                                    :checked="
+                                                    :model-value="
                                                         form.included_services.includes(
                                                             service.value,
                                                         )
                                                     "
-                                                    @update:checked="
+                                                    @update:model-value="
                                                         toggleService(
                                                             service.value,
                                                         )
@@ -903,7 +903,12 @@ function destroy(item: ListingPackage): void {
                             </p>
                         </div>
                         <label class="flex items-center gap-3 text-sm">
-                            <Checkbox v-model:checked="form.active" />
+                            <Checkbox
+                                :model-value="form.active"
+                                @update:model-value="
+                                    form.active = $event === true
+                                "
+                            />
                             Paquete activo y visible en la ficha pública
                         </label>
                         <p

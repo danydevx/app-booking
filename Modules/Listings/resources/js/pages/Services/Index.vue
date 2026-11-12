@@ -151,7 +151,7 @@ const { validate } = useFrontValidation(serviceSchema, () => ({
     description: form.description,
     pricing_mode: form.pricing_mode,
     provider: form.provider,
-    price: form.price,
+    price: String(form.price ?? ''),
     price_unit: form.price_unit,
     active: form.active,
 }));
@@ -758,7 +758,12 @@ function destroy(item: CommercialService): void {
                         </div>
                         <div class="rounded-lg border bg-muted/20 p-3">
                             <label class="flex items-center gap-3 text-sm">
-                                <Checkbox v-model:checked="form.active" />
+                                <Checkbox
+                                    :model-value="form.active"
+                                    @update:model-value="
+                                        form.active = $event === true
+                                    "
+                                />
                                 Disponible y visible en la ficha pública
                             </label>
                         </div>

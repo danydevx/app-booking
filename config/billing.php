@@ -21,6 +21,7 @@ return [
             'name' => 'Gratis',
             'description' => 'Para probar la plataforma y publicar una terraza.',
             'stripe_price_id' => null,
+            'price_cents' => 0,
             'interval' => 'month',
             'active' => true,
             'limits' => [
@@ -38,6 +39,7 @@ return [
             'name' => 'Pro',
             'description' => 'Para anfitriones con varias terrazas y CRM de clientes.',
             'stripe_price_id' => env('STRIPE_PRICE_PRO'),
+            'price_cents' => 49900,
             'interval' => 'month',
             'active' => true,
             'limits' => [

@@ -7,6 +7,7 @@ use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Laravel\Cashier\Cashier;
 use Tests\TestCase;
 
 class BillingPageTest extends TestCase
@@ -29,6 +30,15 @@ class BillingPageTest extends TestCase
                 ->missing('plans.0.stripe_price_id')
                 ->missing('plans.1.stripe_price_id')
                 ->where('subscription.stripe_configured', false));
+    }
+
+    public function test_cashier_amounts_are_formatted_without_intl_extension(): void
+    {
+        if (extension_loaded('intl')) {
+            $this->markTestSkipped('The intl extension is installed.');
+        }
+
+        $this->assertSame('$499.00 MXN', Cashier::formatAmount(49900, 'MXN'));
     }
 
     public function test_invoices_are_empty_without_a_stripe_customer_or_secret(): void

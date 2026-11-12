@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { Check, CreditCard, ShieldAlert, X } from '@lucide/vue';
+import { Check, CreditCard, LoaderCircle, ShieldAlert, X } from '@lucide/vue';
+import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -111,8 +112,16 @@ function statusVariant(
     return 'outline';
 }
 
+const checkoutProcessing = ref<string | null>(null);
+const portalProcessing = ref(false);
+
 function checkout(plan: PlanPayload): void {
-    if (!plan.price_configured || !props.subscription.stripe_configured) {
+    if (
+        checkoutProcessing.value !== null ||
+        portalProcessing.value ||
+        !plan.price_configured ||
+        !props.subscription.stripe_configured
+    ) {
         return;
     }
 
@@ -124,15 +133,37 @@ function checkout(plan: PlanPayload): void {
         return;
     }
 
+    checkoutProcessing.value = plan.slug;
+
     router.post(
         props.urls.checkout,
         { plan: plan.slug },
-        { preserveScroll: true },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                checkoutProcessing.value = null;
+            },
+        },
     );
 }
 
 function openPortal(): void {
-    router.post(props.urls.portal, {}, { preserveScroll: true });
+    if (portalProcessing.value || checkoutProcessing.value !== null) {
+        return;
+    }
+
+    portalProcessing.value = true;
+
+    router.post(
+        props.urls.portal,
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                portalProcessing.value = false;
+            },
+        },
+    );
 }
 </script>
 
@@ -159,10 +190,19 @@ function openPortal(): void {
                         subscription.stripe_configured
                     "
                     variant="outline"
+                    :disabled="portalProcessing || checkoutProcessing !== null"
                     @click="openPortal"
                 >
-                    <CreditCard />
-                    Administrar facturación
+                    <LoaderCircle
+                        v-if="portalProcessing"
+                        class="animate-spin"
+                    />
+                    <CreditCard v-else />
+                    {{
+                        portalProcessing
+                            ? 'Abriendo portal…'
+                            : 'Administrar facturación'
+                    }}
                 </Button>
             </div>
         </div>
@@ -171,9 +211,13 @@ function openPortal(): void {
             v-if="checkoutResult === 'success'"
             class="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
         >
-            Stripe recibió el pago. El plan se actualizará cuando llegue el
-            webhook de confirmación; recargar esta página no activa nada por sí
-            solo.
+            <template v-if="plan.slug !== 'free'">
+                Pago confirmado. Tu cuenta ya está en el plan {{ plan.name }}.
+            </template>
+            <template v-else>
+                Stripe recibió el pago y lo estamos confirmando. Si el plan no
+                cambia, recarga esta página en unos segundos.
+            </template>
         </div>
 
         <div
@@ -357,11 +401,21 @@ function openPortal(): void {
                         class="w-full"
                         :disabled="
                             !candidate.price_configured ||
-                            !subscription.stripe_configured
+                            !subscription.stripe_configured ||
+                            checkoutProcessing !== null ||
+                            portalProcessing
                         "
                         @click="checkout(candidate)"
                     >
-                        Cambiar a {{ candidate.name }}
+                        <LoaderCircle
+                            v-if="checkoutProcessing === candidate.slug"
+                            class="animate-spin"
+                        />
+                        {{
+                            checkoutProcessing === candidate.slug
+                                ? 'Abriendo Stripe…'
+                                : `Cambiar a ${candidate.name}`
+                        }}
                     </Button>
                     <p
                         v-else-if="candidate.is_current"

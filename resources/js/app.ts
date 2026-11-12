@@ -3,6 +3,8 @@ import type { DefineComponent } from 'vue';
 import { initializeTheme } from '@/composables/useAppearance';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
+import ExploreLayout from '@/layouts/ExploreLayout.vue';
+import HomeLayout from '@/layouts/HomeLayout.vue';
 import PlatformLayout from '@/layouts/PlatformLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
@@ -45,14 +47,21 @@ void createInertiaApp({
     },
     layout: (name) => {
         switch (true) {
-            case name === 'Welcome':
-                return null;
             case name.startsWith('auth/'):
                 return AuthLayout;
             case name.startsWith('settings/'):
             case name.startsWith('teams/'):
                 return [AppLayout, SettingsLayout];
+            case name === 'Owners':
+                return HomeLayout;
+            case name === 'Listings/Public/Home':
+                return HomeLayout;
+            case name === 'Listings/Public/Index':
+                return ExploreLayout;
             case name.startsWith('Listings/Public/'):
+                return HomeLayout;
+            case name === 'Bookings/Public/Availability':
+                return HomeLayout;
             case name.startsWith('Bookings/Public/'):
                 return null;
             case name.startsWith('Platform/Public/'):

@@ -26,5 +26,7 @@ return [
         'default_radius_km' => 25,
         'max_radius_km' => 100,
         'max_candidates' => 500,
+        'map_markers' => 300,
+        'suggestions_cache_seconds' => 60,
     ],
 ];

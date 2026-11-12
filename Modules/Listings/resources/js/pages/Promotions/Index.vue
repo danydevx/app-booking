@@ -161,8 +161,8 @@ const promotionSchema = z
 const { validate } = useFrontValidation(promotionSchema, () => ({
     title: form.title,
     description: form.description,
-    promotional_price: form.promotional_price,
-    previous_price: form.previous_price,
+    promotional_price: String(form.promotional_price ?? ''),
+    previous_price: String(form.previous_price ?? ''),
     starts_at: form.starts_at,
     ends_at: form.ends_at,
     applies_on: form.applies_on,
@@ -551,10 +551,12 @@ function statusVariant(
                                     class="flex cursor-pointer items-center gap-2 text-sm"
                                 >
                                     <Checkbox
-                                        :checked="
+                                        :model-value="
                                             form.applies_on.includes(day.value)
                                         "
-                                        @update:checked="toggleDay(day.value)"
+                                        @update:model-value="
+                                            toggleDay(day.value)
+                                        "
                                     />
                                     {{ day.label }}
                                 </label>
@@ -573,7 +575,12 @@ function statusVariant(
                             />
                         </div>
                         <label class="flex items-center gap-3 text-sm">
-                            <Checkbox v-model:checked="form.active" />
+                            <Checkbox
+                                :model-value="form.active"
+                                @update:model-value="
+                                    form.active = $event === true
+                                "
+                            />
                             Promoción activa
                         </label>
                     </div>

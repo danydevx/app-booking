@@ -1,22 +1,14 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Search } from '@lucide/vue';
-import { computed, reactive, watch } from 'vue';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import PaginationLinks from '@/components/PaginationLinks.vue';
-import PublicShell from '@/components/PublicShell.vue';
-import ListingMap from '../../components/ListingMap.vue';
+import '@/homeSite';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, nextTick, ref, watch } from 'vue';
+import HomePagination from '@/components/home/HomePagination.vue';
+import HomeVenueCard from '@/components/home/HomeVenueCard.vue';
+import GeoSearchBar from '@/components/public/GeoSearchBar.vue';
+import GeoResultsMap from '../../components/GeoResultsMap.vue';
 import type {
+    GeoBounds,
+    GeoMapPoint,
     ListingLocations,
     ListingPublicCard,
     Paginated,
@@ -24,336 +16,464 @@ import type {
     ServiceOption,
 } from '../../types';
 
-type PublicSearchForm = {
-    state: string;
-    city: string;
-    capacity: string | number;
-    service: string;
-    lat: string | number;
-    lng: string | number;
-    radius: string | number;
-};
-
 const props = defineProps<{
     listings: Paginated<ListingPublicCard>;
+    mapListings: GeoMapPoint[];
     center: { lat: number; lng: number } | null;
     radius: number | null;
+    bounds: GeoBounds | null;
     filters: PublicFilters;
     priorityServices: ServiceOption[];
     additionalServices: ServiceOption[];
+    services: ServiceOption[];
     locations: ListingLocations;
     urls: {
         index: string;
+        locations: string;
     };
 }>();
 
-const form = reactive<PublicSearchForm>({
-    state: props.filters.state ?? '',
-    city: props.filters.city ?? '',
-    capacity: props.filters.capacity ?? '',
-    service: props.filters.service ?? '',
-    lat: props.filters.lat ?? '',
-    lng: props.filters.lng ?? '',
-    radius: props.filters.radius ?? 25,
-});
-
-const stateOptions = computed(() =>
-    Object.entries(props.locations).map(([value, state]) => ({
-        value,
-        label: state.label,
-    })),
+const page = usePage();
+const locationError = computed(
+    () =>
+        (page.props.errors as Record<string, string> | undefined)?.location ??
+        null,
 );
 
-const municipalityOptions = computed(() => {
-    const municipalities = props.locations[form.state]?.municipalities ?? [];
-    const options = municipalities.map((municipality) => ({
-        value: municipality,
-        label: municipality,
-    }));
+const selectedId = ref<number | null>(null);
+const mobileView = ref<'list' | 'map'>('list');
+const pendingBounds = ref<GeoBounds | null>(null);
+const mapRef = ref<InstanceType<typeof GeoResultsMap> | null>(null);
 
-    if (form.city && !municipalities.includes(form.city)) {
-        options.unshift({
-            value: form.city,
-            label: `${form.city} (valor actual)`,
+const hasZone = computed(() => props.bounds !== null);
+
+const priceOptions: Record<string, string> = {
+    '0-5000': 'Hasta $5,000',
+    '5000-10000': '$5,000 – $10,000',
+    '10000-20000': '$10,000 – $20,000',
+    '20000-': 'Más de $20,000',
+};
+
+const locationLabel = computed(() => {
+    if (props.filters.q) {
+        return String(props.filters.q);
+    }
+
+    if (props.filters.postal_code) {
+        return `CP ${props.filters.postal_code}`;
+    }
+
+    if (props.filters.city) {
+        const state = props.filters.state
+            ? props.locations[props.filters.state]?.label
+            : null;
+
+        return [props.filters.city, state].filter(Boolean).join(', ');
+    }
+
+    if (props.filters.state) {
+        return (
+            props.locations[props.filters.state]?.label ??
+            String(props.filters.state)
+        );
+    }
+
+    return null;
+});
+
+const priceLabel = computed(() => {
+    const min = props.filters.price_min;
+    const max = props.filters.price_max;
+
+    if (min === null || min === undefined || min === '') {
+        return null;
+    }
+
+    const key =
+        max === null || max === undefined || max === ''
+            ? `${min}-`
+            : `${min}-${max}`;
+
+    return priceOptions[key] ?? `$${min} – $${max ?? '∞'}`;
+});
+
+const serviceLabel = computed(() => {
+    if (!props.filters.service) {
+        return null;
+    }
+
+    return (
+        props.services.find((option) => option.value === props.filters.service)
+            ?.label ?? String(props.filters.service)
+    );
+});
+
+const activeFilters = computed(() => {
+    const entries: Array<{ label: string; value: string }> = [];
+
+    if (locationLabel.value) {
+        entries.push({ label: 'Ubicación', value: locationLabel.value });
+    }
+
+    if (props.filters.capacity) {
+        entries.push({
+            label: 'Invitados',
+            value: `${props.filters.capacity}+`,
         });
     }
 
-    return options;
+    if (priceLabel.value) {
+        entries.push({ label: 'Precio', value: priceLabel.value });
+    }
+
+    if (serviceLabel.value) {
+        entries.push({ label: 'Característica', value: serviceLabel.value });
+    }
+
+    if (hasZone.value) {
+        entries.push({ label: 'Zona', value: 'Área visible del mapa' });
+    }
+
+    if (props.radius && props.center) {
+        entries.push({ label: 'Radio', value: `${props.radius} km` });
+    }
+
+    return entries;
 });
 
+const showZoneButton = computed(() => {
+    if (!pendingBounds.value) {
+        return false;
+    }
+
+    if (!props.bounds) {
+        return true;
+    }
+
+    return (['north', 'south', 'east', 'west'] as const).some(
+        (key) =>
+            Math.abs(pendingBounds.value![key] - props.bounds![key]) > 0.0005,
+    );
+});
+
+function baseParams(): Record<string, string | number> {
+    const params: Record<string, string | number> = {};
+    const filters = props.filters;
+
+    if (filters.q) {
+        params.q = String(filters.q);
+    }
+
+    if (filters.state) {
+        params.state = String(filters.state);
+    }
+
+    if (filters.city) {
+        params.city = String(filters.city);
+    }
+
+    if (filters.postal_code) {
+        params.postal_code = String(filters.postal_code);
+    }
+
+    if (filters.capacity) {
+        params.capacity = Number(filters.capacity);
+    }
+
+    if (filters.service) {
+        params.service = String(filters.service);
+    }
+
+    if (
+        filters.price_min !== null &&
+        filters.price_min !== undefined &&
+        filters.price_min !== ''
+    ) {
+        params.price_min = Number(filters.price_min);
+    }
+
+    if (
+        filters.price_max !== null &&
+        filters.price_max !== undefined &&
+        filters.price_max !== ''
+    ) {
+        params.price_max = Number(filters.price_max);
+    }
+
+    return params;
+}
+
+const clearZoneUrl = computed(() => {
+    const params = new URLSearchParams(
+        Object.entries(baseParams()).map(([key, value]) => [
+            key,
+            String(value),
+        ]),
+    );
+    const query = params.toString();
+
+    return query === '' ? props.urls.index : `${props.urls.index}?${query}`;
+});
+
+function onBoundsChange(bounds: GeoBounds): void {
+    pendingBounds.value = bounds;
+}
+
+function applyZone(): void {
+    const bounds = pendingBounds.value;
+
+    if (!bounds) {
+        return;
+    }
+
+    const round = (value: number): number => Math.round(value * 1e6) / 1e6;
+
+    router.get(
+        props.urls.index,
+        {
+            ...baseParams(),
+            north: round(bounds.north),
+            south: round(bounds.south),
+            east: round(bounds.east),
+            west: round(bounds.west),
+        },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                pendingBounds.value = null;
+            },
+        },
+    );
+}
+
+function scrollToCard(id: number): void {
+    nextTick(() => {
+        document
+            .getElementById(`venue-${id}`)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+}
+
+function onCardSelect(id: number): void {
+    selectedId.value = id;
+}
+
+function onMarkerSelect(id: number): void {
+    selectedId.value = id;
+
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+        mobileView.value = 'list';
+    }
+
+    scrollToCard(id);
+}
+
+function toggleView(view: 'list' | 'map'): void {
+    mobileView.value = view;
+
+    if (view === 'map') {
+        nextTick(() => {
+            window.setTimeout(() => mapRef.value?.refresh(), 80);
+        });
+    }
+}
+
 watch(
-    () => form.state,
-    (state, previousState) => {
-        if (state === previousState) {
-            return;
-        }
-
-        const municipalities = props.locations[state]?.municipalities ?? [];
-
-        if (form.city !== '' && !municipalities.includes(form.city)) {
-            form.city = '';
+    () => props.mapListings.map((point) => point.id),
+    (ids) => {
+        if (selectedId.value !== null && !ids.includes(selectedId.value)) {
+            selectedId.value = null;
         }
     },
 );
-
-function search(): void {
-    router.get(props.urls.index, { ...form }, { preserveScroll: true });
-}
 </script>
 
 <template>
     <Head title="Explorar terrazas" />
 
-    <PublicShell>
-        <div class="space-y-6">
-            <div class="max-w-2xl space-y-2">
-                <h1 class="text-3xl font-semibold tracking-tight">
-                    Encuentra una terraza para tu próximo evento
-                </h1>
-                <p class="text-muted-foreground">
-                    Busca por estado, municipio o radio de distancia. Los
-                    resultados se actualizan en el mapa.
-                </p>
-            </div>
-
-            <form
-                class="grid gap-4 rounded-xl border bg-card p-4 sm:p-5 lg:grid-cols-8"
-                @submit.prevent="search"
-            >
-                <div class="grid gap-2">
-                    <Label for="state">Estado</Label>
-                    <Select v-model="form.state">
-                        <SelectTrigger id="state" class="w-full">
-                            <SelectValue placeholder="Estado" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem
-                                v-for="state in stateOptions"
-                                :key="state.value"
-                                :value="state.value"
-                            >
-                                {{ state.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div class="grid gap-2 lg:col-span-2">
-                    <Label for="city">Municipio / alcaldía</Label>
-                    <Select
-                        v-model="form.city"
-                        :disabled="municipalityOptions.length === 0"
-                    >
-                        <SelectTrigger id="city" class="w-full">
-                            <SelectValue
-                                :placeholder="
-                                    form.state
-                                        ? 'Selecciona municipio'
-                                        : 'Selecciona estado'
-                                "
-                            />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem
-                                v-for="municipality in municipalityOptions"
-                                :key="municipality.value"
-                                :value="municipality.value"
-                            >
-                                {{ municipality.label }}
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div class="grid gap-2">
-                    <Label for="capacity">Capacidad mínima</Label>
-                    <Input
-                        id="capacity"
-                        v-model.number="form.capacity"
-                        type="number"
-                        min="1"
-                        placeholder="50"
-                    />
-                </div>
-                <div class="grid gap-2 lg:col-span-2">
-                    <Label for="service">Servicio</Label>
-                    <select
-                        id="service"
-                        v-model="form.service"
-                        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                    >
-                        <option value="">Cualquier característica</option>
-                        <optgroup label="Destacadas">
-                            <option
-                                v-for="service in priorityServices"
-                                :key="service.value"
-                                :value="service.value"
-                            >
-                                {{ service.label }}
-                            </option>
-                        </optgroup>
-                        <optgroup label="Más características">
-                            <option
-                                v-for="service in additionalServices"
-                                :key="service.value"
-                                :value="service.value"
-                            >
-                                {{ service.label }}
-                            </option>
-                        </optgroup>
-                    </select>
-                </div>
-                <div class="flex items-end lg:col-span-2">
-                    <Button type="submit" class="w-full">
-                        <Search />
-                        Buscar
-                    </Button>
-                </div>
-
-                <div class="grid gap-2 sm:grid-cols-3 lg:col-span-8">
-                    <div class="grid gap-2">
-                        <Label for="lat">Latitud</Label>
-                        <Input
-                            id="lat"
-                            v-model="form.lat"
-                            inputmode="decimal"
-                            placeholder="19.4326"
-                        />
-                    </div>
-                    <div class="grid gap-2">
-                        <Label for="lng">Longitud</Label>
-                        <Input
-                            id="lng"
-                            v-model="form.lng"
-                            inputmode="decimal"
-                            placeholder="-99.1332"
-                        />
-                    </div>
-                    <div class="grid gap-2">
-                        <Label for="radius">Radio (km)</Label>
-                        <Input
-                            id="radius"
-                            v-model.number="form.radius"
-                            type="number"
-                            min="1"
-                            max="100"
-                        />
-                    </div>
-                </div>
-            </form>
-
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between gap-3">
-                        <p class="text-sm font-medium">
-                            {{ listings.total }}
-                            {{ listings.total === 1 ? 'terraza' : 'terrazas' }}
-                        </p>
-                    </div>
-
-                    <div
-                        v-if="listings.data.length === 0"
-                        class="rounded-xl border border-dashed p-10 text-center"
-                    >
-                        <h2 class="font-medium">No encontramos terrazas</h2>
-                        <p class="mt-1 text-sm text-muted-foreground">
-                            Prueba con otra ciudad, un radio mayor o menos
-                            filtros.
-                        </p>
-                    </div>
-
-                    <article
-                        v-for="listing in listings.data"
-                        :key="listing.id"
-                        class="flex flex-col overflow-hidden rounded-xl border bg-card sm:flex-row"
-                    >
-                        <div
-                            class="aspect-video bg-muted sm:aspect-auto sm:w-52"
+    <div class="flex h-[calc(100dvh-4.3125rem)] min-h-0 flex-col">
+        <header
+            class="shrink-0 border-b border-[color:var(--home-border)] bg-white"
+        >
+            <div class="w-full px-4 py-3 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-baseline gap-3">
+                        <h1 class="text-xl font-extrabold sm:text-2xl">
+                            Explorar terrazas
+                        </h1>
+                        <span
+                            class="text-sm font-medium text-[color:var(--home-muted)]"
                         >
-                            <img
-                                v-if="listing.cover_url"
-                                :src="listing.cover_url"
-                                :alt="listing.name"
-                                class="h-full w-full object-cover"
-                            />
-                            <div
-                                v-else
-                                class="flex h-full items-center justify-center text-sm text-muted-foreground"
-                            >
-                                Sin imagen
-                            </div>
-                        </div>
+                            {{ listings.total }}
+                            {{ listings.total === 1 ? 'espacio' : 'espacios' }}
+                        </span>
+                    </div>
 
-                        <div class="flex flex-1 flex-col gap-3 p-4">
-                            <div>
-                                <div
-                                    class="flex items-start justify-between gap-3"
-                                >
-                                    <h2 class="font-semibold">
-                                        <Link
-                                            :href="listing.url"
-                                            class="hover:underline"
-                                        >
-                                            {{ listing.name }}
-                                        </Link>
-                                    </h2>
-                                    <span
-                                        v-if="listing.distance_km !== null"
-                                        class="text-xs text-muted-foreground"
-                                    >
-                                        {{ listing.distance_km }} km
-                                    </span>
-                                </div>
-                                <p class="text-sm text-muted-foreground">
-                                    {{
-                                        [listing.city, listing.state]
-                                            .filter(Boolean)
-                                            .join(', ') ||
-                                        'Ubicación por confirmar'
-                                    }}
-                                    <span v-if="listing.capacity">
-                                        · Hasta {{ listing.capacity }} personas
-                                    </span>
-                                </p>
-                            </div>
-
-                            <div class="flex flex-wrap gap-1">
-                                <Badge
-                                    v-for="service in listing.services.slice(
-                                        0,
-                                        5,
-                                    )"
-                                    :key="service"
-                                    variant="secondary"
-                                >
-                                    {{ service }}
-                                </Badge>
-                                <Badge
-                                    v-if="listing.services.length > 5"
-                                    variant="outline"
-                                >
-                                    +{{ listing.services.length - 5 }}
-                                </Badge>
-                            </div>
-
-                            <div class="mt-auto">
-                                <Button size="sm" as-child>
-                                    <Link :href="listing.url">Ver detalle</Link>
-                                </Button>
-                            </div>
-                        </div>
-                    </article>
-
-                    <PaginationLinks :links="listings.links" />
+                    <div class="flex items-center gap-2 lg:hidden">
+                        <button
+                            type="button"
+                            class="home-tab"
+                            :class="{
+                                'home-tab--active': mobileView === 'list',
+                            }"
+                            :aria-pressed="mobileView === 'list'"
+                            @click="toggleView('list')"
+                        >
+                            Lista
+                        </button>
+                        <button
+                            type="button"
+                            class="home-tab"
+                            :class="{
+                                'home-tab--active': mobileView === 'map',
+                            }"
+                            :aria-pressed="mobileView === 'map'"
+                            @click="toggleView('map')"
+                        >
+                            Mapa
+                        </button>
+                    </div>
                 </div>
 
-                <div class="lg:sticky lg:top-6 lg:h-fit">
-                    <ListingMap
-                        :listings="listings.data"
+                <div class="mt-3">
+                    <GeoSearchBar
+                        :action="urls.index"
+                        :suggestions-url="urls.locations"
+                        :filters="filters"
+                        :services="services"
+                        :locations="locations"
+                    />
+                    <p
+                        v-if="locationError"
+                        class="mt-2 text-sm font-medium text-[#b42318]"
+                        role="alert"
+                    >
+                        {{ locationError }}
+                    </p>
+                </div>
+
+                <div
+                    v-if="activeFilters.length > 0"
+                    class="mt-2 flex flex-wrap items-center gap-2"
+                >
+                    <span
+                        v-for="filter in activeFilters"
+                        :key="`${filter.label}-${filter.value}`"
+                        class="home-chip"
+                    >
+                        {{ filter.label }}: {{ filter.value }}
+                    </span>
+                    <Link
+                        v-if="hasZone"
+                        :href="clearZoneUrl"
+                        class="text-sm font-bold text-[color:var(--home-primary-deep)] hover:text-[color:var(--home-primary-hover)]"
+                        preserve-scroll
+                    >
+                        Quitar zona
+                    </Link>
+                    <Link
+                        :href="urls.index"
+                        class="text-sm font-bold text-[color:var(--home-primary-deep)] hover:text-[color:var(--home-primary-hover)]"
+                    >
+                        Quitar filtros
+                    </Link>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex min-h-0 flex-1">
+            <section
+                class="relative min-w-0 lg:block lg:w-[58%] lg:flex-none"
+                :class="
+                    mobileView === 'map' ? 'block w-full' : 'hidden lg:block'
+                "
+            >
+                <div class="absolute inset-0">
+                    <GeoResultsMap
+                        ref="mapRef"
+                        :points="mapListings"
                         :center="center"
                         :radius="radius"
-                        height="32rem"
+                        :bounds="bounds"
+                        :selected-id="selectedId"
+                        height="100%"
+                        @select="onMarkerSelect"
+                        @bounds-change="onBoundsChange"
                     />
                 </div>
-            </div>
+
+                <button
+                    v-if="showZoneButton"
+                    type="button"
+                    class="home-btn home-btn--primary absolute top-3 left-1/2 z-[1000] -translate-x-1/2 shadow-lg"
+                    @click="applyZone"
+                >
+                    Buscar en esta zona
+                </button>
+
+                <div
+                    v-if="radius"
+                    class="absolute bottom-3 left-3 z-[500] rounded-full border border-[color:var(--home-border)] bg-white/95 px-3 py-1 text-xs font-semibold text-[color:var(--home-secondary)]"
+                >
+                    Radio de {{ radius }} km
+                </div>
+            </section>
+
+            <section
+                class="min-w-0 flex-1 overflow-y-auto border-[color:var(--home-border)] bg-[color:var(--home-bg)] lg:w-[42%] lg:flex-none lg:border-l"
+                :class="mobileView === 'list' ? 'block' : 'hidden lg:block'"
+            >
+                <div class="px-4 py-4 sm:px-5">
+                    <div
+                        v-if="listings.data.length === 0"
+                        class="rounded-[1.125rem] border border-[color:var(--home-border)] bg-white px-6 py-12 text-center"
+                    >
+                        <p class="text-xl font-extrabold sm:text-2xl">
+                            {{
+                                hasZone
+                                    ? 'No encontramos terrazas en esta zona'
+                                    : 'No encontramos espacios con esos criterios'
+                            }}
+                        </p>
+                        <p
+                            class="mx-auto mt-3 max-w-md text-base text-[color:var(--home-secondary)]"
+                        >
+                            Prueba con otra zona del mapa, un rango de invitados
+                            distinto o menos características.
+                        </p>
+                        <div class="mt-6 flex flex-wrap justify-center gap-3">
+                            <Link
+                                v-if="hasZone"
+                                :href="clearZoneUrl"
+                                class="home-btn home-btn--outline"
+                                preserve-scroll
+                            >
+                                Quitar zona
+                            </Link>
+                            <Link
+                                :href="urls.index"
+                                class="home-btn home-btn--primary"
+                            >
+                                Ver todo el catálogo
+                            </Link>
+                        </div>
+                    </div>
+
+                    <div v-else class="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                        <HomeVenueCard
+                            v-for="listing in listings.data"
+                            :key="listing.id"
+                            :listing="listing"
+                            selectable
+                            :selected="selectedId === listing.id"
+                            @select="onCardSelect"
+                        />
+                    </div>
+
+                    <HomePagination :links="listings.links" />
+                </div>
+            </section>
         </div>
-    </PublicShell>
+    </div>
 </template>

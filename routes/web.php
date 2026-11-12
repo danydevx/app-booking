@@ -2,12 +2,13 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\OwnersController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::get('propietarios', OwnersController::class)->name('public.owners');
 
 Route::prefix('app/{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])

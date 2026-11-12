@@ -1,9 +1,7 @@
 <script setup lang="ts">
+import '@/homeSite';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import PublicShell from '@/components/PublicShell.vue';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import AvailabilityCalendar from '../../components/AvailabilityCalendar.vue';
 import InquiryForm from '../../components/InquiryForm.vue';
 import type { BlockedDate, PublicListingSummary } from '../../types';
@@ -23,101 +21,122 @@ const props = defineProps<{
 const cover = computed(
     () => props.listing.media.find((media) => media.type === 'image') ?? null,
 );
+
+const location = computed(
+    () =>
+        [props.listing.city, props.listing.state].filter(Boolean).join(', ') ||
+        'Ubicación por confirmar',
+);
 </script>
 
 <template>
     <Head :title="`Disponibilidad · ${listing.name}`" />
 
-    <PublicShell>
-        <div class="space-y-8">
-            <div class="space-y-2">
-                <Link
-                    :href="urls.index"
-                    class="text-sm text-muted-foreground hover:text-foreground"
+    <div class="home-container py-8 sm:py-10">
+        <Link
+            :href="urls.listing"
+            class="text-sm font-semibold text-[color:var(--home-secondary)] hover:text-[color:var(--home-primary-deep)]"
+        >
+            ← Volver a la ficha
+        </Link>
+
+        <header class="mt-4 flex flex-wrap items-end justify-between gap-4">
+            <div class="max-w-3xl">
+                <p class="home-eyebrow">Disponibilidad</p>
+                <h1
+                    class="mt-2 text-3xl leading-tight font-extrabold sm:text-4xl"
                 >
-                    ← Volver a explorar
+                    {{ listing.name }}
+                </h1>
+                <p class="mt-2 text-base text-[color:var(--home-secondary)]">
+                    {{ location }}
+                    <span v-if="listing.capacity">
+                        · Hasta {{ listing.capacity }} personas
+                    </span>
+                </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <Link :href="urls.listing" class="home-btn home-btn--outline">
+                    Ver ficha completa
                 </Link>
-                <div class="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                        <h1 class="text-3xl font-semibold tracking-tight">
-                            {{ listing.name }}
-                        </h1>
-                        <p class="text-muted-foreground">
-                            {{
-                                [listing.city, listing.state]
-                                    .filter(Boolean)
-                                    .join(', ') || 'Ubicación por confirmar'
-                            }}
-                            <span v-if="listing.capacity">
-                                · Hasta {{ listing.capacity }} personas
-                            </span>
-                        </p>
-                    </div>
-                    <Button variant="outline" as-child>
-                        <Link :href="urls.listing">Ver ficha completa</Link>
-                    </Button>
+                <Link :href="urls.index" class="home-btn home-btn--outline">
+                    Explorar más terrazas
+                </Link>
+            </div>
+        </header>
+
+        <div
+            v-if="submitted"
+            class="mt-6 rounded-[1rem] border border-[#A7F3D0] bg-[#ECFDF5] p-4 text-sm font-medium text-[#065F46]"
+            role="status"
+        >
+            {{ submitted }}
+        </div>
+
+        <div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_24rem]">
+            <div class="min-w-0 space-y-8">
+                <div
+                    v-if="cover"
+                    class="home-media aspect-[16/9] overflow-hidden rounded-[1.125rem]"
+                >
+                    <img
+                        :src="cover.url"
+                        :alt="cover.alt_text ?? listing.name"
+                        fetchpriority="high"
+                    />
                 </div>
-            </div>
 
-            <div
-                v-if="submitted"
-                class="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
-            >
-                {{ submitted }}
-            </div>
-
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-                <div class="space-y-6">
-                    <div
-                        v-if="cover"
-                        class="overflow-hidden rounded-xl border bg-muted"
-                    >
-                        <img
-                            :src="cover.url"
-                            :alt="cover.alt_text ?? listing.name"
-                            class="aspect-video w-full object-cover"
-                        />
-                    </div>
-
-                    <section class="space-y-3">
-                        <h2 class="text-lg font-semibold">Disponibilidad</h2>
-                        <p class="text-sm text-muted-foreground">
-                            Las fechas marcadas no están disponibles. Enviar una
-                            solicitud no bloquea el calendario.
-                        </p>
+                <section
+                    class="border-t border-[color:var(--home-border)] pt-8"
+                >
+                    <p class="home-eyebrow">Calendario</p>
+                    <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
+                        Fechas disponibles
+                    </h2>
+                    <p class="mt-2 text-sm text-[color:var(--home-muted)]">
+                        Las fechas marcadas no están disponibles. Enviar una
+                        solicitud no bloquea el calendario.
+                    </p>
+                    <div class="mt-5">
                         <AvailabilityCalendar
                             :blocked-dates="blocked_dates"
                             :months="3"
-                        />
-                    </section>
-
-                    <section
-                        v-if="listing.services.length > 0"
-                        class="space-y-3"
-                    >
-                        <h2 class="text-lg font-semibold">Servicios</h2>
-                        <div class="flex flex-wrap gap-2">
-                            <Badge
-                                v-for="service in listing.services"
-                                :key="service.key"
-                                variant="secondary"
-                            >
-                                {{ service.label }}
-                            </Badge>
-                        </div>
-                    </section>
-                </div>
-
-                <aside class="lg:sticky lg:top-6 lg:h-fit">
-                    <div class="rounded-xl border bg-card p-5">
-                        <InquiryForm
-                            :store-url="urls.store"
-                            :listing-name="listing.name"
-                            :attribution="attribution"
+                            variant="public"
                         />
                     </div>
-                </aside>
+                </section>
+
+                <section
+                    v-if="listing.services.length > 0"
+                    class="border-t border-[color:var(--home-border)] pt-8"
+                >
+                    <p class="home-eyebrow">Características</p>
+                    <h2 class="mt-2 text-2xl font-extrabold sm:text-3xl">
+                        Lo que ofrece el lugar
+                    </h2>
+                    <div class="mt-4 flex flex-wrap gap-1.5">
+                        <span
+                            v-for="service in listing.services"
+                            :key="service.key"
+                            class="home-chip"
+                        >
+                            {{ service.label }}
+                        </span>
+                    </div>
+                </section>
             </div>
+
+            <aside class="min-w-0 lg:self-start">
+                <div
+                    class="rounded-[1.125rem] border border-[color:var(--home-border)] bg-white p-5"
+                >
+                    <InquiryForm
+                        :store-url="urls.store"
+                        :listing-name="listing.name"
+                        :attribution="attribution"
+                    />
+                </div>
+            </aside>
         </div>
-    </PublicShell>
+    </div>
 </template>

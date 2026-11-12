@@ -3,7 +3,7 @@
 > Git reality: all phases were committed directly to `main` (trunk-based).
 > Branch names in older phase reports are historical labels, not existing refs.
 
-Last updated: 2026-11-10
+Last updated: 2026-11-11
 
 | Phase                           | Status      | Evidence                                                                                                                                                                                               | Commit         |
 | ------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- |
@@ -32,12 +32,16 @@ Last updated: 2026-11-10
 - PHP version: 8.3.6
 - Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
-- Test suite: 406 tests / 3,252 assertions (SQLite and MySQL 8.4)
+- Test suite: 430 tests / 3,453 assertions (SQLite and MySQL 8.4)
 - Architecture decisions: `docs/decisions/README.md` (ADR 0001–0004)
 - Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
 - CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
 - Database migration: phase 2 applied (schema + data); SQLite remains legacy/test-only
 - Frontend: Vue 3 + Inertia 3 + Tailwind 4 + shadcn-vue
+- Public frontend identity: landing uses `resources/css/home.css` (`.home-site`,
+  pink `#F50557` + dark CTAs, Plus Jakarta Sans) via `HomeLayout`; catalog/detail keep
+  `resources/css/public.css` (`.public-site`). Neither reaches the admin, which
+  keeps its shadcn-vue tokens, fonts and layout untouched
 - Bootstrap/jQuery: not installed
 - Business modules: `Modules/{Name}/` with module-owned backend, routes, migrations,
   Vue pages/components, Blade views and tests; see `docs/development/MODULES.md`
@@ -48,6 +52,9 @@ Last updated: 2026-11-10
 - CRM: timeline, notes, tasks, tags, metrics, pipeline, lifecycle, daily board, assignment, quotes, email templates, attribution, reports, in-app notifications, client portal, contracts and sectioned customer workspace are available (Pasos 1–14)
 - Availability: interactive calendar, manual blocks and recurring series (weekly/biweekly/monthly)
 - Admin prefix: public site remains at `/` and `/terrazas`; account administration lives under `/app/{team}` and platform under `/app/platform`
+- Public design guidelines: `docs/design/Guidelines.md` (home, catalog, detail, owners landing)
+- Owners landing: `/propietarios` presents Free vs Pro with real plan limits/prices and the public registration/billing flows
+- Public geo search: `/terrazas` supports city/state/postal-code text search, map viewport search, card↔marker sync and clustered markers; see `docs/development/GEO-SEARCH.md`
 - Listing features: config-driven catalog with 8 categories and 50 MVP amenities, grouped in admin and public detail
 - Commercial MVP: optional base prices, seasonal price ranges, packages, commercial services and time-bound promotions per listing; public pages only show active/current records
 - Full-flow smoke test covers landing → solicitud → CRM → cotización → contrato → portal → reserva → opinión → reportes

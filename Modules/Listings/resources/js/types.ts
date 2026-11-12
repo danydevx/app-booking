@@ -208,6 +208,7 @@ export type ListingPublicCard = {
     capacity: number | null;
     services: string[];
     cover_url: string | null;
+    price_from_formatted: string | null;
     latitude: number | null;
     longitude: number | null;
     distance_km: number | null;
@@ -274,11 +275,47 @@ export type Paginated<T> = {
 };
 
 export type PublicFilters = {
+    q?: string | null;
     state?: string | null;
     city?: string | null;
+    postal_code?: string | null;
     capacity?: string | number | null;
     service?: string | null;
+    price_min?: string | number | null;
+    price_max?: string | number | null;
     lat?: string | number | null;
     lng?: string | number | null;
     radius?: string | number | null;
+    north?: string | number | null;
+    south?: string | number | null;
+    east?: string | number | null;
+    west?: string | number | null;
+};
+
+export type GeoBounds = {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+};
+
+export type GeoMapPoint = {
+    id: number;
+    name: string;
+    slug: string;
+    city: string | null;
+    state: string | null;
+    capacity: number | null;
+    price_from_formatted: string | null;
+    cover_url: string | null;
+    latitude: number | null;
+    longitude: number | null;
+    url: string;
+};
+
+export type LocationSuggestion = {
+    type: 'city' | 'state' | 'postal_code';
+    label: string;
+    sublabel: string;
+    params: Record<string, string>;
 };
