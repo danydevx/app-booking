@@ -244,7 +244,7 @@ const listingSchema = z.object({
     capacity: decimalString('Indica una capacidad válida.', 1, 100000),
     services: z.array(z.string()),
     event_types: z.array(z.number()),
-    details: z.record(z.string()),
+    details: z.record(z.string(), z.string()),
     rules: z
         .string()
         .max(2000, 'Las reglas no pueden superar 2000 caracteres.'),

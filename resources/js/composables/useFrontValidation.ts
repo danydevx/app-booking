@@ -1,6 +1,6 @@
-import { toTypedSchema } from '@vee-validate/zod';
 import { useForm as useVeeForm } from 'vee-validate';
 import type { ZodType } from 'zod';
+import { toZodTypedSchema } from './zodTypedSchema';
 
 type InertiaFormLike = {
     setError: (errors: never) => void;
@@ -18,7 +18,7 @@ export function useFrontValidation<T extends Record<string, unknown>>(
     values: () => T,
 ) {
     const validation = useVeeForm<T>({
-        validationSchema: toTypedSchema(schema),
+        validationSchema: toZodTypedSchema(schema),
         initialValues: values() as never,
     });
 

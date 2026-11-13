@@ -402,7 +402,7 @@ const rangeSchema = z
             .max(120, 'El nombre no puede superar 120 caracteres.'),
         starts_at: z.string().min(1, 'La fecha de inicio es obligatoria.'),
         ends_at: z.string().min(1, 'La fecha de fin es obligatoria.'),
-        daily_pricing: z.record(rangeDailySchema),
+        daily_pricing: z.record(z.string(), rangeDailySchema),
         included_people: z
             .string()
             .refine(

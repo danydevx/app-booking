@@ -33,7 +33,7 @@ type PlanRow = {
     name: string;
     description: string;
     stripe_price_id: string | null;
-    interval: string;
+    interval: 'month' | 'year';
     active: boolean;
     is_free: boolean;
     price_configured: boolean;
@@ -79,8 +79,8 @@ const planSchema = z.object({
         .max(255, 'El precio de Stripe no puede superar 255 caracteres.'),
     interval: z.enum(['month', 'year']),
     active: z.boolean(),
-    limits: z.record(z.number().int().min(0).max(1000000)),
-    features: z.record(z.boolean()),
+    limits: z.record(z.string(), z.number().int().min(0).max(1000000)),
+    features: z.record(z.string(), z.boolean()),
 });
 
 function blankLimits(): Record<string, number> {
@@ -100,7 +100,7 @@ const form = useForm({
     name: '',
     description: '',
     stripe_price_id: '',
-    interval: 'month',
+    interval: 'month' as 'month' | 'year',
     active: true,
     limits: blankLimits(),
     features: blankFeatures(),
