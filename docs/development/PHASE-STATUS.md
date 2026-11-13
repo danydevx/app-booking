@@ -23,7 +23,7 @@ Last updated: 2026-11-12
 - None. Database migration to MySQL phase 2 applied; SQLite remains
   legacy/test-only.
 - CI verified locally: SQLite `composer ci:check` and MySQL 8.4 backend suite pass.
-- RC1 candidate consolidado localmente; no hay tag, release ni despliegue. Ver
+- RC1 consolidado localmente y **READY FOR STAGING**; no hay tag, release ni despliegue. Ver
   `docs/BOOKING-MVP-RC1-AUDIT.md`, `docs/BOOKING-MVP-RC1-RELEASE-CHECKLIST.md` y
   `docs/BOOKING-MVP-RC1-REPORT.md`.
 - Production launch pending target environment and explicit approval; checklist in

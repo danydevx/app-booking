@@ -84,9 +84,9 @@
 - [ ] Verificar que storage privado no está expuesto públicamente.
 - [ ] Verificar que `.env`, logs, backups y dumps no son públicos.
 - [ ] Ejecutar `composer audit` y `npm audit --omit=dev`.
-    - Resultado local: `composer audit` PASS; `npm audit` FAIL con 1 critical
-      (`swiper`) y 2 high (`zod` / `@vee-validate/zod`). Requiere decisión y
-      migración de dependencias antes de staging sin excepción.
+    - Resultado local (2026-11-13): `composer audit` PASS y `npm audit` PASS con
+      0 vulnerabilidades. Ver
+      `docs/BOOKING-RC1-DEPENDENCIES-SECURITY-FIX-REPORT.md`.
 - [ ] Revisar privilegios mínimos de la base de datos.
 
 ## 6. Criterio de cierre

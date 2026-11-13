@@ -5,6 +5,12 @@
 **Release Candidate:** **RC1 BLOCKED por advisories de dependencias**
 **Producción:** **PRODUCTION: NO-GO**
 
+> **Addendum 2026-11-13:** los advisories de `swiper`, `zod` y
+> `@vee-validate/zod` fueron resueltos en
+> `docs/BOOKING-RC1-DEPENDENCIES-SECURITY-FIX-REPORT.md`. También se actualizó
+> Laravel por un advisory publicado el 2026-11-13. El estado histórico de este
+> reporte se conserva; el estado RC1 vigente es **READY FOR STAGING**.
+
 ## A. Resumen
 
 La consolidación del trabajo local se completó. Los cambios funcionales están
