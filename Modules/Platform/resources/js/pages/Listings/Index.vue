@@ -20,6 +20,9 @@ type ListingRow = {
     cover_url: string | null;
     is_suspended: boolean;
     suspended_at: string | null;
+    is_claimable: boolean;
+    is_claimed: boolean;
+    is_claim_transfer: boolean;
     created_at: string | null;
 };
 
@@ -171,6 +174,20 @@ function statusVariant(
                                 class="ml-1"
                             >
                                 Moderación
+                            </Badge>
+                            <Badge
+                                v-else-if="listing.is_claimable"
+                                variant="secondary"
+                                class="ml-1"
+                            >
+                                Sin reclamar
+                            </Badge>
+                            <Badge
+                                v-else-if="listing.is_claim_transfer"
+                                variant="outline"
+                                class="ml-1"
+                            >
+                                Reclamada
                             </Badge>
                         </td>
                         <td class="px-4 py-3">

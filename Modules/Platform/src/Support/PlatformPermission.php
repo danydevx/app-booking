@@ -28,6 +28,10 @@ final class PlatformPermission
 
     public const LISTINGS_MODERATE = 'platform.listings.moderate';
 
+    public const CLAIMS_VIEW = 'platform.claims.view';
+
+    public const CLAIMS_MANAGE = 'platform.claims.manage';
+
     public const SUBSCRIPTIONS_VIEW = 'platform.subscriptions.view';
 
     public const PLANS_VIEW = 'platform.plans.view';
@@ -66,6 +70,8 @@ final class PlatformPermission
             self::SYSTEM_MANAGE,
             self::LISTINGS_VIEW,
             self::LISTINGS_MODERATE,
+            self::CLAIMS_VIEW,
+            self::CLAIMS_MANAGE,
             self::SUBSCRIPTIONS_VIEW,
             self::PLANS_VIEW,
             self::PLANS_MANAGE,

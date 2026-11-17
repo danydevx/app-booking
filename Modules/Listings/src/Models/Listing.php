@@ -3,6 +3,7 @@
 namespace Modules\Listings\Models;
 
 use App\Models\Team;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -26,6 +27,7 @@ use Modules\Platform\Support\GeographicCoverageService;
  * @property string $type
  * @property string $name
  * @property string $slug
+ * @property string|null $external_ref
  * @property string|null $description
  * @property string|null $address
  * @property string|null $city
@@ -64,6 +66,8 @@ use Modules\Platform\Support\GeographicCoverageService;
  * @property string $timezone
  * @property ListingStatus $status
  * @property Carbon|null $published_at
+ * @property Carbon|null $claimed_at
+ * @property int|null $claimed_by_user_id
  * @property Carbon|null $suspended_at
  * @property ListingStatus|null $suspended_from_status
  * @property string|null $suspension_reason
@@ -80,6 +84,7 @@ use Modules\Platform\Support\GeographicCoverageService;
  */
 #[Fillable([
     'name',
+    'external_ref',
     'description',
     'address',
     'city',
@@ -127,6 +132,14 @@ class Listing extends Model
     public function team(): BelongsTo
     {
         return $this->belongsTo(Team::class);
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function claimedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'claimed_by_user_id');
     }
 
     /**
@@ -225,6 +238,23 @@ class Listing extends Model
     public function isPublished(): bool
     {
         return $this->status === ListingStatus::Published && $this->published_at !== null;
+    }
+
+    /**
+     * Determine if an owner still needs to claim this listing.
+     */
+    public function isClaimable(): bool
+    {
+        return $this->claimed_at === null
+            && ($this->team?->isDirectory() ?? false);
+    }
+
+    /**
+     * Determine if the listing was already claimed by its owner.
+     */
+    public function isClaimed(): bool
+    {
+        return $this->claimed_at !== null;
     }
 
     public function logoUrl(): ?string
@@ -338,6 +368,7 @@ class Listing extends Model
             'details' => 'array',
             'status' => ListingStatus::class,
             'published_at' => 'datetime',
+            'claimed_at' => 'datetime',
             'suspended_at' => 'datetime',
             'suspended_from_status' => ListingStatus::class,
         ];

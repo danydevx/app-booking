@@ -9,6 +9,16 @@ return [
 
     'geocoder' => 'null',
 
+    'directory' => [
+        'team_name' => env('LISTINGS_DIRECTORY_TEAM_NAME', 'Directorio'),
+    ],
+
+    'claims' => [
+        'evidence_disk' => 'local',
+        'max_evidence_kb' => 10240,
+        'evidence_mimes' => ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
+    ],
+
     'media' => [
         'disk' => 'public',
         'max_images' => 20,

@@ -5,6 +5,7 @@ use Modules\Platform\Http\Controllers\PlatformAccountController;
 use Modules\Platform\Http\Controllers\PlatformActivityController;
 use Modules\Platform\Http\Controllers\PlatformBrandingController;
 use Modules\Platform\Http\Controllers\PlatformCatalogController;
+use Modules\Platform\Http\Controllers\PlatformClaimController;
 use Modules\Platform\Http\Controllers\PlatformCoverageController;
 use Modules\Platform\Http\Controllers\PlatformDashboardController;
 use Modules\Platform\Http\Controllers\PlatformListingController;
@@ -13,6 +14,7 @@ use Modules\Platform\Http\Controllers\PlatformReportController;
 use Modules\Platform\Http\Controllers\PlatformSubscriptionController;
 use Modules\Platform\Http\Controllers\PlatformSystemController;
 use Modules\Platform\Http\Controllers\PlatformUserController;
+use Modules\Platform\Http\Controllers\PublicListingClaimController;
 use Modules\Platform\Http\Controllers\PublicListingReportController;
 use Modules\Platform\Support\PlatformPermission;
 
@@ -22,6 +24,12 @@ Route::middleware('web')->group(function (): void {
     Route::post('terrazas/{listing:slug}/reportar', [PublicListingReportController::class, 'store'])
         ->middleware('throttle:listing-reports')
         ->name('public.reports.store');
+
+    Route::get('terrazas/{listing:slug}/reclamar', [PublicListingClaimController::class, 'create'])
+        ->name('public.claims.create');
+    Route::post('terrazas/{listing:slug}/reclamar', [PublicListingClaimController::class, 'store'])
+        ->middleware(['auth', 'verified', 'throttle:listing-claims'])
+        ->name('public.claims.store');
 });
 
 Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS])
@@ -82,6 +90,25 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::post('listings/{listing}/restore', [PlatformListingController::class, 'restore'])
             ->middleware('can:'.PlatformPermission::LISTINGS_MODERATE)
             ->name('listings.restore');
+        Route::post('listings/{listing}/release', [PlatformListingController::class, 'release'])
+            ->middleware('can:'.PlatformPermission::CLAIMS_MANAGE)
+            ->name('listings.release');
+
+        Route::get('claims', [PlatformClaimController::class, 'index'])
+            ->middleware('can:'.PlatformPermission::CLAIMS_VIEW)
+            ->name('claims.index');
+        Route::get('claims/{claim}', [PlatformClaimController::class, 'show'])
+            ->middleware('can:'.PlatformPermission::CLAIMS_VIEW)
+            ->name('claims.show');
+        Route::post('claims/{claim}/approve', [PlatformClaimController::class, 'approve'])
+            ->middleware('can:'.PlatformPermission::CLAIMS_MANAGE)
+            ->name('claims.approve');
+        Route::post('claims/{claim}/reject', [PlatformClaimController::class, 'reject'])
+            ->middleware('can:'.PlatformPermission::CLAIMS_MANAGE)
+            ->name('claims.reject');
+        Route::get('claims/{claim}/evidence', [PlatformClaimController::class, 'evidence'])
+            ->middleware('can:'.PlatformPermission::CLAIMS_VIEW)
+            ->name('claims.evidence');
 
         Route::get('subscriptions', [PlatformSubscriptionController::class, 'index'])
             ->middleware('can:'.PlatformPermission::SUBSCRIPTIONS_VIEW)

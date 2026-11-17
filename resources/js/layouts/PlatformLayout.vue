@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
 import {
+    BadgeCheck,
     Building2,
     CreditCard,
     Flag,
@@ -45,6 +46,11 @@ const navigation = [
     { title: 'Cuentas', href: '/app/platform/accounts', icon: Users },
     { title: 'Usuarios', href: '/app/platform/users', icon: UserCog },
     { title: 'Terrazas', href: '/app/platform/listings', icon: Building2 },
+    {
+        title: 'Reclamaciones',
+        href: '/app/platform/claims',
+        icon: BadgeCheck,
+    },
     { title: 'Planes', href: '/app/platform/plans', icon: Layers },
     {
         title: 'Suscripciones',

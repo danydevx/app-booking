@@ -135,6 +135,8 @@ final class ListingPresenter
      */
     public static function publicDetail(Listing $listing): array
     {
+        $claimable = $listing->isClaimable();
+
         return [
             'id' => $listing->id,
             'name' => $listing->name,
@@ -146,6 +148,11 @@ final class ListingPresenter
             'country' => $listing->country,
             'logo_url' => $listing->logoUrl(),
             'postal_code' => $listing->postal_code,
+            'is_claimable' => $claimable,
+            'is_claimed' => $listing->isClaimed(),
+            'claim_url' => $claimable
+                ? route('public.claims.create', ['listing' => $listing->slug])
+                : null,
             'latitude' => $listing->latitude !== null ? (float) $listing->latitude : null,
             'longitude' => $listing->longitude !== null ? (float) $listing->longitude : null,
             'capacity' => $listing->capacity,
@@ -201,19 +208,21 @@ final class ListingPresenter
                 ->values()
                 ->all(),
             'rules' => $listing->rules,
-            'contact_name' => $listing->contact_name,
-            'contact_email' => $listing->contact_email,
-            'contact_phone' => $listing->contact_phone,
-            'whatsapp_url' => self::whatsappUrl($listing->whatsapp_phone),
+            'contact_name' => $claimable ? null : $listing->contact_name,
+            'contact_email' => $claimable ? null : $listing->contact_email,
+            'contact_phone' => $claimable ? null : $listing->contact_phone,
+            'whatsapp_url' => $claimable ? null : self::whatsappUrl($listing->whatsapp_phone),
             'account' => [
-                'name' => $listing->team?->name,
-                'logo_url' => $listing->team?->logoUrl(),
-                'contact_email' => $listing->team?->contact_email,
-                'contact_phone' => $listing->team?->contact_phone,
-                'whatsapp_url' => WhatsApp::url(
-                    $listing->team?->whatsapp_phone,
-                    "Hola, me interesa {$listing->name}.",
-                ),
+                'name' => $claimable ? null : $listing->team?->name,
+                'logo_url' => $claimable ? null : $listing->team?->logoUrl(),
+                'contact_email' => $claimable ? null : $listing->team?->contact_email,
+                'contact_phone' => $claimable ? null : $listing->team?->contact_phone,
+                'whatsapp_url' => $claimable
+                    ? null
+                    : WhatsApp::url(
+                        $listing->team?->whatsapp_phone,
+                        "Hola, me interesa {$listing->name}.",
+                    ),
             ],
             'timezone' => $listing->timezone,
             'url' => self::publicUrl($listing),

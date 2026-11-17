@@ -7,6 +7,7 @@
 | [0003](0003-production-operations.md) | Production operations and launch gates | Proposed — no deployment authorized |
 | [0004](0004-open-decisions.md)        | Open product and operational decisions | Open                                |
 | [0005](0005-commercial-quotations.md) | Commercial quotations in PDF           | Implemented (RC1 candidate)         |
+| [0006](0006-listing-claims.md)        | Reclamación de terrazas del Directorio | Implemented (2026-11-17)            |
 
 ## When to add an ADR
 

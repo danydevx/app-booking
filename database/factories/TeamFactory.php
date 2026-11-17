@@ -39,6 +39,18 @@ class TeamFactory extends Factory
     }
 
     /**
+     * Indicate that the team is the platform-owned directory of unclaimed
+     * listings.
+     */
+    public function directory(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_directory' => true,
+            'is_personal' => false,
+        ]);
+    }
+
+    /**
      * Indicate that the team has been deleted.
      */
     public function trashed(): static

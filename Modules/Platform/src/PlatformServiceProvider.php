@@ -29,6 +29,9 @@ final class PlatformServiceProvider extends ServiceProvider
         RateLimiter::for('listing-reports', fn (Request $request) => Limit::perMinute(5)
             ->by($request->ip()));
 
+        RateLimiter::for('listing-claims', fn (Request $request) => Limit::perMinute(5)
+            ->by($request->user()?->id ?: $request->ip()));
+
         if ($this->app->runningInConsole()) {
             $this->commands([
                 MakePlatformSuperadmin::class,

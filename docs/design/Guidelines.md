@@ -479,6 +479,7 @@ paragraph. The public header/footer use no decorative iconography.
 | `/terrazas/{slug}`                              | `Listings/Public/Show`         | `HomeLayout`           | Consistent                                                                        |
 | `/terrazas/{slug}/disponibilidad`               | `Bookings/Public/Availability` | `PublicShell` (legacy) | Pending: needs a public calendar/form variant without touching the admin calendar |
 | `/terrazas/{slug}/reportar`                     | `Platform/Public/Report`       | `PublicShell` (legacy) | Pending                                                                           |
+| `/terrazas/{slug}/reclamar`                     | `Platform/Public/Claim`        | `PublicShell` (legacy) | CTA de reclamo en el detalle; revisión en el panel de plataforma                  |
 | Booking portal / contract / quote / unsubscribe | `Bookings/Public/*`            | `PublicShell` (legacy) | Pending: transactional documents outside discovery                                |
 | `/login`, `/register`, auth                     | starter kit                    | `AuthLayout`           | Starter-kit auth, outside the discovery identity                                  |
 

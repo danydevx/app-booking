@@ -2,11 +2,13 @@
 
 namespace Modules\Bookings;
 
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Modules\Bookings\Console\Commands\ExpireBookingInquiries;
 use Modules\Bookings\Console\Commands\SendBookingReminders;
 use Modules\Bookings\Console\Commands\SendTaskReminders;
+use Modules\Bookings\Listeners\TransferListingOwnershipRecords;
 use Modules\Bookings\Models\BookingContract;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
@@ -21,6 +23,7 @@ use Modules\Bookings\Policies\CustomerPolicy;
 use Modules\Bookings\Policies\CustomerQuotePolicy;
 use Modules\Bookings\Policies\CustomerTagPolicy;
 use Modules\Bookings\Policies\CustomerTaskPolicy;
+use Modules\Listings\Events\ListingOwnershipTransferred;
 
 final class BookingsServiceProvider extends ServiceProvider
 {
@@ -37,6 +40,11 @@ final class BookingsServiceProvider extends ServiceProvider
         }
 
         $this->loadRoutesFrom($modulePath.'/routes/web.php');
+
+        Event::listen(
+            ListingOwnershipTransferred::class,
+            TransferListingOwnershipRecords::class,
+        );
 
         Gate::policy(BookingInquiry::class, BookingInquiryPolicy::class);
         Gate::policy(BookingContract::class, BookingContractPolicy::class);

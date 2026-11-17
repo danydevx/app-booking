@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Modules\Listings\Actions\RestoreListing;
+use Modules\Listings\Actions\ReturnListingToDirectory;
 use Modules\Listings\Actions\SuspendListing;
 use Modules\Listings\Enums\ListingStatus;
 use Modules\Listings\Models\Listing;
@@ -15,6 +16,7 @@ use Modules\Platform\Http\Requests\ModerationReasonRequest;
 use Modules\Platform\Http\Requests\PlatformListingIndexRequest;
 use Modules\Platform\Models\ListingReport;
 use Modules\Platform\Support\ActivityPresenter;
+use Modules\Platform\Support\PlatformPermission;
 use Spatie\Activitylog\Models\Activity;
 
 class PlatformListingController extends Controller
@@ -58,6 +60,9 @@ class PlatformListingController extends Controller
             'cover_url' => $listing->coverImage?->url,
             'is_suspended' => $listing->isSuspendedByPlatform(),
             'suspended_at' => $listing->suspended_at?->toDateString(),
+            'is_claimable' => $listing->isClaimable(),
+            'is_claimed' => $listing->isClaimed(),
+            'is_claim_transfer' => $listing->claimed_by_user_id !== null,
             'created_at' => $listing->created_at?->toDateString(),
         ]);
 
@@ -120,6 +125,13 @@ class PlatformListingController extends Controller
                 'suspended_at' => $model->suspended_at?->toIso8601String(),
                 'suspension_reason' => $model->suspension_reason,
                 'published_at' => $model->published_at?->toDateString(),
+                'is_claimable' => $model->isClaimable(),
+                'is_claimed' => $model->isClaimed(),
+                'is_claim_transfer' => $model->claimed_by_user_id !== null,
+                'claimed_at' => $model->claimed_at?->toIso8601String(),
+                'claim_url' => $model->isClaimable() && $model->isPubliclyVisible()
+                    ? route('public.claims.create', ['listing' => $model->slug])
+                    : null,
                 'public_url' => $model->isPubliclyVisible()
                     ? route('public.listings.show', ['listing' => $model->slug])
                     : null,
@@ -150,11 +162,13 @@ class PlatformListingController extends Controller
             'activities' => $activities,
             'can' => [
                 'moderate' => Gate::allows('platform.listings.moderate'),
+                'release' => Gate::allows(PlatformPermission::CLAIMS_MANAGE),
             ],
             'urls' => [
                 'index' => route('platform.listings.index'),
                 'suspend' => route('platform.listings.suspend', ['listing' => $model->slug]),
                 'restore' => route('platform.listings.restore', ['listing' => $model->slug]),
+                'release' => route('platform.listings.release', ['listing' => $model->slug]),
             ],
         ]);
     }
@@ -196,6 +210,27 @@ class PlatformListingController extends Controller
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => "Terraza {$model->name} restaurada.",
+        ]);
+
+        return back();
+    }
+
+    public function release(
+        ModerationReasonRequest $request,
+        string $listing,
+        ReturnListingToDirectory $returnToDirectory,
+    ): RedirectResponse {
+        $model = $this->findListing($listing);
+
+        $returnToDirectory->handle(
+            $model,
+            $request->user(),
+            (string) $request->validated('reason'),
+        );
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Terraza {$model->name} devuelta al Directorio.",
         ]);
 
         return back();

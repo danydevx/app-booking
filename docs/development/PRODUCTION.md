@@ -103,6 +103,7 @@ No commitear valores reales.
 6. Enlazar `.env` y storage persistente.
 7. `php artisan migrate --force` como paso controlado.
 8. `php artisan platform:sync-permissions` (idempotente).
+   8b. Si se lanza con terrazas importadas: `php artisan app:directory-team` y luego `php artisan listings:import <archivo> --publish` después de revisar la salida.
 9. Crear el primer superadmin con `php artisan app:make-platform-superadmin`.
 10. `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`.
 11. `php artisan storage:link --force`.

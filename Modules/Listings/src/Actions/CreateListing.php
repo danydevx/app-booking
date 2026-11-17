@@ -4,6 +4,7 @@ namespace Modules\Listings\Actions;
 
 use App\Models\Team;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Modules\Listings\Enums\ListingStatus;
 use Modules\Listings\Models\Listing;
@@ -34,6 +35,7 @@ final class CreateListing
             $listing->timezone = $team->timezone ?: (string) config('listings.default_timezone', 'America/Mexico_City');
             $listing->status = ListingStatus::Draft;
             $listing->published_at = null;
+            $listing->claimed_at = Carbon::now();
             $listing->save();
 
             if ($eventTypeIds !== []) {

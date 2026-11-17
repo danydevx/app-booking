@@ -4,7 +4,9 @@ namespace Modules\Listings;
 
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Modules\Listings\Console\Commands\CreateDirectoryTeam;
 use Modules\Listings\Console\Commands\GenerateListingMediaThumbnails;
+use Modules\Listings\Console\Commands\ImportListings;
 use Modules\Listings\Contracts\Geocoder;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Policies\ListingPolicy;
@@ -18,6 +20,8 @@ final class ListingsServiceProvider extends ServiceProvider
 
         if ($this->app->runningInConsole()) {
             $this->commands([
+                CreateDirectoryTeam::class,
+                ImportListings::class,
                 GenerateListingMediaThumbnails::class,
             ]);
         }

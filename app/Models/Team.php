@@ -26,6 +26,7 @@ use Laravel\Cashier\Billable;
  * @property string|null $whatsapp_phone
  * @property string $timezone
  * @property bool $is_personal
+ * @property bool $is_directory
  * @property string|null $stripe_id
  * @property string|null $pm_type
  * @property string|null $pm_last_four
@@ -119,6 +120,15 @@ class Team extends Model
     }
 
     /**
+     * Determine if this is the platform-owned directory account that holds
+     * imported listings waiting to be claimed by their owners.
+     */
+    public function isDirectory(): bool
+    {
+        return (bool) $this->is_directory;
+    }
+
+    /**
      * Get the public URL for the account logo, if configured.
      */
     public function logoUrl(): ?string
@@ -147,6 +157,7 @@ class Team extends Model
     {
         return [
             'is_personal' => 'boolean',
+            'is_directory' => 'boolean',
             'trial_ends_at' => 'datetime',
             'suspended_at' => 'datetime',
         ];

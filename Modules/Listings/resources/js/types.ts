@@ -250,6 +250,9 @@ export type ListingPublicDetail = {
     country: string | null;
     logo_url: string | null;
     postal_code: string | null;
+    is_claimable: boolean;
+    is_claimed: boolean;
+    claim_url: string | null;
     latitude: number | null;
     longitude: number | null;
     capacity: number | null;

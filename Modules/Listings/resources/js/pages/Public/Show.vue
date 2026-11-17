@@ -233,6 +233,12 @@ onBeforeUnmount(() => {
                         Hasta {{ listing.capacity }} invitados
                     </span>
                     <span
+                        v-if="listing.is_claimable"
+                        class="home-chip border-[color:var(--home-primary)]/40 bg-[color:var(--home-primary)]/10 text-[color:var(--home-primary-deep)]"
+                    >
+                        Anuncio sin reclamar
+                    </span>
+                    <span
                         v-if="listing.pricing.price_from_formatted"
                         class="home-chip"
                     >
@@ -1056,8 +1062,15 @@ onBeforeUnmount(() => {
                     </div>
 
                     <p class="mt-4 text-sm text-[color:var(--home-secondary)]">
-                        La reserva y el anticipo se acuerdan directamente con el
-                        anfitrión.
+                        <template v-if="listing.is_claimable">
+                            Este anuncio aún no tiene propietario verificado. Tu
+                            solicitud se enviará al equipo de la plataforma, que
+                            dará seguimiento con el anfitrión.
+                        </template>
+                        <template v-else>
+                            La reserva y el anticipo se acuerdan directamente
+                            con el anfitrión.
+                        </template>
                     </p>
 
                     <div class="mt-4 flex flex-col gap-2">
@@ -1102,6 +1115,26 @@ onBeforeUnmount(() => {
                         WhatsApp abre una conversación manual; la plataforma no
                         envía el mensaje.
                     </p>
+                </div>
+
+                <div
+                    v-if="listing.is_claimable && listing.claim_url"
+                    class="rounded-[1.125rem] border border-[color:var(--home-primary)]/30 bg-[color:var(--home-primary)]/5 p-5"
+                >
+                    <p class="home-eyebrow">¿Es tu terraza?</p>
+                    <h2 class="mt-2 text-lg font-bold">Reclama este anuncio</h2>
+                    <p class="mt-2 text-sm text-[color:var(--home-secondary)]">
+                        Este anuncio fue agregado por el equipo de la
+                        plataforma. Si eres el propietario o representante,
+                        solicita el control para actualizar fotos, precios y
+                        disponibilidad.
+                    </p>
+                    <Link
+                        :href="listing.claim_url"
+                        class="home-btn home-btn--primary mt-4 w-full"
+                    >
+                        Reclamar esta terraza
+                    </Link>
                 </div>
 
                 <div

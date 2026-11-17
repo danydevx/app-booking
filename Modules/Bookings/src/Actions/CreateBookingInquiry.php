@@ -3,6 +3,7 @@
 namespace Modules\Bookings\Actions;
 
 use App\Models\User;
+use App\Support\Branding;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -11,6 +12,7 @@ use Modules\Bookings\Enums\InquiryStatus;
 use Modules\Bookings\Models\BookingInquiry;
 use Modules\Bookings\Models\Customer;
 use Modules\Bookings\Notifications\InquiryReceivedVisitorNotification;
+use Modules\Bookings\Notifications\NewInquiryDirectoryNotification;
 use Modules\Bookings\Notifications\NewInquiryOwnerNotification;
 use Modules\Listings\Models\Listing;
 use Throwable;
@@ -178,7 +180,20 @@ final class CreateBookingInquiry
         }
 
         try {
-            $owner = $inquiry->listing->team?->owner();
+            $team = $inquiry->listing->team;
+
+            if ($team?->isDirectory()) {
+                $support = Branding::supportEmail() ?: Branding::fromAddress();
+
+                if (filled($support)) {
+                    Notification::route('mail', $support)
+                        ->notify(new NewInquiryDirectoryNotification($inquiry));
+                }
+
+                return;
+            }
+
+            $owner = $team?->owner();
 
             if ($owner instanceof User && $owner->wantsInquiryEmails()) {
                 $owner->notify(new NewInquiryOwnerNotification($inquiry));

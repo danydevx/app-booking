@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { ArrowLeft, ExternalLink } from '@lucide/vue';
+import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -54,6 +55,11 @@ const props = defineProps<{
         suspended_at: string | null;
         suspension_reason: string | null;
         published_at: string | null;
+        is_claimable: boolean;
+        is_claimed: boolean;
+        is_claim_transfer: boolean;
+        claimed_at: string | null;
+        claim_url: string | null;
         public_url: string | null;
         team: {
             id: number | null;
@@ -66,11 +72,12 @@ const props = defineProps<{
     };
     reports: ReportRow[];
     activities: ActivityRow[];
-    can: { moderate: boolean };
+    can: { moderate: boolean; release: boolean };
     urls: {
         index: string;
         suspend: string;
         restore: string;
+        release: string;
     };
 }>();
 
@@ -89,6 +96,20 @@ function reasonOf(activity: ActivityRow): string {
     const reason = activity.properties.reason;
 
     return typeof reason === 'string' ? reason : '';
+}
+
+const copied = ref(false);
+
+function copyClaimUrl(): void {
+    if (!props.listing.claim_url) {
+        return;
+    }
+
+    void navigator.clipboard.writeText(props.listing.claim_url);
+    copied.value = true;
+    window.setTimeout(() => {
+        copied.value = false;
+    }, 2000);
 }
 </script>
 
@@ -133,6 +154,20 @@ function reasonOf(activity: ActivityRow): string {
                 <Badge v-if="listing.team.is_suspended" variant="destructive">
                     Cuenta suspendida
                 </Badge>
+                <Badge v-if="listing.is_claimable" variant="secondary">
+                    Sin reclamar
+                </Badge>
+                <Badge v-else-if="listing.is_claimed" variant="outline">
+                    Reclamada
+                </Badge>
+                <Button
+                    v-if="listing.claim_url"
+                    size="sm"
+                    variant="outline"
+                    @click="copyClaimUrl"
+                >
+                    {{ copied ? 'Enlace copiado' : 'Copiar enlace de reclamo' }}
+                </Button>
                 <Button
                     v-if="listing.public_url"
                     size="sm"
@@ -180,6 +215,15 @@ function reasonOf(activity: ActivityRow): string {
             title="Restaurar terraza"
             description="Vuelve al estado previo a la suspensión y se hace visible si estaba publicada."
             submit-label="Restaurar"
+        />
+
+        <ModerationForm
+            v-if="can.release && listing.is_claim_transfer"
+            :action="urls.release"
+            title="Devolver al Directorio"
+            description="Desvincula la terraza de su cuenta actual y la deja disponible para que otro propietario la reclame."
+            submit-label="Devolver al Directorio"
+            destructive
         />
 
         <div class="grid gap-4 lg:grid-cols-3">
