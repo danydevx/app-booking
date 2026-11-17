@@ -72,12 +72,13 @@ const props = defineProps<{
     };
     reports: ReportRow[];
     activities: ActivityRow[];
-    can: { moderate: boolean; release: boolean };
+    can: { moderate: boolean; release: boolean; claimable: boolean };
     urls: {
         index: string;
         suspend: string;
         restore: string;
         release: string;
+        claimable: string;
     };
 }>();
 
@@ -224,6 +225,17 @@ function copyClaimUrl(): void {
             description="Desvincula la terraza de su cuenta actual y la deja disponible para que otro propietario la reclame."
             submit-label="Devolver al Directorio"
             destructive
+        />
+
+        <ModerationForm
+            v-if="
+                can.claimable && !listing.is_claimable && !listing.is_suspended
+            "
+            :action="urls.claimable"
+            title="Marcar como reclamable"
+            description="Mueve la terraza al Directorio y activa el botón público para que su propietario reclame el anuncio."
+            submit-label="Marcar como reclamable"
+            placeholder="Motivo (mín. 5 caracteres)"
         />
 
         <div class="grid gap-4 lg:grid-cols-3">

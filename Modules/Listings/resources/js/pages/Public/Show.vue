@@ -258,6 +258,13 @@ onBeforeUnmount(() => {
 
             <div class="hidden flex-wrap gap-2 sm:flex">
                 <Link
+                    v-if="listing.is_claimable && listing.claim_url"
+                    :href="listing.claim_url"
+                    class="home-btn home-btn--dark"
+                >
+                    Reclamar esta terraza
+                </Link>
+                <Link
                     :href="availabilityUrl"
                     class="home-btn home-btn--primary"
                 >

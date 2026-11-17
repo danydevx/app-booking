@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Listings\Actions\MarkListingAsClaimable;
 use Modules\Listings\Actions\RestoreListing;
 use Modules\Listings\Actions\ReturnListingToDirectory;
 use Modules\Listings\Actions\SuspendListing;
@@ -163,12 +164,14 @@ class PlatformListingController extends Controller
             'can' => [
                 'moderate' => Gate::allows('platform.listings.moderate'),
                 'release' => Gate::allows(PlatformPermission::CLAIMS_MANAGE),
+                'claimable' => Gate::allows(PlatformPermission::CLAIMS_MANAGE),
             ],
             'urls' => [
                 'index' => route('platform.listings.index'),
                 'suspend' => route('platform.listings.suspend', ['listing' => $model->slug]),
                 'restore' => route('platform.listings.restore', ['listing' => $model->slug]),
                 'release' => route('platform.listings.release', ['listing' => $model->slug]),
+                'claimable' => route('platform.listings.claimable', ['listing' => $model->slug]),
             ],
         ]);
     }
@@ -231,6 +234,27 @@ class PlatformListingController extends Controller
         Inertia::flash('toast', [
             'type' => 'success',
             'message' => "Terraza {$model->name} devuelta al Directorio.",
+        ]);
+
+        return back();
+    }
+
+    public function markClaimable(
+        ModerationReasonRequest $request,
+        string $listing,
+        MarkListingAsClaimable $markClaimable,
+    ): RedirectResponse {
+        $model = $this->findListing($listing);
+
+        $markClaimable->handle(
+            $model,
+            $request->user(),
+            (string) $request->validated('reason'),
+        );
+
+        Inertia::flash('toast', [
+            'type' => 'success',
+            'message' => "Terraza {$model->name} disponible para reclamarse.",
         ]);
 
         return back();

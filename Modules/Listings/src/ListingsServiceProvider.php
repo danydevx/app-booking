@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Modules\Listings\Console\Commands\CreateDirectoryTeam;
 use Modules\Listings\Console\Commands\GenerateListingMediaThumbnails;
 use Modules\Listings\Console\Commands\ImportListings;
+use Modules\Listings\Console\Commands\MakeListingClaimable;
 use Modules\Listings\Contracts\Geocoder;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Policies\ListingPolicy;
@@ -22,6 +23,7 @@ final class ListingsServiceProvider extends ServiceProvider
             $this->commands([
                 CreateDirectoryTeam::class,
                 ImportListings::class,
+                MakeListingClaimable::class,
                 GenerateListingMediaThumbnails::class,
             ]);
         }

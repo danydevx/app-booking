@@ -93,6 +93,9 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::post('listings/{listing}/release', [PlatformListingController::class, 'release'])
             ->middleware('can:'.PlatformPermission::CLAIMS_MANAGE)
             ->name('listings.release');
+        Route::post('listings/{listing}/claimable', [PlatformListingController::class, 'markClaimable'])
+            ->middleware('can:'.PlatformPermission::CLAIMS_MANAGE)
+            ->name('listings.claimable');
 
         Route::get('claims', [PlatformClaimController::class, 'index'])
             ->middleware('can:'.PlatformPermission::CLAIMS_VIEW)

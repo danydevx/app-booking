@@ -106,6 +106,24 @@ php artisan listings:import storage/app/imports/terrazas.csv --publish
   URLs `http(s)`.
 - La importación es idempotente por `external_ref`.
 
+## Convertir una terraza existente en reclamable
+
+Si una terraza ya existe en una cuenta normal y quieres que su propietario la
+reclame, no necesitas volver a importarla:
+
+- Desde el detalle de la terraza en `/app/platform/listings/{slug}`, usa
+  **"Marcar como reclamable"**.
+- O por consola:
+
+```bash
+php artisan listings:make-claimable terraza-jardin-encinos \
+  --reason="Se cargará desde el Directorio para que su dueño la reclame."
+```
+
+La acción mueve la terraza al Directorio, limpia `claimed_at`/`claimed_by_user_id`,
+transfiere solicitudes y registros relacionados, avisa al propietario anterior y
+deja activo el botón público de reclamo. El slug y la URL pública no cambian.
+
 ## Reclamación pública
 
 - El detalle de una terraza sin reclamar muestra el aviso **"Anuncio sin

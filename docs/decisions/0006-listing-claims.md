@@ -26,9 +26,12 @@ auditable y rompe la separación por cuenta.
 5. Las terrazas sin reclamar **no exponen** el contacto importado en la página
    pública. Las solicitudes de visitantes se avisan al correo de soporte y se
    transfieren junto con la terraza al aprobar.
-6. Reclamar **no se bloquea** por el límite del plan. El límite sigue aplicando
+6. Una terraza existente puede moverse al Directorio con
+   **"Marcar como reclamable"** o `listings:make-claimable`; el cambio conserva
+   su slug y activa el flujo público de reclamo.
+7. Reclamar **no se bloquea** por el límite del plan. El límite sigue aplicando
    solo a la creación de terrazas nuevas.
-7. La aprobación y la devolución al Directorio quedan en el log
+8. La aprobación y la devolución al Directorio quedan en el log
    `moderation`; un superadmin puede devolver una terraza reclamada para
    corregir errores.
 

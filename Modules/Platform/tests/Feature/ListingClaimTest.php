@@ -285,6 +285,37 @@ class ListingClaimTest extends TestCase
         Notification::assertSentTo($claimant, ListingClaimRejected::class);
     }
 
+    public function test_superadmin_can_mark_an_existing_listing_as_claimable(): void
+    {
+        Notification::fake();
+
+        [, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->published()->create([
+            'claimed_at' => now(),
+            'claimed_by_user_id' => null,
+        ]);
+
+        $directory = Team::factory()->directory()->create(['name' => 'Directorio']);
+
+        $this->actingAs($this->superadmin())
+            ->post(route('platform.listings.claimable', ['listing' => $listing->slug]), [
+                'reason' => 'Se cargará desde el Directorio.',
+            ])
+            ->assertRedirect();
+
+        $listing->refresh();
+
+        $this->assertSame($directory->id, $listing->team_id);
+        $this->assertNull($listing->claimed_at);
+        $this->assertNull($listing->claimed_by_user_id);
+
+        $this->get(route('public.listings.show', ['listing' => $listing->slug]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('listing.is_claimable', true)
+                ->where('listing.claim_url', route('public.claims.create', ['listing' => $listing->slug])));
+    }
+
     public function test_superadmin_can_return_a_claimed_listing_to_the_directory(): void
     {
         Notification::fake();
