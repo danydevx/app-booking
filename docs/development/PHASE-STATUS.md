@@ -22,6 +22,10 @@ Last updated: 2026-11-17
 
 - None. Database migration to MySQL phase 2 applied; SQLite remains
   legacy/test-only.
+- `npm audit --omit=dev` PASS: 0 vulnerabilidades de producción. El árbol
+  dev/build conserva 17 alertas altas de `picomatch` sin parche upstream; ver el
+  addendum 2026-11-17 en
+  `docs/BOOKING-RC1-DEPENDENCIES-SECURITY-FIX-REPORT.md`.
 - CI verified locally: SQLite `composer ci:check` and MySQL 8.4 backend suite pass.
 - RC1 consolidado localmente y **READY FOR STAGING**; no hay tag, release ni despliegue. Ver
   `docs/BOOKING-MVP-RC1-AUDIT.md`, `docs/BOOKING-MVP-RC1-RELEASE-CHECKLIST.md` y

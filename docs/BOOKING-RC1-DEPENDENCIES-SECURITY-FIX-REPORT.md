@@ -168,3 +168,56 @@ No se eliminaron tests ni assertions.
 | commit de documentación | `docs: registrar cierre de advisories rc1`                          | Reporte y estado RC1                         |
 
 No se hizo push, tag ni despliegue.
+
+## 9. Addendum 2026-11-17 — nuevo advisory de `picomatch`
+
+Al re-ejecutar la auditoría el 2026-11-17 apareció un advisory nuevo, posterior al
+cierre original:
+
+| Paquete     | Versión afectada | Severidad | Advisory                                      | Versión corregida |
+| ----------- | ---------------- | --------- | --------------------------------------------- | ----------------- |
+| `picomatch` | `<= 4.0.7`       | High      | GHSA-fc5q-39xc-vjpf / CVE-2026-112366 (ReDoS) | Ninguna publicada |
+
+Cadena afectada: `@inertiajs/vite` y `laravel-vite-plugin` (declarados como
+dependencias de producción) arrastraban `tinyglobby`/`fdir`/`picomatch`, además
+de `vite`/`vue-tsc`/`vite-plus` en el árbol de build. No existe una versión
+parcheada de `picomatch` al día de este addendum, por lo que actualizar versiones
+no resuelve el advisory.
+
+### Decisión
+
+Se corrigió el límite de producción de `package.json`: `@inertiajs/vite` y
+`laravel-vite-plugin` pasaron de `dependencies` a `devDependencies`. Ambos se
+usan exclusivamente en `vite.config.ts`; no se envían al runtime. `vite` ya
+estaba en `devDependencies`. No se silenció el advisory: `npm audit` completo
+sigue reportando las 17 alertas altas del árbol de build, y quedan documentadas
+como riesgo residual.
+
+Esta separación hace que `npm audit --omit=dev` audite lo que realmente se
+despliega (paquetes runtime) y vuelve a estar en PASS.
+
+### Resultado
+
+```text
+npm ci                    PASS
+npm ls                    PASS (solo UNMET opcionales de plataforma)
+npm audit --omit=dev      PASS — 0 vulnerabilidades de producción
+npm audit (completo)      17 high — tooling de build, sin parche upstream
+composer audit            PASS
+composer ci:check         PASS — 519 tests / 4,615 assertions (SQLite)
+PHPUnit MySQL 8.4         PASS — 519 tests / 4,615 assertions
+FullFlowSmokeTest         PASS — 1 test / 94 assertions
+npm run build             PASS
+npm run build:ssr         PASS
+```
+
+### Riesgo residual
+
+El advisory de `picomatch` sigue presente en el árbol de desarrollo/build y no
+tiene parche publicado. No afecta al runtime desplegado porque los globs se
+procesan durante el build, no con entrada de usuario en producción. Debe
+revisarse `npm audit` y actualizar `picomatch` en cuanto exista una versión
+corregida. El gate de CI `npm audit --omit=dev` se mantiene sin cambios.
+
+**Estado RC1:** `READY FOR STAGING` bajo el gate de producción definido.
+**Producción:** `PRODUCTION: NO-GO`.

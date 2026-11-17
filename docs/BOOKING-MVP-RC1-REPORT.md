@@ -10,6 +10,14 @@
 > `docs/BOOKING-RC1-DEPENDENCIES-SECURITY-FIX-REPORT.md`. También se actualizó
 > Laravel por un advisory publicado el 2026-11-13. El estado histórico de este
 > reporte se conserva; el estado RC1 vigente es **READY FOR STAGING**.
+>
+> **Addendum 2026-11-17:** apareció un advisory nuevo de `picomatch`
+> (GHSA-fc5q-39xc-vjpf / CVE-2026-112366) sin versión corregida. Afecta solo al
+> tooling de build; se movieron `@inertiajs/vite` y `laravel-vite-plugin` a
+> `devDependencies` para que el gate de producción refleje el runtime real.
+> `npm audit --omit=dev` vuelve a PASS con 0 vulnerabilidades de producción.
+> El árbol completo conserva 17 alertas altas de build, documentadas como riesgo
+> residual. El estado RC1 sigue en **READY FOR STAGING** bajo el gate definido.
 
 ## A. Resumen
 

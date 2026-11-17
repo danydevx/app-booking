@@ -87,6 +87,10 @@
     - Resultado local (2026-11-13): `composer audit` PASS y `npm audit` PASS con
       0 vulnerabilidades. Ver
       `docs/BOOKING-RC1-DEPENDENCIES-SECURITY-FIX-REPORT.md`.
+    - Addendum (2026-11-17): `npm audit --omit=dev` PASS con 0 vulnerabilidades
+      de producción. El árbol completo reporta 17 alertas altas de tooling de
+      build por `picomatch` (sin parche upstream); el gate de producción sigue
+      limpio. Ver addendum en el mismo reporte.
 - [ ] Revisar privilegios mínimos de la base de datos.
 
 ## 6. Criterio de cierre

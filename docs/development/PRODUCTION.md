@@ -99,17 +99,17 @@ No commitear valores reales.
 2. Crear directorio de release en el servidor.
 3. Desplegar el mismo commit/artefacto; no editar archivos en el servidor.
 4. `composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader`
-5. `npm ci && npm run build:ssr` o desplegar el artefacto ya construido.
+5. `npm ci && npm run build:ssr` o desplegar el artefacto ya construido. El build requiere `devDependencies` (Vite y sus plugins); no ejecutar `npm ci --omit=dev` antes del build.
 6. Enlazar `.env` y storage persistente.
 7. `php artisan migrate --force` como paso controlado.
 8. `php artisan platform:sync-permissions` (idempotente).
-   8b. Si se lanza con terrazas importadas: `php artisan app:directory-team` y luego `php artisan listings:import <archivo> --publish` después de revisar la salida.
-9. Crear el primer superadmin con `php artisan app:make-platform-superadmin`.
-10. `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`.
-11. `php artisan storage:link --force`.
-12. Reiniciar workers de cola.
-13. Cambiar el symlink `current` de forma atómica.
-14. Health check y smoke test.
+9. Si se lanza con terrazas importadas: `php artisan app:directory-team` y luego `php artisan listings:import <archivo> --publish` después de revisar la salida.
+10. Crear el primer superadmin con `php artisan app:make-platform-superadmin`.
+11. `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`.
+12. `php artisan storage:link --force`.
+13. Reiniciar workers de cola.
+14. Cambiar el symlink `current` de forma atómica.
+15. Health check y smoke test.
 
 No ejecutar `composer update` en producción. No ejecutar migraciones destructivas.
 
