@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { CustomerQuoteCard, StatusOption } from '../../types';
@@ -66,16 +67,71 @@ const taxLabel = computed(() => {
     }[props.quote.tax_mode];
 });
 
-function sendQuote(): void {
-    if (
-        !window.confirm(
-            '¿Enviar la cotización al correo del cliente? Se compartirá el enlace público.',
-        )
-    ) {
+type ConfirmOptions = {
+    title: string;
+    description: string;
+    label: string;
+    destructive?: boolean;
+    action: () => void;
+};
+
+const confirmOpen = ref(false);
+const confirmProcessing = ref(false);
+const confirmTitle = ref('');
+const confirmDescription = ref('');
+const confirmLabel = ref('Confirmar');
+const confirmDestructive = ref(true);
+let confirmAction: (() => void) | null = null;
+
+function askConfirm(options: ConfirmOptions): void {
+    confirmTitle.value = options.title;
+    confirmDescription.value = options.description;
+    confirmLabel.value = options.label;
+    confirmDestructive.value = options.destructive ?? true;
+    confirmAction = options.action;
+    confirmOpen.value = true;
+}
+
+function runConfirm(): void {
+    if (confirmAction === null) {
         return;
     }
 
-    router.post(props.quote.send_url, {}, { preserveScroll: true });
+    confirmProcessing.value = true;
+    confirmAction();
+}
+
+function finishConfirm(): void {
+    confirmProcessing.value = false;
+    confirmOpen.value = false;
+    confirmAction = null;
+}
+
+function handleConfirmOpen(open: boolean): void {
+    confirmOpen.value = open;
+
+    if (!open) {
+        confirmAction = null;
+    }
+}
+
+function sendQuote(): void {
+    askConfirm({
+        title: 'Enviar cotización',
+        description:
+            'Se enviará la cotización al correo del cliente y se compartirá el enlace público.',
+        label: 'Enviar cotización',
+        destructive: false,
+        action: () =>
+            router.post(
+                props.quote.send_url,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 
 function duplicate(): void {
@@ -83,27 +139,40 @@ function duplicate(): void {
 }
 
 function cancelQuote(): void {
-    if (
-        !window.confirm(
-            '¿Cancelar esta cotización? El PDF emitido se conserva como registro histórico.',
-        )
-    ) {
-        return;
-    }
-
-    router.post(props.quote.cancel_url);
+    askConfirm({
+        title: 'Cancelar cotización',
+        description:
+            'El PDF emitido se conserva como registro histórico. Esta acción no se puede deshacer.',
+        label: 'Cancelar cotización',
+        action: () =>
+            router.post(
+                props.quote.cancel_url,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 
 function convert(): void {
-    if (
-        !window.confirm(
-            '¿Convertir esta cotización en reserva? Se bloquearán las fechas.',
-        )
-    ) {
-        return;
-    }
-
-    router.post(props.quote.convert_url);
+    askConfirm({
+        title: 'Convertir en reserva',
+        description:
+            'Se creará una reserva y se bloquearán las fechas de la cotización.',
+        label: 'Convertir en reserva',
+        destructive: false,
+        action: () =>
+            router.post(
+                props.quote.convert_url,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 </script>
 
@@ -514,5 +583,16 @@ function convert(): void {
                 </section>
             </aside>
         </div>
+
+        <ConfirmDialog
+            :open="confirmOpen"
+            :title="confirmTitle"
+            :description="confirmDescription"
+            :confirm-label="confirmLabel"
+            :destructive="confirmDestructive"
+            :processing="confirmProcessing"
+            @update:open="handleConfirmOpen"
+            @confirm="runConfirm"
+        />
     </div>
 </template>

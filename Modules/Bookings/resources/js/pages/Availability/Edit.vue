@@ -12,6 +12,7 @@ import {
     X,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import InputError from '@/components/InputError.vue';
@@ -256,6 +257,51 @@ function submitSelection(): void {
     submit();
 }
 
+type ConfirmOptions = {
+    title: string;
+    description: string;
+    label: string;
+    action: () => void;
+};
+
+const confirmOpen = ref(false);
+const confirmProcessing = ref(false);
+const confirmTitle = ref('');
+const confirmDescription = ref('');
+const confirmLabel = ref('Confirmar');
+let confirmAction: (() => void) | null = null;
+
+function askConfirm(options: ConfirmOptions): void {
+    confirmTitle.value = options.title;
+    confirmDescription.value = options.description;
+    confirmLabel.value = options.label;
+    confirmAction = options.action;
+    confirmOpen.value = true;
+}
+
+function runConfirm(): void {
+    if (confirmAction === null) {
+        return;
+    }
+
+    confirmProcessing.value = true;
+    confirmAction();
+}
+
+function finishConfirm(): void {
+    confirmProcessing.value = false;
+    confirmOpen.value = false;
+    confirmAction = null;
+}
+
+function handleConfirmOpen(open: boolean): void {
+    confirmOpen.value = open;
+
+    if (!open) {
+        confirmAction = null;
+    }
+}
+
 function submitSeries(): void {
     seriesForm.post(props.urls.series_store, {
         preserveScroll: true,
@@ -268,11 +314,17 @@ function submitSeries(): void {
 }
 
 function deleteSeries(series: BlockSeries): void {
-    if (!window.confirm('¿Eliminar esta serie y liberar sus fechas futuras?')) {
-        return;
-    }
-
-    router.delete(series.destroy_url, { preserveScroll: true });
+    askConfirm({
+        title: 'Eliminar serie',
+        description:
+            'Se eliminará esta serie y se liberarán sus fechas futuras. Esta acción no se puede deshacer.',
+        label: 'Eliminar serie',
+        action: () =>
+            router.delete(series.destroy_url, {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
+    });
 }
 
 function unblockRange(): void {
@@ -287,12 +339,16 @@ function unblockRange(): void {
 }
 
 function unblock(date: string): void {
-    if (!window.confirm('¿Liberar esta fecha?')) {
-        return;
-    }
-
-    router.delete(props.urls.unblock.replace('__DATE__', date), {
-        preserveScroll: true,
+    askConfirm({
+        title: 'Liberar fecha',
+        description:
+            'La fecha volverá a estar disponible para recibir solicitudes.',
+        label: 'Liberar fecha',
+        action: () =>
+            router.delete(props.urls.unblock.replace('__DATE__', date), {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
     });
 }
 
@@ -930,5 +986,16 @@ function dateStatusVariant(
                 </p>
             </section>
         </div>
+
+        <ConfirmDialog
+            :open="confirmOpen"
+            :title="confirmTitle"
+            :description="confirmDescription"
+            :confirm-label="confirmLabel"
+            :destructive="true"
+            :processing="confirmProcessing"
+            @update:open="handleConfirmOpen"
+            @confirm="runConfirm"
+        />
     </div>
 </template>

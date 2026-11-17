@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import ListingForm from '../components/ListingForm.vue';
@@ -97,12 +99,21 @@ function unpublish(): void {
     router.patch(props.urls.unpublish, {}, { preserveScroll: true });
 }
 
-function destroy(): void {
-    if (!window.confirm('¿Eliminar esta terraza y todos sus archivos?')) {
-        return;
-    }
+const deleteOpen = ref(false);
+const deleting = ref(false);
 
-    router.delete(props.urls.destroy);
+function destroy(): void {
+    deleteOpen.value = true;
+}
+
+function confirmDestroy(): void {
+    deleting.value = true;
+
+    router.delete(props.urls.destroy, {
+        onFinish: () => {
+            deleting.value = false;
+        },
+    });
 }
 </script>
 
@@ -237,5 +248,15 @@ function destroy(): void {
                 </div>
             </aside>
         </div>
+
+        <ConfirmDialog
+            :open="deleteOpen"
+            title="Eliminar terraza"
+            description="Esta acción no se puede deshacer. Se eliminará la terraza, sus fotos, videos y datos comerciales asociados."
+            confirm-label="Eliminar terraza"
+            :processing="deleting"
+            @update:open="deleteOpen = $event"
+            @confirm="confirmDestroy"
+        />
     </div>
 </template>

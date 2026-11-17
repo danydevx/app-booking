@@ -9,7 +9,8 @@ import {
     Phone,
     ShieldCheck,
 } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -91,16 +92,26 @@ const rejectError = computed(
     () => (rejectForm.errors as Record<string, string | undefined>).claim ?? '',
 );
 
-function approve(): void {
-    if (
-        !window.confirm(
-            `¿Aprobar la reclamación de ${props.claim.claimant_name} y transferir la terraza?`,
-        )
-    ) {
-        return;
-    }
+const approveOpen = ref(false);
+const approving = ref(false);
 
-    router.post(props.urls.approve);
+function approve(): void {
+    approveOpen.value = true;
+}
+
+function confirmApprove(): void {
+    approving.value = true;
+
+    router.post(
+        props.urls.approve,
+        {},
+        {
+            onFinish: () => {
+                approving.value = false;
+                approveOpen.value = false;
+            },
+        },
+    );
 }
 
 function reject(): void {
@@ -438,5 +449,16 @@ const location =
                 </Card>
             </div>
         </div>
+
+        <ConfirmDialog
+            :open="approveOpen"
+            title="Aprobar reclamación"
+            :description="`Se transferirá «${claim.listing.name}» a la cuenta de ${claim.claimant_name}. Las demás reclamaciones pendientes se rechazarán.`"
+            confirm-label="Aprobar y transferir"
+            :destructive="false"
+            :processing="approving"
+            @update:open="approveOpen = $event"
+            @confirm="confirmApprove"
+        />
     </div>
 </template>

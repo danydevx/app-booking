@@ -12,6 +12,7 @@ import {
 import { computed, ref, watch } from 'vue';
 import { z } from 'zod';
 import { useFrontValidation } from '@/composables/useFrontValidation';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -297,12 +298,31 @@ function reset(): void {
     form.active = true;
 }
 
+const serviceToDelete = ref<CommercialService | null>(null);
+const deletingService = ref(false);
+
 function destroy(item: CommercialService): void {
-    if (!window.confirm(`¿Eliminar el servicio ${item.label}?`)) {
+    serviceToDelete.value = item;
+}
+
+function confirmDestroy(): void {
+    const item = serviceToDelete.value;
+
+    if (item === null) {
         return;
     }
 
-    router.delete(item.delete_url, { preserveScroll: true });
+    deletingService.value = true;
+
+    router.delete(item.delete_url, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingService.value = false;
+        },
+        onSuccess: () => {
+            serviceToDelete.value = null;
+        },
+    });
 }
 </script>
 
@@ -792,5 +812,23 @@ function destroy(item: CommercialService): void {
                 </form>
             </DialogScrollContent>
         </Dialog>
+
+        <ConfirmDialog
+            :open="serviceToDelete !== null"
+            title="Eliminar servicio"
+            :description="
+                serviceToDelete
+                    ? `Se eliminará el servicio «${serviceToDelete.label}». Esta acción no se puede deshacer.`
+                    : ''
+            "
+            confirm-label="Eliminar servicio"
+            :processing="deletingService"
+            @update:open="
+                (open) => {
+                    if (!open) serviceToDelete = null;
+                }
+            "
+            @confirm="confirmDestroy"
+        />
     </div>
 </template>

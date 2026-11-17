@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -51,19 +53,32 @@ function formatDate(value: string | null): string {
 }
 
 function retryJob(job: FailedJob): void {
-    if (!window.confirm(`¿Reintentar ${job.job}?`)) {
-        return;
-    }
-
     router.post(job.retry_url, {}, { preserveScroll: true });
 }
 
+const jobToDelete = ref<FailedJob | null>(null);
+const deletingJob = ref(false);
+
 function forgetJob(job: FailedJob): void {
-    if (!window.confirm(`¿Eliminar el trabajo fallido ${job.job}?`)) {
+    jobToDelete.value = job;
+}
+
+function confirmForgetJob(): void {
+    if (jobToDelete.value === null) {
         return;
     }
 
-    router.delete(job.delete_url, { preserveScroll: true });
+    deletingJob.value = true;
+
+    router.delete(jobToDelete.value.delete_url, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingJob.value = false;
+        },
+        onSuccess: () => {
+            jobToDelete.value = null;
+        },
+    });
 }
 </script>
 
@@ -271,5 +286,23 @@ function forgetJob(job: FailedJob): void {
                 </p>
             </CardContent>
         </Card>
+
+        <ConfirmDialog
+            :open="jobToDelete !== null"
+            title="Eliminar trabajo fallido"
+            :description="
+                jobToDelete
+                    ? `Se eliminará el registro del trabajo «${jobToDelete.job}». Esta acción no se puede deshacer.`
+                    : ''
+            "
+            confirm-label="Eliminar trabajo"
+            :processing="deletingJob"
+            @update:open="
+                (open) => {
+                    if (!open) jobToDelete = null;
+                }
+            "
+            @confirm="confirmForgetJob"
+        />
     </div>
 </template>

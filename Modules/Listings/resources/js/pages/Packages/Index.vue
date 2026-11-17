@@ -16,6 +16,7 @@ import {
 import { computed, ref } from 'vue';
 import { z } from 'zod';
 import { useFrontValidation } from '@/composables/useFrontValidation';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -289,12 +290,31 @@ function reset(): void {
     form.included_people = 50;
 }
 
+const packageToDelete = ref<ListingPackage | null>(null);
+const deletingPackage = ref(false);
+
 function destroy(item: ListingPackage): void {
-    if (!window.confirm(`¿Eliminar el paquete ${item.name}?`)) {
+    packageToDelete.value = item;
+}
+
+function confirmDestroy(): void {
+    const item = packageToDelete.value;
+
+    if (item === null) {
         return;
     }
 
-    router.delete(item.delete_url, { preserveScroll: true });
+    deletingPackage.value = true;
+
+    router.delete(item.delete_url, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingPackage.value = false;
+        },
+        onSuccess: () => {
+            packageToDelete.value = null;
+        },
+    });
 }
 </script>
 
@@ -936,5 +956,23 @@ function destroy(item: ListingPackage): void {
                 </form>
             </DialogScrollContent>
         </Dialog>
+
+        <ConfirmDialog
+            :open="packageToDelete !== null"
+            title="Eliminar paquete"
+            :description="
+                packageToDelete
+                    ? `Se eliminará el paquete «${packageToDelete.name}». Esta acción no se puede deshacer.`
+                    : ''
+            "
+            confirm-label="Eliminar paquete"
+            :processing="deletingPackage"
+            @update:open="
+                (open) => {
+                    if (!open) packageToDelete = null;
+                }
+            "
+            @confirm="confirmDestroy"
+        />
     </div>
 </template>

@@ -9,6 +9,7 @@ import {
     Search,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -155,23 +156,19 @@ function toggleExpanded(state: CoverageState): void {
     };
 }
 
-function confirmReduction(): boolean {
-    const total = enabledMunicipalitiesCount.value;
-
-    if (total >= savedTotal.value) {
-        return true;
-    }
-
-    return window.confirm(
-        'Al reducir la cobertura, los espacios publicados en las zonas afectadas dejarán de mostrarse en el catálogo y no recibirán nuevas solicitudes. ¿Deseas continuar?',
-    );
-}
+const reductionOpen = ref(false);
 
 function save(): void {
-    if (!confirmReduction()) {
+    if (enabledMunicipalitiesCount.value < savedTotal.value) {
+        reductionOpen.value = true;
+
         return;
     }
 
+    submit();
+}
+
+function submit(): void {
     form.transform(() => ({
         states: states.value.map((state): CoveragePayload => ({
             id: state.id,
@@ -425,5 +422,20 @@ function save(): void {
                 {{ form.processing ? 'Guardando…' : 'Guardar cambios' }}
             </Button>
         </div>
+
+        <ConfirmDialog
+            :open="reductionOpen"
+            title="Reducir cobertura geográfica"
+            description="Los espacios publicados en las zonas afectadas dejarán de mostrarse en el catálogo y no recibirán nuevas solicitudes."
+            confirm-label="Guardar y reducir cobertura"
+            :processing="form.processing"
+            @update:open="reductionOpen = $event"
+            @confirm="
+                () => {
+                    reductionOpen = false;
+                    submit();
+                }
+            "
+        />
     </div>
 </template>

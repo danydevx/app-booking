@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import PublicShell from '@/components/PublicShell.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -68,20 +69,89 @@ const statusVariant = computed<
     return 'outline';
 });
 
-function accept(): void {
-    if (!window.confirm('¿Aceptar esta cotización?')) {
+type ConfirmOptions = {
+    title: string;
+    description: string;
+    label: string;
+    destructive?: boolean;
+    action: () => void;
+};
+
+const confirmOpen = ref(false);
+const confirmProcessing = ref(false);
+const confirmTitle = ref('');
+const confirmDescription = ref('');
+const confirmLabel = ref('Confirmar');
+const confirmDestructive = ref(true);
+let confirmAction: (() => void) | null = null;
+
+function askConfirm(options: ConfirmOptions): void {
+    confirmTitle.value = options.title;
+    confirmDescription.value = options.description;
+    confirmLabel.value = options.label;
+    confirmDestructive.value = options.destructive ?? true;
+    confirmAction = options.action;
+    confirmOpen.value = true;
+}
+
+function runConfirm(): void {
+    if (confirmAction === null) {
         return;
     }
 
-    router.post(props.quote.accept_url, {}, { preserveScroll: true });
+    confirmProcessing.value = true;
+    confirmAction();
+}
+
+function finishConfirm(): void {
+    confirmProcessing.value = false;
+    confirmOpen.value = false;
+    confirmAction = null;
+}
+
+function handleConfirmOpen(open: boolean): void {
+    confirmOpen.value = open;
+
+    if (!open) {
+        confirmAction = null;
+    }
+}
+
+function accept(): void {
+    askConfirm({
+        title: 'Aceptar cotización',
+        description:
+            'Confirmas que aceptas esta cotización con las fechas y el importe indicados.',
+        label: 'Aceptar cotización',
+        destructive: false,
+        action: () =>
+            router.post(
+                props.quote.accept_url,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 
 function decline(): void {
-    if (!window.confirm('¿Rechazar esta cotización?')) {
-        return;
-    }
-
-    router.post(props.quote.decline_url, {}, { preserveScroll: true });
+    askConfirm({
+        title: 'Rechazar cotización',
+        description:
+            'La cotización se marcará como rechazada y no podrá responderse de nuevo.',
+        label: 'Rechazar cotización',
+        action: () =>
+            router.post(
+                props.quote.decline_url,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 </script>
 
@@ -272,5 +342,16 @@ function decline(): void {
                 </p>
             </div>
         </div>
+
+        <ConfirmDialog
+            :open="confirmOpen"
+            :title="confirmTitle"
+            :description="confirmDescription"
+            :confirm-label="confirmLabel"
+            :destructive="confirmDestructive"
+            :processing="confirmProcessing"
+            @update:open="handleConfirmOpen"
+            @confirm="runConfirm"
+        />
     </PublicShell>
 </template>

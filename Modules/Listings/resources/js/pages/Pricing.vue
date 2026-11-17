@@ -18,6 +18,7 @@ import {
 import { computed, ref } from 'vue';
 import { z } from 'zod';
 import { useFrontValidation } from '@/composables/useFrontValidation';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -540,12 +541,31 @@ function resetRange(): void {
     rangeForm.active = true;
 }
 
+const rangeToDelete = ref<PriceRange | null>(null);
+const deletingRange = ref(false);
+
 function destroyRange(range: PriceRange): void {
-    if (!window.confirm(`¿Eliminar la tarifa ${range.name}?`)) {
+    rangeToDelete.value = range;
+}
+
+function confirmDestroyRange(): void {
+    const range = rangeToDelete.value;
+
+    if (range === null) {
         return;
     }
 
-    router.delete(range.delete_url, { preserveScroll: true });
+    deletingRange.value = true;
+
+    router.delete(range.delete_url, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingRange.value = false;
+        },
+        onSuccess: () => {
+            rangeToDelete.value = null;
+        },
+    });
 }
 
 function rangeStatusVariant(
@@ -1910,5 +1930,23 @@ function formatRangePrice(value: string | null): string {
                 </form>
             </DialogScrollContent>
         </Dialog>
+
+        <ConfirmDialog
+            :open="rangeToDelete !== null"
+            title="Eliminar tarifa"
+            :description="
+                rangeToDelete
+                    ? `Se eliminará la tarifa «${rangeToDelete.name}». Esta acción no se puede deshacer.`
+                    : ''
+            "
+            confirm-label="Eliminar tarifa"
+            :processing="deletingRange"
+            @update:open="
+                (open) => {
+                    if (!open) rangeToDelete = null;
+                }
+            "
+            @confirm="confirmDestroyRange"
+        />
     </div>
 </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import InputError from '@/components/InputError.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -583,20 +584,35 @@ function duplicate(): void {
     router.post(props.quote.duplicate_url);
 }
 
+const cancelOpen = ref(false);
+const cancelProcessing = ref(false);
+
 function cancelQuote(): void {
     if (!props.quote) {
         return;
     }
 
-    if (
-        !window.confirm(
-            '¿Cancelar esta cotización? Esta acción no se puede deshacer.',
-        )
-    ) {
+    cancelOpen.value = true;
+}
+
+function confirmCancelQuote(): void {
+    if (!props.quote) {
         return;
     }
 
-    router.post(props.quote.cancel_url);
+    cancelProcessing.value = true;
+
+    router.post(
+        props.quote.cancel_url,
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                cancelProcessing.value = false;
+                cancelOpen.value = false;
+            },
+        },
+    );
 }
 
 const statusVariant = computed<
@@ -1496,5 +1512,15 @@ const taxRateLabel = computed(() => `${(taxRateBps.value / 100).toFixed(2)}%`);
                 </section>
             </aside>
         </div>
+
+        <ConfirmDialog
+            :open="cancelOpen"
+            title="Cancelar cotización"
+            description="Esta acción no se puede deshacer. El PDF emitido se conserva como registro histórico."
+            confirm-label="Cancelar cotización"
+            :processing="cancelProcessing"
+            @update:open="cancelOpen = $event"
+            @confirm="confirmCancelQuote"
+        />
     </div>
 </template>

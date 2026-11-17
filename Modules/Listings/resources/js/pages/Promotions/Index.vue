@@ -4,6 +4,7 @@ import { Check, Pencil, Plus, Tag, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import { z } from 'zod';
 import { useFrontValidation } from '@/composables/useFrontValidation';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -233,12 +234,31 @@ async function submit(): Promise<void> {
     form.post(props.urls.store, options);
 }
 
+const promotionToDelete = ref<Promotion | null>(null);
+const deletingPromotion = ref(false);
+
 function destroy(item: Promotion): void {
-    if (!window.confirm(`¿Eliminar la promoción ${item.title}?`)) {
+    promotionToDelete.value = item;
+}
+
+function confirmDestroy(): void {
+    const item = promotionToDelete.value;
+
+    if (item === null) {
         return;
     }
 
-    router.delete(item.delete_url, { preserveScroll: true });
+    deletingPromotion.value = true;
+
+    router.delete(item.delete_url, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingPromotion.value = false;
+        },
+        onSuccess: () => {
+            promotionToDelete.value = null;
+        },
+    });
 }
 
 function statusVariant(
@@ -601,5 +621,23 @@ function statusVariant(
                 </form>
             </DialogScrollContent>
         </Dialog>
+
+        <ConfirmDialog
+            :open="promotionToDelete !== null"
+            title="Eliminar promoción"
+            :description="
+                promotionToDelete
+                    ? `Se eliminará la promoción «${promotionToDelete.title}». Esta acción no se puede deshacer.`
+                    : ''
+            "
+            confirm-label="Eliminar promoción"
+            :processing="deletingPromotion"
+            @update:open="
+                (open) => {
+                    if (!open) promotionToDelete = null;
+                }
+            "
+            @confirm="confirmDestroy"
+        />
     </div>
 </template>

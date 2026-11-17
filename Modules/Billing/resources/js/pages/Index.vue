@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { Check, CreditCard, LoaderCircle, ShieldAlert, X } from '@lucide/vue';
 import { ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -114,6 +115,7 @@ function statusVariant(
 
 const checkoutProcessing = ref<string | null>(null);
 const portalProcessing = ref(false);
+const planToCheckout = ref<PlanPayload | null>(null);
 
 function checkout(plan: PlanPayload): void {
     if (
@@ -125,15 +127,18 @@ function checkout(plan: PlanPayload): void {
         return;
     }
 
-    if (
-        !window.confirm(
-            `¿Cambiar la cuenta al plan ${plan.name}? Se abrirá Stripe Checkout.`,
-        )
-    ) {
+    planToCheckout.value = plan;
+}
+
+function confirmCheckout(): void {
+    const plan = planToCheckout.value;
+
+    if (plan === null) {
         return;
     }
 
     checkoutProcessing.value = plan.slug;
+    planToCheckout.value = null;
 
     router.post(
         props.urls.checkout,
@@ -475,5 +480,24 @@ function openPortal(): void {
             de Stripe. Los anticipos de reservas siguen fuera de Stripe y se
             registran manualmente; esta página no procesa pagos de renter.
         </p>
+
+        <ConfirmDialog
+            :open="planToCheckout !== null"
+            title="Cambiar de plan"
+            :description="
+                planToCheckout
+                    ? `Se abrirá Stripe Checkout para cambiar la cuenta al plan ${planToCheckout.name}.`
+                    : ''
+            "
+            confirm-label="Continuar a Stripe"
+            :destructive="false"
+            :processing="checkoutProcessing !== null"
+            @update:open="
+                (open) => {
+                    if (!open) planToCheckout = null;
+                }
+            "
+            @confirm="confirmCheckout"
+        />
     </div>
 </template>

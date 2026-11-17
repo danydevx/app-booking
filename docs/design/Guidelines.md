@@ -470,6 +470,22 @@ paragraph. The public header/footer use no decorative iconography.
 
 ---
 
+## K. Destructive actions in the admin
+
+- Never use `window.confirm`. Use `resources/js/components/ConfirmDialog.vue`
+  (shadcn `Dialog`) for delete, archive, merge, anonymize, cancel or ownership
+  transfer actions.
+- Show the object name in the description when possible: "Se eliminará la
+  terraza «X»".
+- The destructive button is the last action, uses `variant="destructive"` and
+  states the verb ("Eliminar terraza", "Anonimizar cliente").
+- Cancel is secondary and comes first.
+- Disable both buttons while the request is processing.
+- Deleting a listing, media, package, service, promotion, price range, customer
+  data, availability series or a team must always ask for confirmation first.
+
+---
+
 ## Current public views
 
 | Route                                           | Component                      | Layout                 | Status                                                                            |
@@ -479,7 +495,7 @@ paragraph. The public header/footer use no decorative iconography.
 | `/terrazas/{slug}`                              | `Listings/Public/Show`         | `HomeLayout`           | Consistent                                                                        |
 | `/terrazas/{slug}/disponibilidad`               | `Bookings/Public/Availability` | `PublicShell` (legacy) | Pending: needs a public calendar/form variant without touching the admin calendar |
 | `/terrazas/{slug}/reportar`                     | `Platform/Public/Report`       | `PublicShell` (legacy) | Pending                                                                           |
-| `/terrazas/{slug}/reclamar`                     | `Platform/Public/Claim`        | `HomeLayout`           | Consistent: CTA en el detalle y formulario con el sistema público              |
+| `/terrazas/{slug}/reclamar`                     | `Platform/Public/Claim`        | `HomeLayout`           | Consistent: CTA en el detalle y formulario con el sistema público                 |
 | Booking portal / contract / quote / unsubscribe | `Bookings/Public/*`            | `PublicShell` (legacy) | Pending: transactional documents outside discovery                                |
 | `/login`, `/register`, auth                     | starter kit                    | `AuthLayout`           | Starter-kit auth, outside the discovery identity                                  |
 

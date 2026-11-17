@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import DepositForm from '../components/DepositForm.vue';
@@ -60,6 +61,54 @@ const contractFormError = computed<string | null>(() => {
     return errors.contract ?? null;
 });
 
+type ConfirmOptions = {
+    title: string;
+    description: string;
+    label: string;
+    destructive?: boolean;
+    action: () => void;
+};
+
+const confirmOpen = ref(false);
+const confirmProcessing = ref(false);
+const confirmTitle = ref('');
+const confirmDescription = ref('');
+const confirmLabel = ref('Confirmar');
+const confirmDestructive = ref(true);
+let confirmAction: (() => void) | null = null;
+
+function askConfirm(options: ConfirmOptions): void {
+    confirmTitle.value = options.title;
+    confirmDescription.value = options.description;
+    confirmLabel.value = options.label;
+    confirmDestructive.value = options.destructive ?? true;
+    confirmAction = options.action;
+    confirmOpen.value = true;
+}
+
+function runConfirm(): void {
+    if (confirmAction === null) {
+        return;
+    }
+
+    confirmProcessing.value = true;
+    confirmAction();
+}
+
+function finishConfirm(): void {
+    confirmProcessing.value = false;
+    confirmOpen.value = false;
+    confirmAction = null;
+}
+
+function handleConfirmOpen(open: boolean): void {
+    confirmOpen.value = open;
+
+    if (!open) {
+        confirmAction = null;
+    }
+}
+
 function saveContract(): void {
     if (props.inquiry.contract) {
         contractForm.patch(props.inquiry.contract.update_url, {
@@ -77,17 +126,19 @@ function publishContract(): void {
         return;
     }
 
-    if (!window.confirm('¿Publicar el contrato en el portal del cliente?')) {
-        return;
-    }
-
-    router.post(
-        props.inquiry.contract.publish_url,
-        {},
-        {
-            preserveScroll: true,
-        },
-    );
+    askConfirm({
+        title: 'Publicar contrato',
+        description:
+            'El contrato quedará visible en el portal del cliente para que lo revise y acepte.',
+        label: 'Publicar contrato',
+        destructive: false,
+        action: () =>
+            router.post(
+                props.inquiry.contract?.publish_url ?? '',
+                {},
+                { preserveScroll: true, onFinish: finishConfirm },
+            ),
+    });
 }
 
 function contractStatusVariant(
@@ -131,27 +182,58 @@ function markContacted(): void {
 }
 
 function accept(): void {
-    if (!window.confirm('¿Aceptar la solicitud y reservar estas fechas?')) {
-        return;
-    }
-
-    router.patch(props.urls.accept, {}, { preserveScroll: true });
+    askConfirm({
+        title: 'Aceptar solicitud',
+        description:
+            'Se aceptará la solicitud y se reservarán estas fechas para el cliente.',
+        label: 'Aceptar y reservar',
+        destructive: false,
+        action: () =>
+            router.patch(
+                props.urls.accept,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 
 function decline(): void {
-    if (!window.confirm('¿Rechazar esta solicitud?')) {
-        return;
-    }
-
-    router.patch(props.urls.decline, {}, { preserveScroll: true });
+    askConfirm({
+        title: 'Rechazar solicitud',
+        description:
+            'La solicitud se marcará como rechazada. El cliente recibirá un aviso.',
+        label: 'Rechazar solicitud',
+        action: () =>
+            router.patch(
+                props.urls.decline,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 
 function cancel(): void {
-    if (!window.confirm('¿Cancelar la reserva y liberar las fechas?')) {
-        return;
-    }
-
-    router.patch(props.urls.cancel, {}, { preserveScroll: true });
+    askConfirm({
+        title: 'Cancelar reserva',
+        description:
+            'Se cancelará la reserva y las fechas volverán a estar disponibles.',
+        label: 'Cancelar reserva',
+        action: () =>
+            router.patch(
+                props.urls.cancel,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 
 function updateDepositStatus(deposit: BookingDeposit, event: Event): void {
@@ -667,5 +749,16 @@ function formatActivityDate(value: string | null): string {
                 </section>
             </aside>
         </div>
+
+        <ConfirmDialog
+            :open="confirmOpen"
+            :title="confirmTitle"
+            :description="confirmDescription"
+            :confirm-label="confirmLabel"
+            :destructive="confirmDestructive"
+            :processing="confirmProcessing"
+            @update:open="handleConfirmOpen"
+            @confirm="runConfirm"
+        />
     </div>
 </template>

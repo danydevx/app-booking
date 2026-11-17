@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ArrowLeft } from '@lucide/vue';
+import { ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -68,53 +70,106 @@ const props = defineProps<{
 const roleForm = useForm({ user: '' });
 const supportForm = useForm({ user: '' });
 
-function grantSuperadmin(): void {
-    if (
-        !window.confirm(`¿Otorgar acceso de superadmin a ${props.user.email}?`)
-    ) {
+type ConfirmOptions = {
+    title: string;
+    description: string;
+    label: string;
+    destructive?: boolean;
+    action: () => void;
+};
+
+const confirmOpen = ref(false);
+const confirmProcessing = ref(false);
+const confirmTitle = ref('');
+const confirmDescription = ref('');
+const confirmLabel = ref('Confirmar');
+const confirmDestructive = ref(true);
+let confirmAction: (() => void) | null = null;
+
+function askConfirm(options: ConfirmOptions): void {
+    confirmTitle.value = options.title;
+    confirmDescription.value = options.description;
+    confirmLabel.value = options.label;
+    confirmDestructive.value = options.destructive ?? true;
+    confirmAction = options.action;
+    confirmOpen.value = true;
+}
+
+function runConfirm(): void {
+    if (confirmAction === null) {
         return;
     }
 
-    roleForm.post(props.urls.grant_superadmin, { preserveScroll: true });
+    confirmProcessing.value = true;
+    confirmAction();
+}
+
+function finishConfirm(): void {
+    confirmProcessing.value = false;
+    confirmOpen.value = false;
+    confirmAction = null;
+}
+
+function handleConfirmOpen(open: boolean): void {
+    confirmOpen.value = open;
+
+    if (!open) {
+        confirmAction = null;
+    }
+}
+
+function grantSuperadmin(): void {
+    askConfirm({
+        title: 'Otorgar acceso de superadmin',
+        description: `Se dará acceso total de plataforma a ${props.user.email}.`,
+        label: 'Otorgar superadmin',
+        destructive: false,
+        action: () =>
+            roleForm.post(props.urls.grant_superadmin, {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
+    });
 }
 
 function revokeSuperadmin(): void {
-    if (
-        !window.confirm(
-            `¿Revocar el acceso de superadmin de ${props.user.email}?`,
-        )
-    ) {
-        return;
-    }
-
-    roleForm.post(props.urls.revoke_superadmin, { preserveScroll: true });
+    askConfirm({
+        title: 'Revocar acceso de superadmin',
+        description: `Se retirará el acceso de plataforma a ${props.user.email}.`,
+        label: 'Revocar superadmin',
+        action: () =>
+            roleForm.post(props.urls.revoke_superadmin, {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
+    });
 }
 
 function resendVerification(): void {
-    if (
-        !window.confirm(
-            `¿Reenviar el correo de verificación a ${props.user.email}?`,
-        )
-    ) {
-        return;
-    }
-
-    supportForm.post(props.urls.resend_verification, {
-        preserveScroll: true,
+    askConfirm({
+        title: 'Reenviar verificación',
+        description: `Se enviará un nuevo correo de verificación a ${props.user.email}.`,
+        label: 'Reenviar correo',
+        destructive: false,
+        action: () =>
+            supportForm.post(props.urls.resend_verification, {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
     });
 }
 
 function sendPasswordReset(): void {
-    if (
-        !window.confirm(
-            `¿Enviar un enlace de restablecimiento de contraseña a ${props.user.email}?`,
-        )
-    ) {
-        return;
-    }
-
-    supportForm.post(props.urls.send_password_reset, {
-        preserveScroll: true,
+    askConfirm({
+        title: 'Enviar restablecimiento',
+        description: `Se enviará un enlace para restablecer la contraseña a ${props.user.email}.`,
+        label: 'Enviar enlace',
+        destructive: false,
+        action: () =>
+            supportForm.post(props.urls.send_password_reset, {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
     });
 }
 
@@ -400,5 +455,16 @@ function reasonOf(activity: ActivityRow): string {
                 </p>
             </CardContent>
         </Card>
+
+        <ConfirmDialog
+            :open="confirmOpen"
+            :title="confirmTitle"
+            :description="confirmDescription"
+            :confirm-label="confirmLabel"
+            :destructive="confirmDestructive"
+            :processing="confirmProcessing"
+            @update:open="handleConfirmOpen"
+            @confirm="runConfirm"
+        />
     </div>
 </template>

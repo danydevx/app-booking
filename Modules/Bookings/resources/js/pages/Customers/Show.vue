@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -340,24 +341,81 @@ function reactivateEmail(): void {
     router.patch(props.urls.email_opt_in, {}, { preserveScroll: true });
 }
 
-function mergeCustomer(): void {
-    if (
-        !window.confirm(
-            '¿Fusionar este cliente con el destino? El cliente actual quedará archivado.',
-        )
-    ) {
+type ConfirmOptions = {
+    title: string;
+    description: string;
+    label: string;
+    action: () => void;
+};
+
+const confirmOpen = ref(false);
+const confirmProcessing = ref(false);
+const confirmTitle = ref('');
+const confirmDescription = ref('');
+const confirmLabel = ref('Confirmar');
+let confirmAction: (() => void) | null = null;
+
+function askConfirm(options: ConfirmOptions): void {
+    confirmTitle.value = options.title;
+    confirmDescription.value = options.description;
+    confirmLabel.value = options.label;
+    confirmAction = options.action;
+    confirmOpen.value = true;
+}
+
+function runConfirm(): void {
+    if (confirmAction === null) {
         return;
     }
 
-    mergeForm.post(props.urls.merge);
+    confirmProcessing.value = true;
+    confirmAction();
+}
+
+function finishConfirm(): void {
+    confirmProcessing.value = false;
+    confirmOpen.value = false;
+    confirmAction = null;
+}
+
+function handleConfirmOpen(open: boolean): void {
+    confirmOpen.value = open;
+
+    if (!open) {
+        confirmAction = null;
+    }
+}
+
+function mergeCustomer(): void {
+    askConfirm({
+        title: 'Fusionar cliente',
+        description:
+            'El cliente actual quedará archivado y sus datos se combinarán con el destino.',
+        label: 'Fusionar cliente',
+        action: () =>
+            mergeForm.post(props.urls.merge, {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
+    });
 }
 
 function archiveCustomer(): void {
-    if (!window.confirm('¿Archivar este cliente?')) {
-        return;
-    }
-
-    router.patch(props.urls.archive, {}, { preserveScroll: true });
+    askConfirm({
+        title: 'Archivar cliente',
+        description:
+            'El cliente dejará de aparecer en la lista activa. Sus datos se conservarán.',
+        label: 'Archivar cliente',
+        action: () =>
+            router.patch(
+                props.urls.archive,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 
 function restoreCustomer(): void {
@@ -365,15 +423,17 @@ function restoreCustomer(): void {
 }
 
 function anonymizeCustomer(): void {
-    if (
-        !window.confirm(
-            '¿Anonimizar este cliente? Se eliminarán sus datos personales y los de sus solicitudes. Esta acción no se puede deshacer.',
-        )
-    ) {
-        return;
-    }
-
-    anonymizeForm.patch(props.urls.anonymize);
+    askConfirm({
+        title: 'Anonimizar cliente',
+        description:
+            'Se eliminarán sus datos personales y los de sus solicitudes. Esta acción no se puede deshacer.',
+        label: 'Anonimizar cliente',
+        action: () =>
+            anonymizeForm.patch(props.urls.anonymize, {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
+    });
 }
 
 function toggleTag(tagId: number): void {
@@ -390,14 +450,20 @@ function createTag(): void {
 }
 
 function deleteTag(tag: CustomerTag & { delete_url: string | null }): void {
-    if (
-        !tag.delete_url ||
-        !window.confirm(`¿Eliminar la etiqueta ${tag.name}?`)
-    ) {
+    if (!tag.delete_url) {
         return;
     }
 
-    router.delete(tag.delete_url, { preserveScroll: true });
+    askConfirm({
+        title: 'Eliminar etiqueta',
+        description: `Se eliminará la etiqueta «${tag.name}» de todos los clientes.`,
+        label: 'Eliminar etiqueta',
+        action: () =>
+            router.delete(tag.delete_url ?? '', {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
+    });
 }
 
 function completeTask(task: CustomerTask): void {
@@ -405,11 +471,21 @@ function completeTask(task: CustomerTask): void {
 }
 
 function cancelTask(task: CustomerTask): void {
-    if (!window.confirm('¿Cancelar esta tarea?')) {
-        return;
-    }
-
-    router.patch(task.cancel_url, {}, { preserveScroll: true });
+    askConfirm({
+        title: 'Cancelar tarea',
+        description:
+            'La tarea se marcará como cancelada y dejará de aparecer en tus pendientes.',
+        label: 'Cancelar tarea',
+        action: () =>
+            router.patch(
+                task.cancel_url,
+                {},
+                {
+                    preserveScroll: true,
+                    onFinish: finishConfirm,
+                },
+            ),
+    });
 }
 
 function recordActivity(): void {
@@ -423,11 +499,17 @@ function recordActivity(): void {
 }
 
 function deleteActivity(activity: CustomerActivity): void {
-    if (!window.confirm('¿Eliminar esta actividad del historial?')) {
-        return;
-    }
-
-    router.delete(activity.delete_url, { preserveScroll: true });
+    askConfirm({
+        title: 'Eliminar actividad',
+        description:
+            'La actividad se eliminará del historial del cliente. Esta acción no se puede deshacer.',
+        label: 'Eliminar actividad',
+        action: () =>
+            router.delete(activity.delete_url, {
+                preserveScroll: true,
+                onFinish: finishConfirm,
+            }),
+    });
 }
 
 function formatActivityDate(value: string): string {
@@ -1799,5 +1881,16 @@ function statusVariant(
                 </section>
             </aside>
         </div>
+
+        <ConfirmDialog
+            :open="confirmOpen"
+            :title="confirmTitle"
+            :description="confirmDescription"
+            :confirm-label="confirmLabel"
+            :destructive="true"
+            :processing="confirmProcessing"
+            @update:open="handleConfirmOpen"
+            @confirm="runConfirm"
+        />
     </div>
 </template>

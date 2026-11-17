@@ -12,6 +12,7 @@ import {
 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +37,8 @@ const form = useForm<{
 });
 
 const items = ref<ListingMedia[]>([...props.media]);
+const mediaToDelete = ref<ListingMedia | null>(null);
+const deletingMedia = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
 const draggedIndex = ref<number | null>(null);
 const dragOverIndex = ref<number | null>(null);
@@ -188,11 +191,27 @@ function remove(media: ListingMedia): void {
         return;
     }
 
-    if (!window.confirm('¿Eliminar este archivo?')) {
+    mediaToDelete.value = media;
+}
+
+function confirmRemove(): void {
+    const media = mediaToDelete.value;
+
+    if (!media?.delete_url) {
         return;
     }
 
-    router.delete(media.delete_url, { preserveScroll: true });
+    deletingMedia.value = true;
+
+    router.delete(media.delete_url, {
+        preserveScroll: true,
+        onFinish: () => {
+            deletingMedia.value = false;
+        },
+        onSuccess: () => {
+            mediaToDelete.value = null;
+        },
+    });
 }
 
 function startEdit(item: ListingMedia): void {
@@ -546,5 +565,19 @@ function saveAlt(item: ListingMedia): void {
         >
             Todavía no hay fotos. Agrega una imagen para poder publicar.
         </p>
+
+        <ConfirmDialog
+            :open="mediaToDelete !== null"
+            title="Eliminar archivo"
+            description="Se eliminará este archivo de la terraza. Esta acción no se puede deshacer."
+            confirm-label="Eliminar archivo"
+            :processing="deletingMedia"
+            @update:open="
+                (open) => {
+                    if (!open) mediaToDelete = null;
+                }
+            "
+            @confirm="confirmRemove"
+        />
     </section>
 </template>
