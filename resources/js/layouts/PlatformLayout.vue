@@ -88,7 +88,7 @@ function isActive(href: string): boolean {
             class="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur"
         >
             <div
-                class="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6"
+                class="mx-auto flex w-[90%] max-w-none flex-col gap-4 px-4 py-4 sm:px-6"
             >
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <Link href="/app/platform" class="flex items-center gap-2">
@@ -129,7 +129,7 @@ function isActive(href: string): boolean {
                 </div>
 
                 <nav
-                    class="-mx-1 flex items-center gap-1 overflow-x-auto px-1 pb-1 text-sm"
+                    class="-mx-1 flex flex-wrap items-center gap-1 px-1 pb-1 text-sm"
                     aria-label="Navegación de plataforma"
                 >
                     <Link
@@ -151,7 +151,7 @@ function isActive(href: string): boolean {
             </div>
         </header>
 
-        <main class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+        <main class="mx-auto w-[90%] max-w-none px-4 py-6 sm:px-6">
             <slot />
         </main>
     </div>

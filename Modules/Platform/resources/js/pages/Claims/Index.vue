@@ -173,7 +173,7 @@ function location(claim: ClaimRow): string {
             <Button type="submit">Filtrar</Button>
         </form>
 
-        <div class="overflow-hidden rounded-lg border bg-card">
+        <div class="overflow-x-auto rounded-lg border bg-card">
             <table class="w-full text-sm">
                 <thead class="bg-muted/50 text-left text-xs uppercase">
                     <tr>
