@@ -64,6 +64,8 @@ void createInertiaApp({
                 return HomeLayout;
             case name.startsWith('Bookings/Public/'):
                 return null;
+            case name === 'Platform/Public/Claim':
+                return HomeLayout;
             case name.startsWith('Platform/Public/'):
                 return null;
             case name.startsWith('Platform/'):
