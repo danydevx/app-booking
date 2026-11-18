@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import L from 'leaflet';
+import type { LayerGroup, Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+type LeafletModule = typeof import('leaflet');
+let L = null as unknown as LeafletModule;
 
 type MapListing = {
     id: number;
@@ -21,12 +24,14 @@ const props = defineProps<{
 }>();
 
 const mapElement = ref<HTMLElement | null>(null);
-let map: L.Map | null = null;
-let markers: L.LayerGroup | null = null;
+let map: LeafletMap | null = null;
+let markers: LayerGroup | null = null;
 
 const mexicoCenter: [number, number] = [23.6345, -102.5528];
 
-onMounted(() => {
+onMounted(async () => {
+    L = (await import('leaflet')).default as unknown as LeafletModule;
+
     if (!mapElement.value) {
         return;
     }

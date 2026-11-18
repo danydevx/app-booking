@@ -14,3 +14,18 @@ numprocs=1
 redirect_stderr=true
 stdout_logfile=/var/log/app-booking-queue.log
 stopwaitsecs=3600
+
+; Inertia SSR renderer. Build the bundle with `npm run build:ssr` before
+; starting it. The web app must keep INERTIA_SSR_ENABLED=true.
+[program:app-booking-ssr]
+process_name=%(program_name)s
+command=php /var/www/app-booking/current/artisan inertia:start-ssr
+directory=/var/www/app-booking/current
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+user=www-data
+redirect_stderr=true
+stdout_logfile=/var/log/app-booking-ssr.log
+stopwaitsecs=10

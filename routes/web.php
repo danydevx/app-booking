@@ -3,12 +3,17 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OwnersController;
+use App\Http\Controllers\RobotsController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('propietarios', OwnersController::class)->name('public.owners');
+
+Route::get('robots.txt', RobotsController::class)->name('seo.robots');
+Route::get('sitemap.xml', SitemapController::class)->name('seo.sitemap');
 
 Route::prefix('app/{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])

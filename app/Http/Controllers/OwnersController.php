@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\Branding;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -46,6 +47,15 @@ class OwnersController extends Controller
         return Inertia::render('Owners', [
             'plans' => $plans,
             'video' => $this->demoVideo(),
+            'seo' => [
+                'title' => 'Publica tu terraza',
+                'description' => 'Publica tu terraza, jardín o salón, recibe solicitudes y administra disponibilidad, reservas y clientes desde una sola plataforma.',
+                'canonical' => route('public.owners'),
+                'image' => null,
+                'robots' => 'index, follow',
+                'type' => 'website',
+                'site_name' => Branding::appName(),
+            ],
             'urls' => [
                 'register' => route('register'),
                 'login' => route('login'),

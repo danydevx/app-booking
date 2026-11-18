@@ -56,6 +56,15 @@ class GuidedSearchController extends Controller
                 'today' => $today->toDateString(),
                 'current_month' => $today->format('Y-m'),
             ],
+            'seo' => [
+                'title' => 'Encuentra tu espacio ideal',
+                'description' => 'Cuéntanos qué evento planeas y te mostramos terrazas y salones que encajan con tu fecha, invitados y presupuesto.',
+                'canonical' => route('public.guided-search.index'),
+                'image' => null,
+                'robots' => 'index, follow',
+                'type' => 'website',
+                'site_name' => Branding::appName(),
+            ],
             'urls' => [
                 'home' => route('home'),
                 'index' => route('public.listings.index'),

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import '@/homeSite';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import HomeSearch from '@/components/home/HomeSearch.vue';
 import HomeVenueCard from '@/components/home/HomeVenueCard.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import type { PageSeo } from '@/types';
 
 type HomeListing = {
     id: number;
@@ -36,19 +38,12 @@ const props = defineProps<{
         icon: string | null;
     }>;
     eventTypes: Array<{ value: string; label: string }>;
+    seo: PageSeo;
     urls: {
         index: string;
         guidedSearch: string;
     };
 }>();
-
-const page = usePage();
-
-const appName = computed(
-    () =>
-        (page.props.branding as { app_name?: string } | undefined)?.app_name ??
-        'AApp Booking',
-);
 
 const unsplash = (id: string, width = 1200): string =>
     `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${width}&q=80`;
@@ -95,7 +90,7 @@ const steps = [
 </script>
 
 <template>
-    <Head :title="`${appName} · Espacios para celebrar`" />
+    <SeoHead :seo="seo" />
 
     <section class="relative">
         <img

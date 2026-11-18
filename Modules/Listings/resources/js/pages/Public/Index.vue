@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import '@/homeSite';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
 import HomePagination from '@/components/home/HomePagination.vue';
 import HomeVenueCard from '@/components/home/HomeVenueCard.vue';
 import GeoSearchBar from '@/components/public/GeoSearchBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
 import GeoResultsMap from '../../components/GeoResultsMap.vue';
+import type { PageSeo } from '@/types';
 import type {
     GeoBounds,
     GeoMapPoint,
@@ -38,6 +40,7 @@ const props = defineProps<{
         description: string | null;
     }>;
     locations: ListingLocations;
+    seo: PageSeo;
     urls: {
         index: string;
         locations: string;
@@ -340,7 +343,7 @@ watch(
 </script>
 
 <template>
-    <Head title="Explorar terrazas" />
+    <SeoHead :seo="seo" />
 
     <div class="flex h-[calc(100dvh-4.3125rem)] min-h-0 flex-col">
         <header

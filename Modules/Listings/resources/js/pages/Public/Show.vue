@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import '@/homeSite';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import SeoHead from '@/components/SeoHead.vue';
+import type { PageSeo } from '@/types';
 import ListingSectionNav from '@/components/public/ListingSectionNav.vue';
 import ListingContactModal from '../../components/ListingContactModal.vue';
 import ListingMap from '../../components/ListingMap.vue';
@@ -15,6 +17,7 @@ const props = defineProps<{
         label: string;
         reason: string | null;
     }>;
+    seo: PageSeo;
     urls: {
         index: string;
         report: string;
@@ -30,6 +33,8 @@ const props = defineProps<{
         capacity: number | null;
     };
 }>();
+
+const jsonLd = computed(() => JSON.stringify(props.seo.json_ld ?? null));
 
 const activeIndex = ref(0);
 const contactOpen = ref(false);
@@ -204,7 +209,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Head :title="`${listing.name} · Terrazas para eventos`" />
+    <SeoHead :seo="seo" />
+
+    <component :is="'script'" type="application/ld+json" v-html="jsonLd" />
 
     <div class="home-container pt-6 pb-16 sm:pt-8">
         <Link

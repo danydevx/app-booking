@@ -22,6 +22,7 @@ use Modules\Listings\Models\Listing;
 use Modules\Listings\Queries\PublicListingSearch;
 use Modules\Listings\Support\ListingPresenter;
 use Modules\Listings\Support\ListingPublicCatalog;
+use Modules\Listings\Support\ListingSeo;
 use Modules\Listings\Support\TerraceServiceCatalog;
 use Modules\Platform\Support\GeographicCoverageService;
 
@@ -69,6 +70,15 @@ class PublicListingController extends Controller
             'featuredCharacteristics' => ListingPublicCatalog::featuredCharacteristics(),
             'eventTypes' => ListingPublicCatalog::eventTypeOptions(),
             'totalListings' => Listing::query()->publiclyVisible()->count(),
+            'seo' => [
+                'title' => Branding::appName().' · Espacios para celebrar',
+                'description' => 'Renta terrazas, jardines y salones para eventos en México. Encuentra espacios por ciudad, capacidad, servicios y tipo de evento.',
+                'canonical' => route('home'),
+                'image' => null,
+                'robots' => 'index, follow',
+                'type' => 'website',
+                'site_name' => Branding::appName(),
+            ],
             'urls' => [
                 'index' => route('public.listings.index'),
                 'guidedSearch' => route('public.guided-search.index'),
@@ -117,6 +127,15 @@ class PublicListingController extends Controller
             'featuredCharacteristics' => ListingPublicCatalog::featuredCharacteristics(),
             'eventTypes' => ListingPublicCatalog::eventTypeOptions(),
             'locations' => $this->coverage->locations(),
+            'seo' => [
+                'title' => 'Explorar terrazas · Espacios para eventos',
+                'description' => 'Explora terrazas, jardines y salones para eventos por ciudad, capacidad, servicios y tipo de evento.',
+                'canonical' => route('public.listings.index'),
+                'image' => null,
+                'robots' => 'index, follow',
+                'type' => 'website',
+                'site_name' => Branding::appName(),
+            ],
             'urls' => [
                 'index' => route('public.listings.index'),
                 'locations' => route('public.listings.locations'),
@@ -255,6 +274,7 @@ class PublicListingController extends Controller
                 'current_month' => CarbonImmutable::now($listing->timezone)->format('Y-m'),
                 'capacity' => $listing->capacity,
             ],
+            'seo' => ListingSeo::forListing($listing),
         ]);
     }
 }

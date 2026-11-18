@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { X } from '@lucide/vue';
-import L from 'leaflet';
+import type {
+    LatLng,
+    LeafletMouseEvent,
+    Map as LeafletMap,
+    Marker,
+} from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+type LeafletModule = typeof import('leaflet');
+let L = null as unknown as LeafletModule;
 import { Button } from '@/components/ui/button';
 
 const props = withDefaults(
@@ -21,17 +29,19 @@ const emit = defineEmits<{
 }>();
 
 const mapElement = ref<HTMLElement | null>(null);
-let map: L.Map | null = null;
-let marker: L.Marker | null = null;
+let map: LeafletMap | null = null;
+let marker: Marker | null = null;
 
 const mexicoCenter: [number, number] = [23.6345, -102.5528];
 
-const pinIcon = L.divIcon({
-    className: '',
-    html: '<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#0f766e;border:2px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,.35)"><span style="width:8px;height:8px;border-radius:9999px;background:#fff"></span></div>',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-});
+function pinIcon() {
+    return L.divIcon({
+        className: '',
+        html: '<div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;background:#0f766e;border:2px solid #fff;box-shadow:0 2px 8px rgba(15,23,42,.35)"><span style="width:8px;height:8px;border-radius:9999px;background:#fff"></span></div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+    });
+}
 
 function toCoordinate(value: string | number | null): number | null {
     if (value === null || value === '') {
@@ -75,11 +85,11 @@ function round(value: number): string {
     return value.toFixed(6);
 }
 
-function emitCoordinates(latlng: L.LatLng): void {
+function emitCoordinates(latlng: LatLng): void {
     emit('change', round(latlng.lat), round(latlng.lng));
 }
 
-function placeMarker(latlng: L.LatLng): void {
+function placeMarker(latlng: LatLng): void {
     if (!map) {
         return;
     }
@@ -87,7 +97,7 @@ function placeMarker(latlng: L.LatLng): void {
     if (!marker) {
         marker = L.marker(latlng, {
             draggable: true,
-            icon: pinIcon,
+            icon: pinIcon(),
             keyboard: true,
         }).addTo(map);
 
@@ -112,7 +122,9 @@ function clearLocation(): void {
     emit('change', '', '');
 }
 
-onMounted(() => {
+onMounted(async () => {
+    L = (await import('leaflet')).default as unknown as LeafletModule;
+
     if (!mapElement.value) {
         return;
     }
@@ -137,7 +149,7 @@ onMounted(() => {
         placeMarker(L.latLng(coordinates.lat, coordinates.lng));
     }
 
-    map.on('click', (event: L.LeafletMouseEvent) => {
+    map.on('click', (event: LeafletMouseEvent) => {
         placeMarker(event.latlng);
         emitCoordinates(event.latlng);
     });

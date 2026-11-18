@@ -1,7 +1,15 @@
 <script setup lang="ts">
-import L from 'leaflet';
+import type {
+    CircleMarker,
+    LatLng,
+    LayerGroup,
+    Map as LeafletMap,
+} from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+type LeafletModule = typeof import('leaflet');
+let L = null as unknown as LeafletModule;
 import type { GeoBounds, GeoMapPoint } from '../types';
 
 const props = withDefaults(
@@ -29,16 +37,18 @@ const emit = defineEmits<{
 
 const mapElement = ref<HTMLElement | null>(null);
 
-let map: L.Map | null = null;
-let layer: L.LayerGroup | null = null;
-const selectedMarker: { current: L.CircleMarker | null } = { current: null };
-const currentMarker = (): L.CircleMarker | null => selectedMarker.current;
+let map: LeafletMap | null = null;
+let layer: LayerGroup | null = null;
+const selectedMarker: { current: CircleMarker | null } = { current: null };
+const currentMarker = (): CircleMarker | null => selectedMarker.current;
 let programmaticUntil = 0;
 let fittedSignature = '';
 
 const mexicoCenter: [number, number] = [23.6345, -102.5528];
 
-onMounted(() => {
+onMounted(async () => {
+    L = (await import('leaflet')).default as unknown as LeafletModule;
+
     if (!mapElement.value) {
         return;
     }
@@ -280,7 +290,7 @@ function drawPoint(point: GeoMapPoint, selected: boolean): void {
     }
 }
 
-function drawCluster(position: L.LatLng, count: number): void {
+function drawCluster(position: LatLng, count: number): void {
     if (!map || !layer) {
         return;
     }

@@ -83,6 +83,8 @@ QUEUE_CONNECTION=database
 CACHE_STORE=database
 SESSION_DRIVER=database
 
+INERTIA_SSR_ENABLED=true
+
 STRIPE_KEY=...
 STRIPE_SECRET=...
 STRIPE_WEBHOOK_SECRET=...
@@ -108,15 +110,17 @@ No commitear valores reales.
 11. `php artisan config:cache`, `php artisan route:cache`, `php artisan view:cache`.
 12. `php artisan storage:link --force`.
 13. Reiniciar workers de cola.
-14. Cambiar el symlink `current` de forma atómica.
-15. Health check y smoke test.
+14. Cambiar el symlink `current` de forma atómica y reiniciar `queue:work` e
+    `inertia:start-ssr`.
+15. Health check y smoke test (incluye `php artisan inertia:check-ssr` y una
+    ficha pública que debe traer contenido en el HTML).
 
 No ejecutar `composer update` en producción. No ejecutar migraciones destructivas.
 
 ## Plantillas incluidas
 
 - `deploy/nginx.conf.example` — server block, document root, uploads, deny hidden files, TLS commented.
-- `deploy/supervisor.conf.example` — queue worker.
+- `deploy/supervisor.conf.example` — queue worker y renderizador SSR.
 - `deploy/crontab.example` — scheduler cada minuto.
 - `deploy/backup.sh.example` — dump MySQL + media con retención; copiar fuera del servidor.
 - `deploy/restore.sh.example` — restauración con confirmación explícita; probar en un entorno descartable.
@@ -138,6 +142,20 @@ El scheduler ejecuta `bookings:expire-inquiries`, `bookings:send-reminders` y
 `bookings:send-task-reminders`; revisar que el worker de colas esté activo para
 los correos.
 Añadir `php artisan queue:monitor` si se incorpora el paquete de monitorización.
+
+## SSR y SEO
+
+- `INERTIA_SSR_ENABLED=true` y el programa `app-booking-ssr` de
+  `deploy/supervisor.conf.example` mantienen el renderizado del lado del
+  servidor. Sin SSR, el HTML público llega vacío y las redes sociales no ven
+  título, descripción ni imagen.
+- Verificar con `php artisan inertia:check-ssr`.
+- Smoke test: `curl -s https://dominio/terrazas/<slug> | grep -q "<nombre de la terraza>"`
+  y comprobar que el HTML incluye `<title>`, `meta description` y
+  `application/ld+json`.
+- `robots.txt` y `sitemap.xml` se generan dinámicamente con `APP_URL`; el
+  sitemap solo incluye terrazas públicamente visibles y se cachea una hora.
+- Páginas privadas y con token responden `X-Robots-Tag: noindex, nofollow`.
 
 ## Backups y restauración
 

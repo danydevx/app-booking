@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import '@/homeSite';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
+import SeoHead from '@/components/SeoHead.vue';
 import FeatureIcon from '@/components/public/FeatureIcon.vue';
 import FeatureListItem from '@/components/public/FeatureListItem.vue';
 import HeroImageSlider from '@/components/public/HeroImageSlider.vue';
@@ -11,6 +12,7 @@ import type { FeatureIconName } from '@/components/public/featureIcon';
 import type { HeroSlide } from '@/components/public/heroSlider';
 import type { ProductFeatureTab } from '@/components/public/productFeatureTabs';
 import type { VideoShowcaseMedia } from '@/components/public/videoShowcase';
+import type { PageSeo } from '@/types';
 
 type OwnerPlan = {
     slug: string;
@@ -38,6 +40,7 @@ type OwnerPlan = {
 const props = defineProps<{
     plans: OwnerPlan[];
     video: VideoShowcaseMedia;
+    seo: PageSeo;
     urls: {
         register: string;
         login: string;
@@ -562,22 +565,12 @@ const heroSlides: HeroSlide[] = [
 </script>
 
 <template>
-    <Head title="Publica tu terraza">
-        <meta
-            name="description"
-            content="Publica tu terraza, jardín o salón, recibe solicitudes y administra disponibilidad, reservas y clientes desde una sola plataforma."
-        />
-        <meta property="og:type" content="website" />
-        <meta
-            property="og:title"
-            content="Tu terraza es un negocio. Adminístrala como tal."
-        />
-        <meta
-            property="og:description"
-            content="Publica tu espacio, recibe solicitudes, organiza tus reservas y administra tus clientes con AApp Booking."
-        />
-        <meta property="og:image" :content="heroImage" />
-    </Head>
+    <SeoHead
+        :seo="seo"
+        :image="heroImage"
+        og-title="Tu terraza es un negocio. Adminístrala como tal."
+        og-description="Publica tu espacio, recibe solicitudes, organiza tus reservas y administra tus clientes con AApp Booking."
+    />
 
     <section
         class="section-hero relative overflow-hidden bg-[color:var(--home-bg)]"

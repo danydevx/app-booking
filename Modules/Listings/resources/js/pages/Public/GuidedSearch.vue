@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import '@/homeSite';
-import { Head, Link } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import SeoHead from '@/components/SeoHead.vue';
+import type { PageSeo } from '@/types';
 import ListingContactModal from '../../components/ListingContactModal.vue';
 import EventDateStep from '../../components/guided/EventDateStep.vue';
 import EventTypeStep from '../../components/guided/EventTypeStep.vue';
@@ -48,6 +50,7 @@ const props = defineProps<{
         today: string;
         current_month: string;
     };
+    seo: PageSeo;
     urls: {
         home: string;
         index: string;
@@ -323,7 +326,7 @@ function openContact(listing: GuidedResult): void {
 </script>
 
 <template>
-    <Head title="Encuentra tu espacio ideal" />
+    <SeoHead :seo="seo" />
 
     <div class="home-container py-10 sm:py-14">
         <div class="mx-auto max-w-5xl">

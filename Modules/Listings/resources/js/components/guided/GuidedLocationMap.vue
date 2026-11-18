@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import L from 'leaflet';
+import type { LayerGroup, LeafletMouseEvent, Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
+type LeafletModule = typeof import('leaflet');
+let L = null as unknown as LeafletModule;
 
 const props = withDefaults(
     defineProps<{
@@ -22,12 +25,14 @@ const emit = defineEmits<{
 
 const mapElement = ref<HTMLElement | null>(null);
 
-let map: L.Map | null = null;
-let layer: L.LayerGroup | null = null;
+let map: LeafletMap | null = null;
+let layer: LayerGroup | null = null;
 
 const mexicoCenter: [number, number] = [23.6345, -102.5528];
 
-onMounted(() => {
+onMounted(async () => {
+    L = (await import('leaflet')).default as unknown as LeafletModule;
+
     if (!mapElement.value) {
         return;
     }
@@ -74,7 +79,7 @@ onBeforeUnmount(() => {
     layer = null;
 });
 
-function handleClick(event: L.LeafletMouseEvent): void {
+function handleClick(event: LeafletMouseEvent): void {
     emit('update:center', {
         lat: Number(event.latlng.lat.toFixed(6)),
         lng: Number(event.latlng.lng.toFixed(6)),
