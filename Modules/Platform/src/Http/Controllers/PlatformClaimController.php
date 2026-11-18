@@ -71,6 +71,9 @@ class PlatformClaimController extends Controller
                 'id' => $claim->targetTeam->id,
                 'name' => $claim->targetTeam->name,
             ],
+            'approve_url' => $claim->isPending() && $claim->listing->isClaimable()
+                ? route('platform.claims.approve', ['claim' => $claim->id])
+                : null,
         ]);
 
         $counts = ListingClaim::query()
@@ -91,6 +94,9 @@ class PlatformClaimController extends Controller
                 'status' => is_string($status) ? $status : null,
             ],
             'statuses' => ListingClaimStatus::options(),
+            'can' => [
+                'manage' => Gate::allows(PlatformPermission::CLAIMS_MANAGE),
+            ],
             'urls' => [
                 'index' => route('platform.claims.index'),
                 'dashboard' => route('platform.dashboard'),

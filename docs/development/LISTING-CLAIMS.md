@@ -173,6 +173,11 @@ deja activo el botón público de reclamo. El slug y la URL pública no cambian.
 La cola está en `/app/platform/claims` y requiere
 `platform.claims.view`/`platform.claims.manage`.
 
+Las reclamaciones pendientes tienen el botón **"Aprobar y transferir"**
+directamente en la lista (con confirmación); también se puede revisar el detalle
+en `/app/platform/claims/{id}` para ver el mensaje, el documento y la cuenta
+destino.
+
 Al aprobar:
 
 1. Se crea la cuenta de negocio si el solicitante no eligió una.
@@ -203,6 +208,27 @@ terraza reclamada sigue siendo administrable.
   al solicitante/propietario.
 
 Las notificaciones son `ShouldQueue`; en producción el worker debe estar activo.
+
+## Datos de prueba para reclamaciones
+
+En entorno local se pueden crear dos terrazas reclamables y dos cuentas de
+prueba con:
+
+```bash
+php artisan db:seed --class=ClaimFlowDemoSeeder
+```
+
+Crea (de forma idempotente y sin tocar otras filas):
+
+- `Terraza Demo Reclamable Uno` (`/terrazas/terraza-demo-reclamable-uno`), en el
+  Directorio, con una reclamación pendiente de `dueno.uno@terrazas.test`.
+- `Terraza Demo Reclamable Dos` (`/terrazas/terraza-demo-reclamable-dos`), sin
+  reclamar, para probar el flujo completo.
+- Cuentas verificadas `dueno.uno@terrazas.test` y `dueno.dos@terrazas.test`, con
+  contraseña `password`, cada una con su cuenta de negocio.
+
+Flujo sugerido: entrar como `dueno.dos`, reclamar la terraza Dos, luego entrar
+como superadmin a `/app/platform/claims` y aprobar ambas con un clic.
 
 ## Verificación
 

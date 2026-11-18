@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
-import { BadgeCheck, FileText } from '@lucide/vue';
-import { ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { BadgeCheck, FileText, ShieldCheck } from '@lucide/vue';
+import { computed, ref } from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ type ClaimRow = {
         is_claimable: boolean;
     };
     target_team: { id: number; name: string } | null;
+    approve_url: string | null;
 };
 
 type PaginationLink = {
@@ -50,6 +52,7 @@ const props = defineProps<{
     counts: { pending: number; approved: number; rejected: number };
     filters: { q: string; status: string | null };
     statuses: Array<{ value: string; label: string }>;
+    can: { manage: boolean };
     urls: {
         index: string;
         dashboard: string;
@@ -58,6 +61,50 @@ const props = defineProps<{
 
 const search = ref(props.filters.q ?? '');
 const status = ref(props.filters.status ?? '');
+
+const approveOpen = ref(false);
+const claimToApprove = ref<ClaimRow | null>(null);
+const approveForm = useForm({});
+
+const approveError = computed(
+    () =>
+        (approveForm.errors as Record<string, string | undefined>).claim ?? '',
+);
+
+const approveDescription = computed(() => {
+    const claim = claimToApprove.value;
+
+    if (!claim) {
+        return '';
+    }
+
+    const target =
+        claim.target_team?.name ?? 'una cuenta nueva del solicitante';
+
+    return `La terraza "${claim.listing.name ?? 'sin nombre'}" se transferirá a ${target}. Las demás reclamaciones pendientes de esta terraza se rechazarán.`;
+});
+
+function askApprove(claim: ClaimRow): void {
+    claimToApprove.value = claim;
+    approveForm.clearErrors();
+    approveOpen.value = true;
+}
+
+function approve(): void {
+    const url = claimToApprove.value?.approve_url;
+
+    if (!url) {
+        return;
+    }
+
+    approveForm.post(url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            approveOpen.value = false;
+            claimToApprove.value = null;
+        },
+    });
+}
 
 function submit(): void {
     router.get(
@@ -244,15 +291,25 @@ function location(claim: ClaimRow): string {
                             {{ formatDate(claim.created_at) }}
                         </td>
                         <td class="px-4 py-3 text-right">
-                            <Button as-child size="sm" variant="outline">
-                                <Link
-                                    :href="`${urls.index}/${claim.id}`"
-                                    aria-label="Revisar reclamación"
+                            <div class="flex flex-wrap justify-end gap-2">
+                                <Button
+                                    v-if="claim.approve_url && can.manage"
+                                    size="sm"
+                                    @click="askApprove(claim)"
                                 >
-                                    <BadgeCheck class="size-4" />
-                                    Revisar
-                                </Link>
-                            </Button>
+                                    <ShieldCheck class="size-4" />
+                                    Aprobar y transferir
+                                </Button>
+                                <Button as-child size="sm" variant="outline">
+                                    <Link
+                                        :href="`${urls.index}/${claim.id}`"
+                                        aria-label="Revisar reclamación"
+                                    >
+                                        <BadgeCheck class="size-4" />
+                                        Revisar
+                                    </Link>
+                                </Button>
+                            </div>
                         </td>
                     </tr>
                     <tr v-if="claims.data.length === 0">
@@ -267,6 +324,25 @@ function location(claim: ClaimRow): string {
             </table>
         </div>
 
+        <p
+            v-if="approveError"
+            class="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive"
+        >
+            {{ approveError }}
+        </p>
+
         <PaginationLinks :links="claims.links" />
+
+        <ConfirmDialog
+            :open="approveOpen"
+            title="Aprobar y transferir terraza"
+            :description="approveDescription"
+            confirm-label="Aprobar y transferir"
+            cancel-label="Cancelar"
+            :processing="approveForm.processing"
+            :destructive="false"
+            @update:open="approveOpen = $event"
+            @confirm="approve"
+        />
     </div>
 </template>

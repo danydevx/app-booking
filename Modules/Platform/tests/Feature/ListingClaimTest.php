@@ -162,6 +162,56 @@ class ListingClaimTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_claims_index_exposes_inline_approval_for_pending_claims_only(): void
+    {
+        Notification::fake();
+
+        [$claimant] = $this->ownerWithTeam();
+        [$otherClaimant] = $this->ownerWithTeam();
+        [, $directory, $listing] = $this->claimableListing();
+        $superadmin = $this->superadmin();
+
+        $approvedListing = Listing::factory()->forTeam($directory)->published()->create([
+            'name' => 'Terraza Ya Aprobada',
+        ]);
+
+        $approved = ListingClaim::factory()
+            ->forListing($approvedListing)
+            ->forUser($otherClaimant)
+            ->create([
+                'status' => ListingClaimStatus::Approved,
+                'reviewed_at' => now(),
+                'created_at' => now()->subMinute(),
+            ]);
+
+        $pending = ListingClaim::factory()
+            ->forListing($listing)
+            ->forUser($claimant)
+            ->create([
+                'target_team_id' => $claimant->currentTeam?->id,
+                'created_at' => now(),
+            ]);
+
+        $this->actingAs($superadmin)
+            ->get(route('platform.claims.index'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Platform/Claims/Index')
+                ->where('can.manage', true)
+                ->has('claims.data', 2)
+                ->where('claims.data.0.id', $pending->id)
+                ->where('claims.data.0.approve_url', route('platform.claims.approve', ['claim' => $pending->id]))
+                ->where('claims.data.1.id', $approved->id)
+                ->where('claims.data.1.approve_url', null));
+
+        $this->actingAs($superadmin)
+            ->post(route('platform.claims.approve', ['claim' => $pending->id]))
+            ->assertRedirect(route('platform.claims.show', ['claim' => $pending->id]));
+
+        $this->assertSame($claimant->currentTeam?->id, $listing->fresh()->team_id);
+        $this->assertSame(ListingClaimStatus::Approved, $pending->fresh()->status);
+    }
+
     public function test_superadmin_approval_creates_a_business_account_and_transfers_the_listing(): void
     {
         Notification::fake();
