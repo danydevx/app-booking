@@ -1,14 +1,21 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Info } from '@lucide/vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { TeamInvitationContext } from '@/types';
 
 type Props = {
     invitation: TeamInvitationContext;
-    action: 'Log in' | 'Register';
+    action: 'login' | 'register';
 };
 
-defineProps<Props>();
+const props = defineProps<Props>();
+
+const message = computed(() =>
+    props.action === 'login'
+        ? `Inicia sesión para unirte al equipo "${props.invitation.teamName}".`
+        : `Regístrate para unirte al equipo "${props.invitation.teamName}".`,
+);
 </script>
 
 <template>
@@ -18,7 +25,7 @@ defineProps<Props>();
         >
             <Info class="size-4" />
             <AlertDescription class="text-blue-900 dark:text-blue-100">
-                {{ action }} to join the "{{ invitation.teamName }}" team.
+                {{ message }}
             </AlertDescription>
         </Alert>
     </div>
