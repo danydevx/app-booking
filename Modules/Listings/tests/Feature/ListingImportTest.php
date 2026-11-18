@@ -29,7 +29,7 @@ class ListingImportTest extends TestCase
                 'latitude' => 20.6736,
                 'longitude' => -103.4055,
                 'capacity' => 150,
-                'services' => ['wifi', 'estacionamiento'],
+                'services' => ['wifi', 'Estacionamiento'],
                 'contact_email' => 'contacto@encinos.test',
                 'price_from_cents' => 1500000,
             ],
@@ -45,7 +45,7 @@ class ListingImportTest extends TestCase
         $this->assertSame('Guadalajara', $listing->city);
         $this->assertSame(150, $listing->capacity);
         $this->assertSame(1500000, $listing->price_from_cents);
-        $this->assertSame(['wifi', 'estacionamiento'], $listing->services);
+        $this->assertSame(['wifi', 'parking'], $listing->services);
         $this->assertSame(ListingStatus::Draft, $listing->status);
         $this->assertNull($listing->claimed_at);
 

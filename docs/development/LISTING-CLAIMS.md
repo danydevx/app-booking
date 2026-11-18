@@ -61,8 +61,8 @@ Requisitos operativos:
             "latitude": 20.6736,
             "longitude": -103.4055,
             "capacity": 150,
-            "services": ["estacionamiento", "wifi"],
-            "event_types": ["boda", "corporativo"],
+            "services": ["parking", "wifi"],
+            "event_types": ["bodas", "eventos-corporativos"],
             "details": { "space_type": "jardin" },
             "rules": "No se permiten mascotas.",
             "contact_name": "Contacto del anuncio",
@@ -85,11 +85,16 @@ La primera fila debe contener los encabezados. Los campos múltiples se separan
 con `|`.
 
 ```csv
-external_ref,name,address,city,state,latitude,longitude,capacity,services,images,contact_email
-terraza-encinos,Jardín Los Encinos,Av. Vallarta 1234,Guadalajara,Jalisco,20.6736,-103.4055,150,estacionamiento|wifi,jardin-01.jpg|jardin-02.jpg,contacto@ejemplo.test
+external_ref,name,address,city,state,latitude,longitude,capacity,services,event_types,images,contact_email
+terraza-encinos,Jardín Los Encinos,Av. Vallarta 1234,Guadalajara,Jalisco,20.6736,-103.4055,150,parking|wifi,bodas|eventos-corporativos,jardin-01.jpg|jardin-02.jpg,contacto@ejemplo.test
 ```
 
 Para `details`, precios por día, paquetes o estructuras anidadas usa JSON.
+
+Los tipos de evento y las características se pueden escribir como **clave**
+(`bodas`, `parking`) o como **nombre** (`Bodas`, `Estacionamiento`). Los valores
+desconocidos se reportan como advertencia y se omiten; la terraza se importa con
+los que sí existan en los catálogos.
 
 ### Ejecutar
 
@@ -105,6 +110,30 @@ php artisan listings:import storage/app/imports/terrazas.csv --publish
 - Las imágenes se buscan en la ruta indicada o en `--images`. También se aceptan
   URLs `http(s)`.
 - La importación es idempotente por `external_ref`.
+
+### Importar desde la plataforma
+
+`/app/platform/listings/import` permite cargar terrazas sin usar la consola. Es
+ideal para los datos generales: título, capacidad, descripción, tipos de evento y
+características.
+
+1. Descarga la **plantilla CSV** o **JSON** desde la misma pantalla.
+2. Sube el archivo (máximo 2 MB y 500 filas). Se aceptan CSV separados por coma,
+   punto y coma o tabulador, con BOM o codificación de Excel.
+3. Revisa la **vista previa**: cada fila indica si se creará, si actualizará una
+   terraza existente por `external_ref` o si tiene error, además de
+   advertencias de catálogos desconocidos y cobertura geográfica.
+4. Confirma la importación. Las filas con error se omiten y se listan en el
+   resultado para corregirlas y volver a subirlas.
+
+Columnas mínimas del CSV: `titulo`, `capacidad`, `descripcion`, `tipos_evento`,
+`caracteristicas`. Opcionales: `external_ref`, `direccion`, `municipio`,
+`estado`, `pais`, `codigo_postal`, `reglas`, `contacto_nombre`,
+`contacto_email`, `contacto_telefono`, `whatsapp`.
+
+Las terrazas se crean en el Directorio como borrador y reclamables por su
+dueño. Para publicarlas hacen falta imágenes, dirección y coordenadas, igual que
+con la consola.
 
 ## Convertir una terraza existente en reclamable
 

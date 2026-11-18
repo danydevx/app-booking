@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import { Upload } from '@lucide/vue';
 import { ref } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,7 @@ const props = defineProps<{
     statuses: Array<{ value: string; label: string }>;
     urls: {
         index: string;
+        import: string;
         dashboard: string;
     };
 }>();
@@ -92,6 +94,12 @@ function statusVariant(
                     Revisa el contenido publicado y suspende terrazas con
                     motivo.
                 </p>
+                <Button variant="outline" class="mt-3" as-child>
+                    <Link :href="urls.import">
+                        <Upload />
+                        Importar terrazas
+                    </Link>
+                </Button>
             </div>
 
             <form

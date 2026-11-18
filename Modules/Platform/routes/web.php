@@ -9,6 +9,7 @@ use Modules\Platform\Http\Controllers\PlatformClaimController;
 use Modules\Platform\Http\Controllers\PlatformCoverageController;
 use Modules\Platform\Http\Controllers\PlatformDashboardController;
 use Modules\Platform\Http\Controllers\PlatformListingController;
+use Modules\Platform\Http\Controllers\PlatformListingImportController;
 use Modules\Platform\Http\Controllers\PlatformPlanController;
 use Modules\Platform\Http\Controllers\PlatformReportController;
 use Modules\Platform\Http\Controllers\PlatformSubscriptionController;
@@ -81,6 +82,21 @@ Route::middleware(['web', 'auth', 'verified', 'can:'.PlatformPermission::ACCESS]
         Route::get('listings', [PlatformListingController::class, 'index'])
             ->middleware('can:'.PlatformPermission::LISTINGS_VIEW)
             ->name('listings.index');
+        Route::get('listings/import', [PlatformListingImportController::class, 'create'])
+            ->middleware('can:'.PlatformPermission::LISTINGS_MODERATE)
+            ->name('listings.import');
+        Route::get('listings/import/template', [PlatformListingImportController::class, 'template'])
+            ->middleware('can:'.PlatformPermission::LISTINGS_MODERATE)
+            ->name('listings.import.template');
+        Route::post('listings/import/preview', [PlatformListingImportController::class, 'preview'])
+            ->middleware(['can:'.PlatformPermission::LISTINGS_MODERATE, 'throttle:10,1'])
+            ->name('listings.import.preview');
+        Route::post('listings/import/store', [PlatformListingImportController::class, 'store'])
+            ->middleware('can:'.PlatformPermission::LISTINGS_MODERATE)
+            ->name('listings.import.store');
+        Route::delete('listings/import/pending', [PlatformListingImportController::class, 'cancel'])
+            ->middleware('can:'.PlatformPermission::LISTINGS_MODERATE)
+            ->name('listings.import.cancel');
         Route::get('listings/{listing}', [PlatformListingController::class, 'show'])
             ->middleware('can:'.PlatformPermission::LISTINGS_VIEW)
             ->name('listings.show');

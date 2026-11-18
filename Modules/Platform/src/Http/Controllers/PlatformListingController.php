@@ -82,6 +82,7 @@ class PlatformListingController extends Controller
             ),
             'urls' => [
                 'index' => route('platform.listings.index'),
+                'import' => route('platform.listings.import'),
                 'dashboard' => route('platform.dashboard'),
             ],
         ]);
