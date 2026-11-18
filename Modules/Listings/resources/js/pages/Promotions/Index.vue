@@ -471,7 +471,7 @@ function statusVariant(
         </section>
 
         <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
-            <DialogScrollContent class="sm:max-w-4xl">
+            <DialogScrollContent>
                 <form class="grid gap-5" @submit.prevent="submit" novalidate>
                     <DialogHeader>
                         <DialogTitle>

@@ -459,7 +459,7 @@ function intervalLabel(interval: string): string {
         </section>
 
         <Dialog :open="dialogOpen" @update:open="handleDialogOpen">
-            <DialogScrollContent class="sm:max-w-5xl">
+            <DialogScrollContent>
                 <form class="grid gap-5" @submit.prevent="submit" novalidate>
                     <DialogHeader>
                         <DialogTitle>
