@@ -61,6 +61,7 @@ const detailValues = Object.fromEntries(
 );
 
 const form = useForm({
+    _method: 'patch',
     name: props.listing?.name ?? '',
     description: props.listing?.description ?? '',
     address: props.listing?.address ?? '',
@@ -344,9 +345,17 @@ async function submit(): Promise<void> {
     }
 
     if (props.urls.update) {
-        form.patch(props.urls.update, {
-            forceFormData: form.logo !== null,
-        });
+        // PHP only parses multipart bodies on POST: spoof PATCH when a logo
+        // file is part of the payload and keep JSON PATCH otherwise.
+        if (form.logo !== null) {
+            form.post(props.urls.update, {
+                forceFormData: true,
+            });
+
+            return;
+        }
+
+        form.patch(props.urls.update);
     }
 }
 </script>

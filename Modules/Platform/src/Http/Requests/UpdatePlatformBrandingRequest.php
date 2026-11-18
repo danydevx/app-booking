@@ -11,6 +11,25 @@ class UpdatePlatformBrandingRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        foreach (['legal_terms_url', 'legal_privacy_url'] as $field) {
+            $value = $this->input($field);
+
+            if (! is_string($value) || trim($value) === '') {
+                continue;
+            }
+
+            $value = trim($value);
+
+            $looksLikeDomain = str_contains($value, '.') && preg_match('/\s/', $value) !== 1;
+
+            if ($looksLikeDomain && ! preg_match('#^https?://#i', $value)) {
+                $this->merge([$field => 'https://'.$value]);
+            }
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */

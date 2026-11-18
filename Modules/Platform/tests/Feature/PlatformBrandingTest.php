@@ -51,6 +51,37 @@ class PlatformBrandingTest extends TestCase
         $this->assertSame('Terrazas MX', Branding::appName());
     }
 
+    public function test_browser_style_multipart_patch_updates_branding_and_normalizes_urls(): void
+    {
+        Storage::fake('public');
+
+        $superadmin = $this->superadmin();
+
+        // Inertia submits the form as POST + _method=patch because PHP only
+        // parses multipart bodies on POST requests.
+        $this->actingAs($superadmin)
+            ->post(route('platform.branding.update'), [
+                '_method' => 'patch',
+                'app_name' => 'Terrazas MX',
+                'support_email' => 'soporte@terrazas.test',
+                'from_address' => 'no-reply@terrazas.test',
+                'legal_terms_url' => 'terrazas.test/terminos',
+                'legal_privacy_url' => 'https://terrazas.test/privacidad',
+                'logo' => UploadedFile::fake()->image('logo.png', 200, 200),
+            ])
+            ->assertRedirect(route('platform.branding.edit'))
+            ->assertSessionHasNoErrors();
+
+        $settings = PlatformSetting::current();
+
+        $this->assertSame('Terrazas MX', $settings->app_name);
+        $this->assertSame('no-reply@terrazas.test', $settings->from_address);
+        $this->assertSame('https://terrazas.test/terminos', $settings->legal_terms_url);
+        $this->assertSame('https://terrazas.test/privacidad', $settings->legal_privacy_url);
+        $this->assertNotNull($settings->logo_path);
+        Storage::disk('public')->assertExists($settings->logo_path);
+    }
+
     public function test_normal_users_cannot_manage_platform_branding(): void
     {
         $user = User::factory()->create();

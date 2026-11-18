@@ -30,6 +30,7 @@ const props = defineProps<{
 }>();
 
 const form = useForm({
+    _method: 'patch',
     app_name: props.branding.app_name,
     support_email: props.branding.support_email ?? '',
     from_address: props.branding.from_address ?? '',
@@ -71,7 +72,8 @@ function removeLogo(): void {
 }
 
 function submit(): void {
-    form.patch(props.urls.update, {
+    // PHP only parses multipart bodies on POST, so spoof PATCH via _method.
+    form.post(props.urls.update, {
         forceFormData: true,
         preserveScroll: true,
     });
@@ -101,7 +103,12 @@ function submit(): void {
                 <form class="space-y-6" @submit.prevent="submit">
                     <div class="grid gap-2">
                         <Label for="app_name">Nombre de la aplicación</Label>
-                        <Input id="app_name" v-model="form.app_name" required />
+                        <Input
+                            id="app_name"
+                            v-model="form.app_name"
+                            required
+                            @input="form.clearErrors('app_name')"
+                        />
                         <p
                             v-if="form.errors.app_name"
                             class="text-sm text-destructive"
@@ -186,6 +193,7 @@ function submit(): void {
                                 v-model="form.from_address"
                                 type="email"
                                 required
+                                @input="form.clearErrors('from_address')"
                             />
                             <p
                                 v-if="form.errors.from_address"
@@ -201,6 +209,7 @@ function submit(): void {
                                 id="support_email"
                                 v-model="form.support_email"
                                 type="email"
+                                @input="form.clearErrors('support_email')"
                             />
                             <p
                                 v-if="form.errors.support_email"
@@ -217,9 +226,11 @@ function submit(): void {
                             <input
                                 id="legal_terms_url"
                                 v-model="form.legal_terms_url"
-                                type="url"
+                                type="text"
+                                inputmode="url"
                                 placeholder="https://…"
                                 class="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                                @input="form.clearErrors('legal_terms_url')"
                             />
                             <p
                                 v-if="form.errors.legal_terms_url"
@@ -234,9 +245,11 @@ function submit(): void {
                             <input
                                 id="legal_privacy_url"
                                 v-model="form.legal_privacy_url"
-                                type="url"
+                                type="text"
+                                inputmode="url"
                                 placeholder="https://…"
                                 class="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                                @input="form.clearErrors('legal_privacy_url')"
                             />
                             <p
                                 v-if="form.errors.legal_privacy_url"

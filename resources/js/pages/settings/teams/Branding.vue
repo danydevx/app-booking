@@ -40,6 +40,7 @@ const timezones = [
 ];
 
 const form = useForm({
+    _method: 'patch',
     name: props.team.name,
     timezone: props.team.timezone,
     contact_email: props.team.contact_email ?? '',
@@ -70,7 +71,8 @@ function removeLogo(): void {
 }
 
 function submit(): void {
-    form.patch(props.urls.update, {
+    // PHP only parses multipart bodies on POST, so spoof PATCH via _method.
+    form.post(props.urls.update, {
         forceFormData: true,
         preserveScroll: true,
     });
@@ -96,7 +98,12 @@ function submit(): void {
         <form class="max-w-2xl space-y-6" @submit.prevent="submit">
             <div class="grid gap-2">
                 <Label for="name">Nombre visible</Label>
-                <Input id="name" v-model="form.name" required />
+                <Input
+                    id="name"
+                    v-model="form.name"
+                    required
+                    @input="form.clearErrors('name')"
+                />
                 <InputError :message="form.errors.name" />
             </div>
 
@@ -152,6 +159,7 @@ function submit(): void {
                     <Input
                         id="contact_email"
                         v-model="form.contact_email"
+                        @input="form.clearErrors('contact_email')"
                         type="email"
                         placeholder="hola@cuenta.com"
                     />
@@ -163,6 +171,7 @@ function submit(): void {
                     <Input
                         id="contact_phone"
                         v-model="form.contact_phone"
+                        @input="form.clearErrors('contact_phone')"
                         placeholder="+52 55 1234 5678"
                     />
                     <InputError :message="form.errors.contact_phone" />
@@ -174,6 +183,7 @@ function submit(): void {
                 <Input
                     id="whatsapp_phone"
                     v-model="form.whatsapp_phone"
+                    @input="form.clearErrors('whatsapp_phone')"
                     placeholder="+52 55 1234 5678"
                 />
                 <InputError :message="form.errors.whatsapp_phone" />

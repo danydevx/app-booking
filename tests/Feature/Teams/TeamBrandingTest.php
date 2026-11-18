@@ -44,6 +44,31 @@ class TeamBrandingTest extends TestCase
         Storage::disk('public')->assertExists($team->logo_path);
     }
 
+    public function test_browser_style_multipart_patch_updates_branding_without_validation_errors(): void
+    {
+        Storage::fake('public');
+
+        [$owner, $team] = $this->ownerWithTeam();
+
+        $this->actingAs($owner)
+            ->post(route('teams.branding.update', ['team' => $team->slug]), [
+                '_method' => 'patch',
+                'name' => 'Terrazas del Centro',
+                'timezone' => 'America/Monterrey',
+                'contact_email' => 'hola@centro.test',
+                'logo' => UploadedFile::fake()->image('logo.png', 300, 300),
+            ])
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        $team->refresh();
+
+        $this->assertSame('Terrazas del Centro', $team->name);
+        $this->assertSame('America/Monterrey', $team->timezone);
+        $this->assertNotNull($team->logo_path);
+        Storage::disk('public')->assertExists($team->logo_path);
+    }
+
     public function test_logo_must_be_a_supported_image(): void
     {
         Storage::fake('public');
