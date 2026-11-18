@@ -88,7 +88,7 @@ function isActive(href: string): boolean {
             class="sticky top-0 z-40 border-b border-border/60 bg-background/95 backdrop-blur"
         >
             <div
-                class="mx-auto flex w-[90%] max-w-none flex-col gap-4 px-4 py-4 sm:px-6"
+                class="mx-auto flex w-[98%] max-w-none flex-col gap-4 px-4 py-4 sm:px-6"
             >
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <Link href="/app/platform" class="flex items-center gap-2">
@@ -151,7 +151,7 @@ function isActive(href: string): boolean {
             </div>
         </header>
 
-        <main class="mx-auto w-[90%] max-w-none px-4 py-6 sm:px-6">
+        <main class="mx-auto w-[98%] max-w-none px-4 py-6 sm:px-6">
             <slot />
         </main>
     </div>
