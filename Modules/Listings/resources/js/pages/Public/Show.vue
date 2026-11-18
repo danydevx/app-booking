@@ -1122,6 +1122,29 @@ onBeforeUnmount(() => {
                         WhatsApp abre una conversación manual; la plataforma no
                         envía el mensaje.
                     </p>
+
+                    <div
+                        v-if="listing.social_links.length"
+                        class="mt-4 border-t border-[color:var(--home-border)] pt-4"
+                    >
+                        <p
+                            class="text-xs font-bold tracking-[0.1em] text-[color:var(--home-muted)] uppercase"
+                        >
+                            Redes sociales
+                        </p>
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            <a
+                                v-for="link in listing.social_links"
+                                :key="link.key"
+                                :href="link.url"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="home-chip hover:underline"
+                            >
+                                {{ link.label }}
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <div

@@ -46,6 +46,14 @@ final class ListingImportNormalizer
         'contacto_correo' => 'contact_email',
         'contacto_telefono' => 'contact_phone',
         'imagenes' => 'images',
+        'facebook' => 'facebook_url',
+        'fb' => 'facebook_url',
+        'instagram' => 'instagram_url',
+        'instagram_url' => 'instagram_url',
+        'tiktok' => 'tiktok_url',
+        'google_maps' => 'google_maps_url',
+        'maps' => 'google_maps_url',
+        'maps_url' => 'google_maps_url',
     ];
 
     /**
@@ -84,6 +92,10 @@ final class ListingImportNormalizer
         'contact_email',
         'contact_phone',
         'whatsapp_phone',
+        'facebook_url',
+        'instagram_url',
+        'tiktok_url',
+        'google_maps_url',
         'event_types',
         'images',
     ];
@@ -199,6 +211,26 @@ final class ListingImportNormalizer
                         break;
                     case 'images':
                         $data['images'] = $this->stringList($value);
+                        break;
+                    case 'facebook_url':
+                    case 'instagram_url':
+                    case 'tiktok_url':
+                    case 'google_maps_url':
+                        $network = array_search($key, SocialProfileLink::COLUMNS, true);
+                        $url = SocialProfileLink::normalize($this->string($value));
+
+                        if ($url === null || ! is_string($network)) {
+                            break;
+                        }
+
+                        if (! SocialProfileLink::isValid($network, $url)) {
+                            $label = SocialProfileLink::NETWORKS[$network];
+                            $warnings[] = "El enlace de {$label} no es válido; se omitió.";
+
+                            break;
+                        }
+
+                        $data[$key] = $url;
                         break;
                     case 'details':
                     case 'daily_pricing':

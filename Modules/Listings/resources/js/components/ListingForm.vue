@@ -81,6 +81,10 @@ const form = useForm({
     contact_email: props.listing?.contact_email ?? '',
     contact_phone: props.listing?.contact_phone ?? '',
     whatsapp_phone: props.listing?.whatsapp_phone ?? '',
+    facebook_url: props.listing?.facebook_url ?? '',
+    instagram_url: props.listing?.instagram_url ?? '',
+    tiktok_url: props.listing?.tiktok_url ?? '',
+    google_maps_url: props.listing?.google_maps_url ?? '',
 });
 
 const countryOptions = computed(() => props.countries);
@@ -263,6 +267,18 @@ const listingSchema = z.object({
     whatsapp_phone: z
         .string()
         .max(40, 'El WhatsApp no puede superar 40 caracteres.'),
+    facebook_url: z
+        .string()
+        .max(255, 'El enlace de Facebook no puede superar 255 caracteres.'),
+    instagram_url: z
+        .string()
+        .max(255, 'El enlace de Instagram no puede superar 255 caracteres.'),
+    tiktok_url: z
+        .string()
+        .max(255, 'El enlace de TikTok no puede superar 255 caracteres.'),
+    google_maps_url: z
+        .string()
+        .max(255, 'El enlace de Google Maps no puede superar 255 caracteres.'),
 });
 
 const { validate } = useFrontValidation(listingSchema, () => ({
@@ -284,6 +300,10 @@ const { validate } = useFrontValidation(listingSchema, () => ({
     contact_email: form.contact_email,
     contact_phone: form.contact_phone,
     whatsapp_phone: form.whatsapp_phone,
+    facebook_url: form.facebook_url,
+    instagram_url: form.instagram_url,
+    tiktok_url: form.tiktok_url,
+    google_maps_url: form.google_maps_url,
 }));
 
 function setCoordinates(latitude: string, longitude: string): void {
@@ -770,6 +790,60 @@ async function submit(): Promise<void> {
                             placeholder="5215555555555"
                         />
                         <InputError :message="form.errors.whatsapp_phone" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t pt-5">
+                <h3 class="text-sm font-semibold">Redes sociales</h3>
+                <p class="text-xs text-muted-foreground">
+                    Opcionales. Se muestran en la ficha pública; solo se aceptan
+                    perfiles de Facebook, Instagram, TikTok y la ficha de Google
+                    Maps.
+                </p>
+
+                <div class="mt-3 grid gap-4 sm:grid-cols-2">
+                    <div class="grid gap-2">
+                        <Label for="facebook_url">Facebook</Label>
+                        <Input
+                            id="facebook_url"
+                            v-model="form.facebook_url"
+                            maxlength="255"
+                            placeholder="facebook.com/tu-terraza"
+                        />
+                        <InputError :message="form.errors.facebook_url" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="instagram_url">Instagram</Label>
+                        <Input
+                            id="instagram_url"
+                            v-model="form.instagram_url"
+                            maxlength="255"
+                            placeholder="instagram.com/tu-terraza"
+                        />
+                        <InputError :message="form.errors.instagram_url" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="tiktok_url">TikTok</Label>
+                        <Input
+                            id="tiktok_url"
+                            v-model="form.tiktok_url"
+                            maxlength="255"
+                            placeholder="tiktok.com/@tu-terraza"
+                        />
+                        <InputError :message="form.errors.tiktok_url" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="google_maps_url"
+                            >Ficha de Google Maps</Label
+                        >
+                        <Input
+                            id="google_maps_url"
+                            v-model="form.google_maps_url"
+                            maxlength="255"
+                            placeholder="maps.app.goo.gl/..."
+                        />
+                        <InputError :message="form.errors.google_maps_url" />
                     </div>
                 </div>
             </div>

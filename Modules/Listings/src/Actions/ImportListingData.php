@@ -42,6 +42,10 @@ final class ImportListingData
         'contact_email',
         'contact_phone',
         'whatsapp_phone',
+        'facebook_url',
+        'instagram_url',
+        'tiktok_url',
+        'google_maps_url',
         'currency',
         'timezone',
     ];

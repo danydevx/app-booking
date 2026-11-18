@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 use Modules\Listings\Models\Listing;
+use Modules\Listings\Rules\SocialProfileUrl;
+use Modules\Listings\Support\SocialProfileLink;
 use Modules\Listings\Support\TerraceDetailCatalog;
 use Modules\Listings\Support\TerraceServiceCatalog;
 use Modules\Platform\Support\GeographicCoverageService;
@@ -112,6 +114,10 @@ class SaveListingRequest extends FormRequest
             'contact_email' => ['nullable', 'email', 'max:255'],
             'contact_phone' => ['nullable', 'string', 'max:40'],
             'whatsapp_phone' => ['nullable', 'string', 'max:40'],
+            'facebook_url' => ['nullable', 'string', 'max:255', new SocialProfileUrl('facebook')],
+            'instagram_url' => ['nullable', 'string', 'max:255', new SocialProfileUrl('instagram')],
+            'tiktok_url' => ['nullable', 'string', 'max:255', new SocialProfileUrl('tiktok')],
+            'google_maps_url' => ['nullable', 'string', 'max:255', new SocialProfileUrl('google_maps')],
             'logo' => [
                 'nullable',
                 'image',
@@ -177,7 +183,17 @@ class SaveListingRequest extends FormRequest
             ->filter(fn ($value): bool => is_string($value) && trim($value) !== '')
             ->all();
 
+        $socialLinks = [];
+
+        foreach (SocialProfileLink::COLUMNS as $column) {
+            $value = $this->input($column);
+            $socialLinks[$column] = is_string($value)
+                ? SocialProfileLink::normalize($value)
+                : null;
+        }
+
         $this->merge([
+            ...$socialLinks,
             'services' => array_values(array_unique(array_filter(
                 (array) $this->input('services', []),
                 fn (mixed $service): bool => is_string($service) && $service !== '',

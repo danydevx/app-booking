@@ -63,6 +63,10 @@ use Modules\Platform\Support\GeographicCoverageService;
  * @property string|null $contact_email
  * @property string|null $contact_phone
  * @property string|null $whatsapp_phone
+ * @property string|null $facebook_url
+ * @property string|null $instagram_url
+ * @property string|null $tiktok_url
+ * @property string|null $google_maps_url
  * @property string $timezone
  * @property ListingStatus $status
  * @property Carbon|null $published_at
@@ -120,6 +124,10 @@ use Modules\Platform\Support\GeographicCoverageService;
     'contact_email',
     'contact_phone',
     'whatsapp_phone',
+    'facebook_url',
+    'instagram_url',
+    'tiktok_url',
+    'google_maps_url',
 ])]
 class Listing extends Model
 {

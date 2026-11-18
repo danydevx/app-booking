@@ -129,7 +129,8 @@ características.
 Columnas mínimas del CSV: `titulo`, `capacidad`, `descripcion`, `tipos_evento`,
 `caracteristicas`. Opcionales: `external_ref`, `direccion`, `municipio`,
 `estado`, `pais`, `codigo_postal`, `reglas`, `contacto_nombre`,
-`contacto_email`, `contacto_telefono`, `whatsapp`.
+`contacto_email`, `contacto_telefono`, `whatsapp`, `facebook`, `instagram`,
+`tiktok`, `google_maps`.
 
 Las terrazas se crean en el Directorio como borrador y reclamables por su
 dueño. Para publicarlas hacen falta imágenes, dirección y coordenadas, igual que

@@ -199,6 +199,10 @@ export type ListingFormData = {
     contact_email: string | null;
     contact_phone: string | null;
     whatsapp_phone: string | null;
+    facebook_url: string | null;
+    instagram_url: string | null;
+    tiktok_url: string | null;
+    google_maps_url: string | null;
     status: ListingStatus;
     status_label: string;
     published_at: string | null;
@@ -274,6 +278,7 @@ export type ListingPublicDetail = {
     contact_email: string | null;
     contact_phone: string | null;
     whatsapp_url: string | null;
+    social_links: Array<{ key: string; label: string; url: string }>;
     account: {
         name: string | null;
         logo_url: string | null;

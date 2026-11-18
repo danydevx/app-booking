@@ -20,7 +20,7 @@ Crear y lanzar una aplicación SaaS Laravel 13 para que propietarios publiquen t
 
 - Registro, login, verificación y recuperación de cuenta.
 - Una Account representa al negocio propietario; soporte futuro para varios miembros y roles.
-- Ficha de negocio/terraza: nombre, descripción, ubicación, coordenadas, servicios, capacidad, reglas, fotos y videos.
+- Ficha de negocio/terraza: nombre, descripción, ubicación, coordenadas, servicios, capacidad, reglas, fotos, videos y redes sociales (Facebook, Instagram, TikTok y Google Maps).
 - Agenda por terraza: disponible, no renta/no disponible y solicitud/fecha ocupada; zona horaria definida.
 - Bandeja de leads/solicitudes y registro sencillo de clientes.
 - Seguimiento manual de anticipo y estado de la reserva; el SaaS no procesa pagos de renta al inicio.

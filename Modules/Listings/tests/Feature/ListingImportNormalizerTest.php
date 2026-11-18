@@ -52,6 +52,33 @@ class ListingImportNormalizerTest extends TestCase
         $this->assertContains('La capacidad debe ser un número entero.', $row['errors']);
     }
 
+    public function test_it_maps_social_links_and_warns_about_invalid_networks(): void
+    {
+        $rows = [
+            [
+                'titulo' => 'Terraza Redes',
+                'facebook' => 'facebook.com/terraza',
+                'instagram_url' => 'https://instagram.com/terraza',
+                'tiktok' => 'https://tiktok.com/@terraza',
+                'google_maps' => 'maps.app.goo.gl/abc',
+            ],
+            [
+                'titulo' => 'Terraza Inválida',
+                'facebook' => 'https://instagram.com/terraza',
+            ],
+        ];
+
+        $result = app(ListingImportNormalizer::class)->normalize($rows);
+
+        $this->assertSame('https://facebook.com/terraza', $result[0]['data']['facebook_url']);
+        $this->assertSame('https://instagram.com/terraza', $result[0]['data']['instagram_url']);
+        $this->assertSame('https://tiktok.com/@terraza', $result[0]['data']['tiktok_url']);
+        $this->assertSame('https://maps.app.goo.gl/abc', $result[0]['data']['google_maps_url']);
+
+        $this->assertArrayNotHasKey('facebook_url', $result[1]['data']);
+        $this->assertContains('El enlace de Facebook no es válido; se omitió.', $result[1]['warnings']);
+    }
+
     public function test_it_accepts_json_arrays_and_numeric_event_type_ids(): void
     {
         $weddings = ListingEventType::query()

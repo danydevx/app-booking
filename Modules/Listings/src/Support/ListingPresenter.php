@@ -72,6 +72,10 @@ final class ListingPresenter
             'contact_email' => $listing->contact_email,
             'contact_phone' => $listing->contact_phone,
             'whatsapp_phone' => $listing->whatsapp_phone,
+            'facebook_url' => $listing->facebook_url,
+            'instagram_url' => $listing->instagram_url,
+            'tiktok_url' => $listing->tiktok_url,
+            'google_maps_url' => $listing->google_maps_url,
             'status' => $listing->status->value,
             'status_label' => $listing->status->label(),
             'published_at' => $listing->published_at?->toISOString(),
@@ -212,6 +216,7 @@ final class ListingPresenter
             'contact_email' => $claimable ? null : $listing->contact_email,
             'contact_phone' => $claimable ? null : $listing->contact_phone,
             'whatsapp_url' => $claimable ? null : self::whatsappUrl($listing->whatsapp_phone),
+            'social_links' => self::socialLinks($listing),
             'account' => [
                 'name' => $claimable ? null : $listing->team?->name,
                 'logo_url' => $claimable ? null : $listing->team?->logoUrl(),
@@ -272,6 +277,30 @@ final class ListingPresenter
     public static function publicUrl(Listing $listing): string
     {
         return route('public.listings.show', ['listing' => $listing->slug]);
+    }
+
+    /**
+     * @return array<int, array{key: string, label: string, url: string}>
+     */
+    public static function socialLinks(Listing $listing): array
+    {
+        $links = [];
+
+        foreach (SocialProfileLink::COLUMNS as $network => $column) {
+            $url = $listing->{$column};
+
+            if (! filled($url)) {
+                continue;
+            }
+
+            $links[] = [
+                'key' => $network,
+                'label' => SocialProfileLink::NETWORKS[$network],
+                'url' => (string) $url,
+            ];
+        }
+
+        return $links;
     }
 
     public static function whatsappUrl(?string $phone): ?string

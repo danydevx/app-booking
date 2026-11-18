@@ -39,7 +39,7 @@ Last updated: 2026-11-18
 - PHP version: 8.3.6
 - Node version: 24 (`.nvmrc` and CI)
 - Test framework: PHPUnit
-- Test suite: 538 tests / 4,874 assertions (SQLite; MySQL 8.4 compatibility job)
+- Test suite: 544 tests / 4,950 assertions (SQLite; MySQL 8.4 compatibility job)
 - Architecture decisions: `docs/decisions/README.md` (ADR 0001–0006)
 - Local database: MySQL 8.4 (Docker, `127.0.0.1:3307`); SQLite legacy at `database/legacy/database.sqlite`
 - CI databases: SQLite (fast suite) + MySQL 8.4 (compatibility job)
@@ -66,6 +66,7 @@ Last updated: 2026-11-18
 - Owners landing: `/propietarios` presents Free vs Pro with real plan limits/prices and the public registration/billing flows
 - Public geo search: `/terrazas` supports city/state/postal-code text search, map viewport search, card↔marker sync and clustered markers; see `docs/development/GEO-SEARCH.md`
 - Listing features: config-driven catalog with 8 categories and 50 MVP amenities, grouped in admin and public detail
+- Social links: optional Facebook, Instagram, TikTok and Google Maps place links per listing, validated by network and shown on the public detail; available on all plans
 - Directory listings and claims: `teams.is_directory`, `listings.claimed_at`, `listing_claims`, `app:directory-team`, `listings:import`, platform CSV/JSON importer with preview at `/app/platform/listings/import`, `listings:make-claimable`, public `/terrazas/{slug}/reclamar` and platform queue `/app/platform/claims`; see `docs/development/LISTING-CLAIMS.md`
 - Commercial MVP: optional base prices, seasonal price ranges, packages, commercial services and time-bound promotions per listing; public pages only show active/current records. Each catalog is capped per listing by plan (`packages_per_listing`, `services_per_listing`, `promotions_per_listing`: Free 5, Pro 20 by default, editable in `/app/platform/plans`); existing rows are kept and only new items are blocked when over the cap
 - Full-flow smoke test covers landing → solicitud → CRM → cotización → contrato → portal → reserva → opinión → reportes

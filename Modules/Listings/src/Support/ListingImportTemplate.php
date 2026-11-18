@@ -24,6 +24,10 @@ final class ListingImportTemplate
             'estado',
             'reglas',
             'contacto_email',
+            'facebook',
+            'instagram',
+            'tiktok',
+            'google_maps',
         ];
     }
 
@@ -45,6 +49,10 @@ final class ListingImportTemplate
                 'Jalisco',
                 'No se permiten mascotas.',
                 'contacto@encinos.test',
+                'facebook.com/jardinlosencinos',
+                'instagram.com/jardinlosencinos',
+                'tiktok.com/@jardinlosencinos',
+                'google.com/maps/place/Jardin+Los+Encinos',
             ],
             [
                 'Terraza Mirador',
@@ -58,6 +66,10 @@ final class ListingImportTemplate
                 'Jalisco',
                 '',
                 'hola@mirador.test',
+                '',
+                'instagram.com/terrazamirador',
+                '',
+                'maps.app.goo.gl/ejemplo',
             ],
         ];
     }
@@ -98,6 +110,10 @@ final class ListingImportTemplate
                     'city' => 'Guadalajara',
                     'state' => 'Jalisco',
                     'contact_email' => 'contacto@encinos.test',
+                    'facebook_url' => 'https://facebook.com/jardinlosencinos',
+                    'instagram_url' => 'https://instagram.com/jardinlosencinos',
+                    'tiktok_url' => 'https://tiktok.com/@jardinlosencinos',
+                    'google_maps_url' => 'https://maps.app.goo.gl/ejemplo',
                 ],
             ],
         ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

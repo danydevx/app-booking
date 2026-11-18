@@ -100,9 +100,9 @@ class PlatformListingImportTest extends TestCase
         $user = $this->superadmin();
 
         $this->uploadCsv($user, [
-            ['titulo', 'capacidad', 'descripcion', 'tipos_evento', 'caracteristicas', 'external_ref', 'municipio', 'estado'],
-            ['Jardín Los Encinos', '150', 'Terraza para eventos.', 'bodas|cumpleanos', 'Estacionamiento|wifi', 'encinos', 'Guadalajara', 'Jalisco'],
-            ['Terraza Mirador', '80', 'Vista a la ciudad.', 'Boda', 'Wi-Fi', 'mirador', 'Guadalajara', 'Jalisco'],
+            ['titulo', 'capacidad', 'descripcion', 'tipos_evento', 'caracteristicas', 'external_ref', 'municipio', 'estado', 'facebook'],
+            ['Jardín Los Encinos', '150', 'Terraza para eventos.', 'bodas|cumpleanos', 'Estacionamiento|wifi', 'encinos', 'Guadalajara', 'Jalisco', 'facebook.com/encinos'],
+            ['Terraza Mirador', '80', 'Vista a la ciudad.', 'Boda', 'Wi-Fi', 'mirador', 'Guadalajara', 'Jalisco', ''],
         ]);
 
         $this->actingAs($user)
@@ -118,6 +118,7 @@ class PlatformListingImportTest extends TestCase
         $this->assertSame(150, $listing->capacity);
         $this->assertSame('Terraza para eventos.', $listing->description);
         $this->assertSame(['parking', 'wifi'], $listing->services);
+        $this->assertSame('https://facebook.com/encinos', $listing->facebook_url);
         $this->assertNull($listing->claimed_at);
         $this->assertSame(
             ['bodas', 'cumpleanos'],
