@@ -47,6 +47,8 @@ const props = defineProps<{
     listing: { id: number; name: string; slug: string };
     promotions: Promotion[];
     weekdays: ServiceOption[];
+    limits: { max: number; used: number; can_create: boolean };
+    billing_url: string;
     urls: {
         index: string;
         manage: string;
@@ -306,12 +308,34 @@ function statusVariant(
                 <Button variant="outline" as-child>
                     <Link :href="urls.manage">Volver al resumen</Link>
                 </Button>
-                <Button type="button" @click="openCreate">
+                <Button
+                    type="button"
+                    :disabled="!limits.can_create"
+                    @click="openCreate"
+                >
                     <Plus class="size-4" />
                     Nueva promoción
                 </Button>
             </div>
         </header>
+
+        <div
+            v-if="!limits.can_create"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+            <div>
+                <p class="font-medium">Límite del plan</p>
+                <p v-if="limits.max > 0">
+                    Tu plan permite hasta {{ limits.max }}
+                    {{ limits.max === 1 ? 'promoción' : 'promociones' }} por
+                    terraza. Puedes editar o eliminar las existentes.
+                </p>
+                <p v-else>Tu plan actual no incluye promociones por terraza.</p>
+            </div>
+            <Button variant="outline" as-child>
+                <Link :href="billing_url">Ver planes</Link>
+            </Button>
+        </div>
 
         <section class="space-y-4">
             <div class="flex flex-wrap items-end justify-between gap-2">
@@ -324,8 +348,10 @@ function statusVariant(
                     </p>
                 </div>
                 <Badge variant="secondary">
-                    {{ promotions.length }}
-                    {{ promotions.length === 1 ? 'promoción' : 'promociones' }}
+                    <template v-if="limits.max > 0">
+                        {{ limits.used }} de {{ limits.max }} promociones
+                    </template>
+                    <template v-else>No incluido en tu plan</template>
                 </Badge>
             </div>
 
@@ -346,6 +372,7 @@ function statusVariant(
                     type="button"
                     class="mt-4"
                     variant="outline"
+                    :disabled="!limits.can_create"
                     @click="openCreate"
                 >
                     <Plus class="size-4" />

@@ -8,8 +8,10 @@ use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Billing\Support\Entitlements;
 use Modules\Listings\Http\Requests\SaveListingPromotionRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingPromotion;
@@ -20,8 +22,11 @@ class ListingPromotionController extends Controller
 {
     use ResolvesCurrentTeam;
 
+    private const LIMIT_KEY = 'promotions_per_listing';
+
     public function __construct(
         private readonly ListingFormData $formData,
+        private readonly Entitlements $entitlements,
     ) {}
 
     public function index(Request $request, string $currentTeam, Listing $listing): Response
@@ -31,10 +36,8 @@ class ListingPromotionController extends Controller
 
         Gate::authorize('update', $listing);
 
-        $promotions = $listing->promotions()
-            ->get()
-            ->map(fn (ListingPromotion $promotion): array => ListingCommercialPresenter::ownerPromotion($promotion, $team, $listing))
-            ->all();
+        $promotions = $listing->promotions()->get();
+        $limit = $this->entitlements->limit($team, self::LIMIT_KEY);
 
         return Inertia::render('Listings/Promotions/Index', [
             'listing' => [
@@ -42,7 +45,15 @@ class ListingPromotionController extends Controller
                 'name' => $listing->name,
                 'slug' => $listing->slug,
             ],
-            'promotions' => $promotions,
+            'promotions' => $promotions
+                ->map(fn (ListingPromotion $promotion): array => ListingCommercialPresenter::ownerPromotion($promotion, $team, $listing))
+                ->all(),
+            'limits' => [
+                'max' => $limit,
+                'used' => $promotions->count(),
+                'can_create' => $this->entitlements->canAddItem($team, self::LIMIT_KEY, $promotions->count()),
+            ],
+            'billing_url' => route('billing.index', ['current_team' => $team->slug]),
             'weekdays' => ListingPromotion::weekdayOptions(),
             'urls' => [
                 ...$this->formData->ownerUrls($team, $listing),
@@ -63,6 +74,7 @@ class ListingPromotionController extends Controller
         $this->ensureOwned($listing, $team);
 
         Gate::authorize('update', $listing);
+        $this->ensureWithinPlanLimit($team, $listing);
 
         $promotion = new ListingPromotion($this->payload($request->validated()));
         $promotion->team_id = $team->id;
@@ -133,6 +145,23 @@ class ListingPromotionController extends Controller
             'conditions' => $data['conditions'] ?? null,
             'active' => $data['active'] ?? false,
         ];
+    }
+
+    private function ensureWithinPlanLimit(Team $team, Listing $listing): void
+    {
+        $count = $listing->promotions()->count();
+
+        if ($this->entitlements->canAddItem($team, self::LIMIT_KEY, $count)) {
+            return;
+        }
+
+        $limit = $this->entitlements->limit($team, self::LIMIT_KEY);
+
+        throw ValidationException::withMessages([
+            'title' => $limit === 0
+                ? 'Tu plan actual no incluye promociones por terraza.'
+                : "Tu plan actual permite máximo {$limit} promociones por terraza. Actualiza el plan para agregar más.",
+        ]);
     }
 
     private function ensureOwned(Listing $listing, Team $team): void

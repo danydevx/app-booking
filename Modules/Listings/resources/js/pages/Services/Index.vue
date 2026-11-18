@@ -55,6 +55,8 @@ const props = defineProps<{
     priceUnits: ServiceOption[];
     pricingModes: ServiceOption[];
     providers: ServiceOption[];
+    limits: { max: number; used: number; can_create: boolean };
+    billing_url: string;
     urls: {
         index: string;
         manage: string;
@@ -363,12 +365,34 @@ function confirmDestroy(): void {
                         Ver pública
                     </a>
                 </Button>
-                <Button type="button" @click="openCreate">
+                <Button
+                    type="button"
+                    :disabled="!limits.can_create"
+                    @click="openCreate"
+                >
                     <Plus class="size-4" />
                     Nuevo servicio
                 </Button>
             </div>
         </header>
+
+        <div
+            v-if="!limits.can_create"
+            class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+        >
+            <div>
+                <p class="font-medium">Límite del plan</p>
+                <p v-if="limits.max > 0">
+                    Tu plan permite hasta {{ limits.max }}
+                    {{ limits.max === 1 ? 'servicio' : 'servicios' }} por
+                    terraza. Puedes editar o eliminar los existentes.
+                </p>
+                <p v-else>Tu plan actual no incluye servicios por terraza.</p>
+            </div>
+            <Button variant="outline" as-child>
+                <Link :href="billing_url">Ver planes</Link>
+            </Button>
+        </div>
 
         <section class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-xl border bg-card p-4">
@@ -440,8 +464,10 @@ function confirmDestroy(): void {
                     </p>
                 </div>
                 <Badge variant="secondary">
-                    {{ services.length }}
-                    {{ services.length === 1 ? 'servicio' : 'servicios' }}
+                    <template v-if="limits.max > 0">
+                        {{ limits.used }} de {{ limits.max }} servicios
+                    </template>
+                    <template v-else>No incluido en tu plan</template>
                 </Badge>
             </div>
 
@@ -462,6 +488,7 @@ function confirmDestroy(): void {
                     type="button"
                     class="mt-4"
                     variant="outline"
+                    :disabled="!limits.can_create"
                     @click="openCreate"
                 >
                     <Plus class="size-4" />

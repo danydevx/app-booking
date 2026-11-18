@@ -8,8 +8,10 @@ use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Billing\Support\Entitlements;
 use Modules\Listings\Http\Requests\SaveListingPackageRequest;
 use Modules\Listings\Models\Listing;
 use Modules\Listings\Models\ListingPackage;
@@ -22,8 +24,11 @@ class ListingPackageController extends Controller
 {
     use ResolvesCurrentTeam;
 
+    private const LIMIT_KEY = 'packages_per_listing';
+
     public function __construct(
         private readonly ListingFormData $formData,
+        private readonly Entitlements $entitlements,
     ) {}
 
     public function index(Request $request, string $currentTeam, Listing $listing): Response
@@ -33,10 +38,8 @@ class ListingPackageController extends Controller
 
         Gate::authorize('update', $listing);
 
-        $packages = $listing->packages()
-            ->get()
-            ->map(fn (ListingPackage $package): array => ListingCommercialPresenter::ownerPackage($package, $team, $listing))
-            ->all();
+        $packages = $listing->packages()->get();
+        $limit = $this->entitlements->limit($team, self::LIMIT_KEY);
 
         return Inertia::render('Listings/Packages/Index', [
             'listing' => [
@@ -44,7 +47,15 @@ class ListingPackageController extends Controller
                 'name' => $listing->name,
                 'slug' => $listing->slug,
             ],
-            'packages' => $packages,
+            'packages' => $packages
+                ->map(fn (ListingPackage $package): array => ListingCommercialPresenter::ownerPackage($package, $team, $listing))
+                ->all(),
+            'limits' => [
+                'max' => $limit,
+                'used' => $packages->count(),
+                'can_create' => $this->entitlements->canAddItem($team, self::LIMIT_KEY, $packages->count()),
+            ],
+            'billing_url' => route('billing.index', ['current_team' => $team->slug]),
             'serviceGroups' => CommercialServiceCatalog::groups(),
             'characteristics' => TerraceServiceCatalog::groupsFor($listing->services ?? []),
             'urls' => [
@@ -66,6 +77,7 @@ class ListingPackageController extends Controller
         $this->ensureOwned($listing, $team);
 
         Gate::authorize('update', $listing);
+        $this->ensureWithinPlanLimit($team, $listing);
 
         $data = $request->validated();
         $package = new ListingPackage($this->payload($data));
@@ -138,6 +150,23 @@ class ListingPackageController extends Controller
             'conditions' => $data['conditions'] ?? null,
             'active' => $data['active'] ?? false,
         ];
+    }
+
+    private function ensureWithinPlanLimit(Team $team, Listing $listing): void
+    {
+        $count = $listing->packages()->count();
+
+        if ($this->entitlements->canAddItem($team, self::LIMIT_KEY, $count)) {
+            return;
+        }
+
+        $limit = $this->entitlements->limit($team, self::LIMIT_KEY);
+
+        throw ValidationException::withMessages([
+            'name' => $limit === 0
+                ? 'Tu plan actual no incluye paquetes por terraza.'
+                : "Tu plan actual permite máximo {$limit} paquetes por terraza. Actualiza el plan para agregar más.",
+        ]);
     }
 
     private function ensureOwned(Listing $listing, Team $team): void

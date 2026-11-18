@@ -40,7 +40,19 @@ final class Entitlements
 
     public function canCreateListing(Team $team, int $currentCount): bool
     {
-        return $currentCount < $this->limit($team, 'listings');
+        return $this->canAddItem($team, 'listings', $currentCount);
+    }
+
+    /**
+     * Determine whether the team can add another row for a limit key.
+     *
+     * A limit of zero means the feature is not included in the plan.
+     */
+    public function canAddItem(Team $team, string $limitKey, int $currentCount): bool
+    {
+        $limit = $this->limit($team, $limitKey);
+
+        return $limit > 0 && $currentCount < $limit;
     }
 
     public function canUpload(Team $team, string $mediaType, int $currentCount): bool

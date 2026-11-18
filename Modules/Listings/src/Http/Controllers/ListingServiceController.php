@@ -8,8 +8,10 @@ use App\Models\Team;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Modules\Billing\Support\Entitlements;
 use Modules\Listings\Enums\ListingServicePriceUnit;
 use Modules\Listings\Enums\ListingServicePricingMode;
 use Modules\Listings\Enums\ListingServiceProvider;
@@ -24,8 +26,11 @@ class ListingServiceController extends Controller
 {
     use ResolvesCurrentTeam;
 
+    private const LIMIT_KEY = 'services_per_listing';
+
     public function __construct(
         private readonly ListingFormData $formData,
+        private readonly Entitlements $entitlements,
     ) {}
 
     public function index(Request $request, string $currentTeam, Listing $listing): Response
@@ -35,10 +40,8 @@ class ListingServiceController extends Controller
 
         Gate::authorize('update', $listing);
 
-        $services = $listing->commercialServices()
-            ->get()
-            ->map(fn (ListingService $service): array => ListingCommercialPresenter::ownerService($service, $team, $listing))
-            ->all();
+        $services = $listing->commercialServices()->get();
+        $limit = $this->entitlements->limit($team, self::LIMIT_KEY);
 
         return Inertia::render('Listings/Services/Index', [
             'listing' => [
@@ -46,7 +49,15 @@ class ListingServiceController extends Controller
                 'name' => $listing->name,
                 'slug' => $listing->slug,
             ],
-            'services' => $services,
+            'services' => $services
+                ->map(fn (ListingService $service): array => ListingCommercialPresenter::ownerService($service, $team, $listing))
+                ->all(),
+            'limits' => [
+                'max' => $limit,
+                'used' => $services->count(),
+                'can_create' => $this->entitlements->canAddItem($team, self::LIMIT_KEY, $services->count()),
+            ],
+            'billing_url' => route('billing.index', ['current_team' => $team->slug]),
             'serviceGroups' => CommercialServiceCatalog::groups(),
             'priceUnits' => ListingServicePriceUnit::options(),
             'pricingModes' => ListingServicePricingMode::options(),
@@ -70,6 +81,7 @@ class ListingServiceController extends Controller
         $this->ensureOwned($listing, $team);
 
         Gate::authorize('update', $listing);
+        $this->ensureWithinPlanLimit($team, $listing);
 
         $data = $request->validated();
         $service = new ListingService($this->payload($data));
@@ -141,6 +153,23 @@ class ListingServiceController extends Controller
             'price_unit' => $data['price_unit'],
             'active' => $data['active'] ?? false,
         ];
+    }
+
+    private function ensureWithinPlanLimit(Team $team, Listing $listing): void
+    {
+        $count = $listing->commercialServices()->count();
+
+        if ($this->entitlements->canAddItem($team, self::LIMIT_KEY, $count)) {
+            return;
+        }
+
+        $limit = $this->entitlements->limit($team, self::LIMIT_KEY);
+
+        throw ValidationException::withMessages([
+            'service_key' => $limit === 0
+                ? 'Tu plan actual no incluye servicios por terraza.'
+                : "Tu plan actual permite máximo {$limit} servicios por terraza. Actualiza el plan para agregar más.",
+        ]);
     }
 
     private function ensureOwned(Listing $listing, Team $team): void

@@ -10,6 +10,10 @@ use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Cashier\Subscription;
 use Modules\Listings\Models\Listing;
+use Modules\Listings\Models\ListingPackage;
+use Modules\Listings\Models\ListingPromotion;
+use Modules\Listings\Models\ListingService;
+use Modules\Listings\Support\CommercialServiceCatalog;
 use Tests\TestCase;
 
 class BillingEnforcementTest extends TestCase
@@ -115,6 +119,209 @@ class BillingEnforcementTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('Bookings/Customers/Index'));
     }
 
+    public function test_free_plan_limits_packages_per_listing(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->create();
+        $url = route('listings.packages.store', [
+            'current_team' => $team->slug,
+            'listing' => $listing->slug,
+        ]);
+
+        for ($index = 1; $index <= 5; $index++) {
+            $this->actingAs($owner)
+                ->post($url, $this->packagePayload($index))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(5, $this->packageCount($listing));
+
+        $this->actingAs($owner)
+            ->post($url, $this->packagePayload(6))
+            ->assertSessionHasErrors('name');
+
+        $this->assertSame(5, $this->packageCount($listing));
+
+        $this->actingAs($owner)
+            ->get(route('listings.packages.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Listings/Packages/Index')
+                ->where('limits.max', 5)
+                ->where('limits.used', 5)
+                ->where('limits.can_create', false)
+                ->where('billing_url', route('billing.index', ['current_team' => $team->slug])));
+    }
+
+    public function test_free_plan_limits_services_per_listing(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->create();
+        $url = route('listings.services.store', [
+            'current_team' => $team->slug,
+            'listing' => $listing->slug,
+        ]);
+        $keys = array_slice(CommercialServiceCatalog::keys(), 0, 6);
+
+        foreach (array_slice($keys, 0, 5) as $key) {
+            $this->actingAs($owner)
+                ->post($url, $this->servicePayload($key))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(5, $this->serviceCount($listing));
+
+        $this->actingAs($owner)
+            ->post($url, $this->servicePayload($keys[5]))
+            ->assertSessionHasErrors('service_key');
+
+        $this->assertSame(5, $this->serviceCount($listing));
+
+        $this->actingAs($owner)
+            ->get(route('listings.services.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Listings/Services/Index')
+                ->where('limits.max', 5)
+                ->where('limits.used', 5)
+                ->where('limits.can_create', false));
+    }
+
+    public function test_free_plan_limits_promotions_per_listing(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $listing = Listing::factory()->forTeam($team)->create();
+        $url = route('listings.promotions.store', [
+            'current_team' => $team->slug,
+            'listing' => $listing->slug,
+        ]);
+
+        for ($index = 1; $index <= 5; $index++) {
+            $this->actingAs($owner)
+                ->post($url, $this->promotionPayload($index))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(5, $this->promotionCount($listing));
+
+        $this->actingAs($owner)
+            ->post($url, $this->promotionPayload(6))
+            ->assertSessionHasErrors('title');
+
+        $this->assertSame(5, $this->promotionCount($listing));
+
+        $this->actingAs($owner)
+            ->get(route('listings.promotions.index', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+            ]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Listings/Promotions/Index')
+                ->where('limits.max', 5)
+                ->where('limits.used', 5)
+                ->where('limits.can_create', false));
+    }
+
+    public function test_commercial_catalog_limits_are_per_listing_on_pro_plan(): void
+    {
+        config(['billing.plans.pro.stripe_price_id' => 'price_pro_test']);
+
+        [$owner, $team] = $this->ownerWithTeam();
+        $this->subscribe($team);
+
+        $first = Listing::factory()->forTeam($team)->create();
+        $second = Listing::factory()->forTeam($team)->create();
+
+        ListingPackage::factory()->count(5)->forListing($first)->create();
+
+        $this->actingAs($owner)
+            ->post(route('listings.packages.store', [
+                'current_team' => $team->slug,
+                'listing' => $second->slug,
+            ]), $this->packagePayload(6))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(5, $this->packageCount($first));
+        $this->assertSame(1, $this->packageCount($second));
+
+        $this->actingAs($owner)
+            ->get(route('listings.packages.index', [
+                'current_team' => $team->slug,
+                'listing' => $first->slug,
+            ]))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('limits.max', 20)
+                ->where('limits.used', 5)
+                ->where('limits.can_create', true));
+    }
+
+    public function test_downgrade_blocks_new_catalog_items_but_keeps_editing_and_deleting(): void
+    {
+        [$owner, $team] = $this->ownerWithTeam();
+        $subscription = $this->subscribe($team);
+        $listing = Listing::factory()->forTeam($team)->create();
+
+        ListingPackage::factory()
+            ->count(6)
+            ->forListing($listing)
+            ->sequence(fn ($sequence): array => ['sort_order' => $sequence->index + 1])
+            ->create();
+
+        $subscription->update([
+            'stripe_status' => 'canceled',
+            'ends_at' => now()->subDay(),
+        ]);
+
+        $storeUrl = route('listings.packages.store', [
+            'current_team' => $team->slug,
+            'listing' => $listing->slug,
+        ]);
+
+        $this->actingAs($owner)
+            ->post($storeUrl, $this->packagePayload(7))
+            ->assertSessionHasErrors('name');
+
+        $this->assertSame(6, $this->packageCount($listing));
+
+        $package = ListingPackage::query()->where('listing_id', $listing->id)->firstOrFail();
+
+        $this->actingAs($owner)
+            ->patch(route('listings.packages.update', [
+                'current_team' => $team->slug,
+                'listing' => $listing->slug,
+                'package' => $package->id,
+            ]), $this->packagePayload(8))
+            ->assertSessionHasNoErrors();
+
+        $remaining = ListingPackage::query()
+            ->where('listing_id', $listing->id)
+            ->orderBy('id')
+            ->take(2)
+            ->get();
+
+        foreach ($remaining as $item) {
+            $this->actingAs($owner)
+                ->delete(route('listings.packages.destroy', [
+                    'current_team' => $team->slug,
+                    'listing' => $listing->slug,
+                    'package' => $item->id,
+                ]))
+                ->assertSessionHasNoErrors();
+        }
+
+        $this->assertSame(4, $this->packageCount($listing));
+
+        $this->actingAs($owner)
+            ->post($storeUrl, $this->packagePayload(9))
+            ->assertSessionHasNoErrors();
+
+        $this->assertSame(5, $this->packageCount($listing));
+    }
+
     /**
      * @return array{0: User, 1: Team}
      */
@@ -123,6 +330,64 @@ class BillingEnforcementTest extends TestCase
         $owner = User::factory()->create();
 
         return [$owner, $owner->currentTeam];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function packagePayload(int $index): array
+    {
+        return [
+            'name' => "Paquete {$index}",
+            'price' => 1200,
+            'duration_hours' => 8,
+            'included_people' => 40,
+            'included_services' => [],
+            'active' => true,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function servicePayload(string $key): array
+    {
+        return [
+            'service_key' => $key,
+            'pricing_mode' => 'additional',
+            'provider' => 'own',
+            'price' => 500,
+            'price_unit' => 'event',
+            'active' => true,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function promotionPayload(int $index): array
+    {
+        return [
+            'title' => "Promoción {$index}",
+            'starts_at' => now()->toDateString(),
+            'ends_at' => now()->addDays(10)->toDateString(),
+            'active' => true,
+        ];
+    }
+
+    private function packageCount(Listing $listing): int
+    {
+        return ListingPackage::query()->where('listing_id', $listing->id)->count();
+    }
+
+    private function serviceCount(Listing $listing): int
+    {
+        return ListingService::query()->where('listing_id', $listing->id)->count();
+    }
+
+    private function promotionCount(Listing $listing): int
+    {
+        return ListingPromotion::query()->where('listing_id', $listing->id)->count();
     }
 
     private function subscribe(Team $team): Subscription

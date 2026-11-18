@@ -24,6 +24,9 @@ type OwnerPlan = {
         listings: number;
         photos_per_listing: number;
         videos_per_listing: number;
+        packages_per_listing: number;
+        services_per_listing: number;
+        promotions_per_listing: number;
     };
     features: {
         customers: boolean;
@@ -469,6 +472,21 @@ const comparisonRows = computed(() => {
             label: 'Videos por terraza',
             free: free.limits.videos_per_listing,
             pro: pro.limits.videos_per_listing,
+        },
+        {
+            label: 'Paquetes por terraza',
+            free: free.limits.packages_per_listing,
+            pro: pro.limits.packages_per_listing,
+        },
+        {
+            label: 'Servicios por terraza',
+            free: free.limits.services_per_listing,
+            pro: pro.limits.services_per_listing,
+        },
+        {
+            label: 'Promociones por terraza',
+            free: free.limits.promotions_per_listing,
+            pro: pro.limits.promotions_per_listing,
         },
         { label: 'Directorio público', free: 'Sí', pro: 'Sí' },
         { label: 'Solicitudes', free: 'Sí', pro: 'Sí' },

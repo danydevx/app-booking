@@ -28,6 +28,9 @@ return [
                 'listings' => 1,
                 'photos_per_listing' => 5,
                 'videos_per_listing' => 0,
+                'packages_per_listing' => 5,
+                'services_per_listing' => 5,
+                'promotions_per_listing' => 5,
             ],
             'features' => [
                 'customers' => false,
@@ -47,6 +50,9 @@ return [
                 'listings' => 5,
                 'photos_per_listing' => 20,
                 'videos_per_listing' => 3,
+                'packages_per_listing' => 20,
+                'services_per_listing' => 20,
+                'promotions_per_listing' => 20,
             ],
             'features' => [
                 'customers' => true,
@@ -60,6 +66,9 @@ return [
         'listings' => 'Terrazas',
         'photos_per_listing' => 'Fotos por terraza',
         'videos_per_listing' => 'Videos por terraza',
+        'packages_per_listing' => 'Paquetes por terraza',
+        'services_per_listing' => 'Servicios por terraza',
+        'promotions_per_listing' => 'Promociones por terraza',
     ],
 
     'feature_labels' => [

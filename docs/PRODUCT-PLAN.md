@@ -35,8 +35,8 @@ Crear y lanzar una aplicación SaaS Laravel 13 para que propietarios publiquen t
 
 ### Suscripciones / planes
 
-- Plan Free: límites sencillos (por definir), por ejemplo una terraza y cupo básico de imágenes.
-- Plan de pago mensual Stripe: límites/capacidades superiores.
+- Plan Free: 1 terraza, 5 fotos por terraza, sin videos y hasta 5 paquetes, 5 servicios y 5 promociones por terraza.
+- Plan de pago mensual Stripe: 5 terrazas, 20 fotos, 3 videos y 20 paquetes, servicios y promociones por terraza, más CRM y cotizaciones. Los topes numéricos se ajustan por plan desde `/app/platform/plans`.
 - Stripe Checkout/Customer Portal y webhooks como fuente de verdad para estado de suscripción.
 - Entitlements en el backend: el servidor valida límites y funciones; ocultar un botón en UI no cuenta como autorización.
 - Separar la suscripción del propietario al SaaS del anticipo/renta que el cliente paga al propietario.

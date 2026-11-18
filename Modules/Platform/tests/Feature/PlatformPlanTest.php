@@ -28,7 +28,7 @@ class PlatformPlanTest extends TestCase
                 ->has('plans', 2)
                 ->where('plans.0.slug', 'free')
                 ->where('plans.1.slug', 'pro')
-                ->has('limitLabels', 3)
+                ->has('limitLabels', 6)
                 ->has('featureLabels', 3));
     }
 
@@ -56,12 +56,14 @@ class PlatformPlanTest extends TestCase
 
         $this->assertNotNull($plan);
         $this->assertSame(9, $plan->limit('listings'));
+        $this->assertSame(25, $plan->limit('packages_per_listing'));
         $this->assertTrue($plan->allows('ai_posts'));
         $this->assertFalse($plan->allows('customers'));
 
         $entitlements = app(Entitlements::class);
 
         $this->assertSame(9, $entitlements->limit($team, 'listings'));
+        $this->assertSame(25, $entitlements->limit($team, 'services_per_listing'));
         $this->assertTrue($entitlements->allows($team, 'ai_posts'));
         $this->assertFalse($entitlements->allows($team, 'customers'));
     }
@@ -142,6 +144,9 @@ class PlatformPlanTest extends TestCase
                 'listings' => 9,
                 'photos_per_listing' => 30,
                 'videos_per_listing' => 5,
+                'packages_per_listing' => 25,
+                'services_per_listing' => 25,
+                'promotions_per_listing' => 25,
             ],
             'features' => [
                 'customers' => false,
